@@ -1,0 +1,334 @@
+@extends('layouts.sfcs')
+
+@section('title', 'Detail Pengaduan')
+
+@section('content')
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('teknisi.pengaduan.index') }}">Pengaduan Saya</a></li>
+            <li class="breadcrumb-item active">{{ Str::limit($pengaduan->judul, 30) }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Content -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-tools me-2"></i>{{ $pengaduan->judul }}</h5>
+                @php
+                    $statusBadges = [
+                        'ditugaskan' => 'bg-info',
+                        'dikerjakan' => 'bg-warning text-dark',
+                        'selesai' => 'bg-success',
+                    ];
+                @endphp
+                <span class="badge {{ $statusBadges[$pengaduan->status] ?? 'bg-secondary' }} fs-6">
+                    <i class="fas fa-flag me-1"></i>{{ ucfirst($pengaduan->status) }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Kode Pengaduan:</strong> {{ $pengaduan->kode_pengaduan }}
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-clipboard-list me-2"></i>Deskripsi Masalah
+                    </h6>
+                    <p class="mb-0" style="line-height: 1.8;">{{ $pengaduan->deskripsi }}</p>
+                </div>
+
+                @if($pengaduan->photos && $pengaduan->photos->count() > 0)
+                    <div class="mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-camera me-2"></i>Foto Dokumentasi ({{ $pengaduan->photos->count() }} foto)
+                        </h6>
+                        <div class="row g-3">
+                            @foreach($pengaduan->photos as $photo)
+                                <div class="col-md-4 col-6">
+                                    <div class="card">
+                                        <a href="{{ asset('storage/' . $photo->path) }}" target="_blank" data-lightbox="pengaduan-{{ $pengaduan->id }}" data-title="Foto {{ $loop->iteration }}">
+                                            <img src="{{ asset('storage/' . $photo->path) }}" class="card-img-top" alt="Foto {{ $loop->iteration }}" style="height: 200px; object-fit: cover;">
+                                        </a>
+                                        <div class="card-body text-center py-2">
+                                            <small class="text-muted">Foto {{ $loop->iteration }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if($pengaduan->catatan_penyelesaian)
+                    <div class="mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                            <i class="fas fa-check-circle me-2"></i>Catatan Penyelesaian
+                        </h6>
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {{ $pengaduan->catatan_penyelesaian }}
+                        </div>
+                    </div>
+                @endif
+
+                @if($pengaduan->feedback)
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Feedback dari Pelapor</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="me-3">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            @if($i <= $pengaduan->feedback->average_rating)
+                                                <i class="fas fa-star text-warning"></i>
+                                            @else
+                                                <i class="far fa-star text-muted"></i>
+                                            @endif
+                                        @endfor
+                                    </div>
+                                    <span class="badge bg-primary">{{ number_format($pengaduan->feedback->average_rating, 1) }}/5</span>
+                                </div>
+                                @if($pengaduan->feedback->komentar)
+                                    <p class="mb-0">{{ $pengaduan->feedback->komentar }}</p>
+                                @endif
+                                <small class="text-muted">
+                                    Diberikan pada {{ $pengaduan->feedback->created_at->format('d F Y H:i') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        @if($pengaduan->status === 'ditugaskan')
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0"><i class="fas fa-play-circle me-2"></i>Mulai Pengerjaan</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Klik tombol di bawah untuk memulai mengerjakan pengaduan ini. Status akan berubah menjadi <strong>"Dikerjakan"</strong>.
+                    </p>
+                    <form action="{{ route('teknisi.pengaduan.start', $pengaduan) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-warning btn-lg w-100">
+                            <i class="fas fa-play me-2"></i> Mulai Kerjakan Sekarang
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endif
+
+        @if($pengaduan->status === 'dikerjakan')
+            <div class="card mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-check-circle me-2"></i>Selesaikan Pengaduan</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tips:</strong> Jelaskan pekerjaan yang telah dilakukan, material yang digunakan, dan hasil perbaikan.
+                    </div>
+                    <form action="{{ route('teknisi.pengaduan.complete', $pengaduan) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-clipboard-check me-1"></i>
+                                Catatan Penyelesaian <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="catatan_penyelesaian" class="form-control @error('catatan_penyelesaian') is-invalid @enderror" rows="5" required placeholder="Contoh: AC sudah diperbaiki, freon ditambah 1kg, filter dibersihkan. AC sudah berfungsi normal kembali."></textarea>
+                            @error('catatan_penyelesaian')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Minimal 20 karakter</small>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-check me-2"></i> Tandai Selesai
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endif
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Info Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Informasi Detail</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 pb-3 border-bottom">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-user me-1"></i>Pelapor</small>
+                    <strong class="d-block">{{ $pengaduan->user->name }}</strong>
+                    <span class="badge bg-secondary mt-1">{{ ucfirst($pengaduan->user->role) }}</span>
+                </div>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-tags me-1"></i>Kategori</small>
+                    <strong class="d-block">{{ $pengaduan->subKategori->kategori->nama ?? '-' }}</strong>
+                    <small class="text-muted">{{ $pengaduan->subKategori->nama ?? '-' }}</small>
+                </div>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-map-marker-alt me-1"></i>Lokasi</small>
+                    <strong class="d-block">
+                        <i class="fas fa-building me-1 text-primary"></i>{{ $pengaduan->ruangan->gedung->nama ?? '-' }}
+                    </strong>
+                    @if($pengaduan->ruangan)
+                        <small class="text-muted d-block"><i class="fas fa-door-open me-1"></i>{{ $pengaduan->ruangan->nama ?? '-' }}</small>
+                    @endif
+                    @if($pengaduan->lokasi_detail)
+                        <small class="text-muted d-block mt-1">{{ $pengaduan->lokasi_detail }}</small>
+                    @endif
+                </div>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-exclamation-triangle me-1"></i>Prioritas</small>
+                    @php
+                        $prioritasBadges = [
+                            'rendah' => 'bg-success',
+                            'sedang' => 'bg-warning text-dark',
+                            'tinggi' => 'bg-orange',
+                            'urgent' => 'bg-danger',
+                        ];
+                    @endphp
+                    <span class="badge {{ $prioritasBadges[$pengaduan->prioritas] ?? 'bg-secondary' }} fs-6">
+                        {{ strtoupper($pengaduan->prioritas) }}
+                    </span>
+                </div>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-calendar-alt me-1"></i>Tanggal Kejadian</small>
+                    <strong>{{ $pengaduan->tanggal_kejadian ? $pengaduan->tanggal_kejadian->format('d F Y') : '-' }}</strong>
+                </div>
+
+                <div class="mb-3 pb-3 border-bottom">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-clock me-1"></i>Dilaporkan</small>
+                    <strong class="d-block">{{ $pengaduan->created_at->format('d F Y H:i') }}</strong>
+                    <small class="text-muted">{{ $pengaduan->created_at->diffForHumans() }}</small>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1"><i class="fas fa-user-check me-1"></i>Ditugaskan</small>
+                    @if($pengaduan->assigned_at)
+                        <strong class="d-block">{{ $pengaduan->assigned_at->format('d F Y H:i') }}</strong>
+                        <small class="text-muted">{{ $pengaduan->assigned_at->diffForHumans() }}</small>
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </div>
+
+                @if($pengaduan->completed_at)
+                    <div class="mb-3 pb-3 border-bottom">
+                        <small class="text-muted d-block mb-1"><i class="fas fa-check-circle me-1"></i>Selesai</small>
+                        <strong class="d-block">{{ $pengaduan->completed_at->format('d F Y H:i') }}</strong>
+                        <small class="text-muted">{{ $pengaduan->completed_at->diffForHumans() }}</small>
+                    </div>
+                @endif
+                </table>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>Timeline Pengerjaan</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-secondary"></div>
+                        <div class="timeline-content">
+                            <strong><i class="fas fa-file-alt me-1"></i>Dilaporkan</strong>
+                            <p class="text-muted small mb-0">
+                                <i class="far fa-clock me-1"></i>{{ $pengaduan->created_at->format('d F Y, H:i') }} WIB
+                            </p>
+                        </div>
+                    </div>
+
+                    @if($pengaduan->assigned_at)
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <strong><i class="fas fa-user-tag me-1"></i>Ditugaskan kepada Anda</strong>
+                                <p class="text-muted small mb-0">
+                                    <i class="far fa-clock me-1"></i>{{ $pengaduan->assigned_at->format('d F Y, H:i') }} WIB
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if(in_array($pengaduan->status, ['dikerjakan', 'selesai']))
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <strong><i class="fas fa-tools me-1"></i>Mulai Dikerjakan</strong>
+                                <p class="text-muted small mb-0">
+                                    <i class="far fa-clock me-1"></i>{{ $pengaduan->updated_at->format('d F Y, H:i') }} WIB
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($pengaduan->status === 'selesai')
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <strong><i class="fas fa-check-circle me-1"></i>Selesai Dikerjakan</strong>
+                                <p class="text-muted small mb-0">
+                                    <i class="far fa-clock me-1"></i>{{ $pengaduan->completed_at ? $pengaduan->completed_at->format('d F Y, H:i') . ' WIB' : '-' }}
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ route('teknisi.pengaduan.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Kembali
+    </a>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+    border-left: 2px solid #e9ecef;
+    padding-left: 20px;
+    margin-left: 6px;
+}
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+    padding-bottom: 0;
+}
+.timeline-marker {
+    position: absolute;
+    left: -8px;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+</style>
+@endsection
