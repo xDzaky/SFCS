@@ -61,9 +61,9 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:siswa,guru,admin,teknisi,kepsek,superadmin'],
-            'nis_nip' => ['nullable', 'string', 'max:50', 'unique:users'],
-            'kelas' => ['nullable', 'string', 'max:20'],
-            'no_telp' => ['nullable', 'string', 'max:15'],
+            'nis' => ['nullable', 'string', 'max:50', 'unique:users'],
+            'nip' => ['nullable', 'string', 'max:50', 'unique:users'],
+            'no_hp' => ['nullable', 'string', 'max:15'],
             'is_active' => ['boolean'],
         ]);
 
@@ -72,9 +72,9 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'nis_nip' => $validated['nis_nip'] ?? null,
-            'kelas' => $validated['kelas'] ?? null,
-            'no_telp' => $validated['no_telp'] ?? null,
+            'nis' => $validated['nis'] ?? null,
+            'nip' => $validated['nip'] ?? null,
+            'no_hp' => $validated['no_hp'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -121,9 +121,9 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:siswa,guru,admin,teknisi,kepsek,superadmin'],
-            'nis_nip' => ['nullable', 'string', 'max:50', 'unique:users,nis_nip,' . $user->id],
-            'kelas' => ['nullable', 'string', 'max:20'],
-            'no_telp' => ['nullable', 'string', 'max:15'],
+            'nis' => ['nullable', 'string', 'max:50', 'unique:users,nis,' . $user->id],
+            'nip' => ['nullable', 'string', 'max:50', 'unique:users,nip,' . $user->id],
+            'no_hp' => ['nullable', 'string', 'max:15'],
             'is_active' => ['boolean'],
         ]);
 
@@ -131,9 +131,9 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
-            'nis_nip' => $validated['nis_nip'] ?? null,
-            'kelas' => $validated['kelas'] ?? null,
-            'no_telp' => $validated['no_telp'] ?? null,
+            'nis' => $validated['nis'] ?? null,
+            'nip' => $validated['nip'] ?? null,
+            'no_hp' => $validated['no_hp'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ];
 

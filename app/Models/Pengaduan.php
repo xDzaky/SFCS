@@ -12,6 +12,14 @@ class Pengaduan extends Model
 {
     protected $table = 'pengaduans';
     
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'kode_pengaduan';
+    }
+    
     protected $fillable = [
         'kode_pengaduan',
         'user_id',
@@ -194,7 +202,10 @@ class Pengaduan extends Model
     /**
      * Get feedback
      */
-    public function feedback(): HasOne
+    /**
+     * Get feedback detail
+     */
+    public function feedbackDetail(): HasOne
     {
         return $this->hasOne(Feedback::class);
     }
@@ -205,6 +216,14 @@ class Pengaduan extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(Log::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get history changes
+     */
+    public function histories(): HasMany
+    {
+        return $this->hasMany(HistoryPengaduan::class)->orderBy('created_at', 'desc');
     }
 
     // ==================== ACCESSORS ====================

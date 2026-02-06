@@ -47,7 +47,7 @@
                     <div class="row g-3">
                         @foreach($pengaduan->photos as $photo)
                             <div class="col-4 col-md-3">
-                                <a href="{{ $photo->url }}" target="_blank">
+                                <a href="{{ $photo->url }}" data-fancybox="gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}">
                                     <img src="{{ $photo->url }}" class="img-fluid rounded" 
                                          style="width: 100%; height: 100px; object-fit: cover;">
                                 </a>
@@ -104,24 +104,72 @@
 
         <!-- Actions -->
         @if(!in_array($pengaduan->status, ['selesai', 'ditolak']))
-            <!-- Update Status -->
+            <!-- Status Progress -->
             <div class="card mb-4">
-                <div class="card-header"><i class="fas fa-edit me-2"></i>Update Status</div>
+                <div class="card-header"><i class="fas fa-tasks me-2"></i>Status Laporan</div>
                 <div class="card-body">
+                    <div class="status-stepper mb-4">
+                        @php
+                            $steps = [
+                                'pending' => ['icon' => 'fa-paper-plane', 'label' => 'Terkirim'],
+                                'diverifikasi' => ['icon' => 'fa-clipboard-check', 'label' => 'Diverifikasi'],
+                                'diproses' => ['icon' => 'fa-tools', 'label' => 'Diproses'],
+                                'selesai' => ['icon' => 'fa-check', 'label' => 'Selesai']
+                            ];
+                            $currentFound = false;
+                        @endphp
+                        
+                        <div class="d-flex justify-content-between position-relative">
+                            <div class="position-absolute top-50 start-0 w-100 translate-middle-y bg-light" style="height: 4px; z-index: 1;"></div>
+                            
+                            @foreach($steps as $key => $step)
+                                @php
+                                    $isActive = $key === $pengaduan->status;
+                                    $isPast = !$isActive && !$currentFound;
+                                    if ($isActive) $currentFound = true;
+                                    
+                                    $bgClass = $isActive ? 'bg-primary text-white border-primary' : ($isPast ? 'bg-primary text-white border-primary' : 'bg-white text-muted border-light');
+                                    $scale = $isActive ? 'transform: scale(1.2); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);' : '';
+                                @endphp
+                                <div class="text-center position-relative" style="z-index: 2; width: 60px;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2 border border-2" 
+                                         style="width: 40px; height: 40px; {{ $bgClass }} {{ $scale }} transition: all 0.3s;">
+                                        <i class="fas {{ $step['icon'] }}"></i>
+                                    </div>
+                                    <div class="small fw-bold {{ $isActive ? 'text-primary' : 'text-muted' }}">{{ $step['label'] }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <hr>
+
                     <form action="{{ route('admin.pengaduan.status', $pengaduan) }}" method="POST">
                         @csrf
-                        <div class="mb-3">
-                            <select name="status" class="form-select" required>
-                                <option value="pending" {{ $pengaduan->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="diverifikasi" {{ $pengaduan->status == 'diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
-                                <option value="diproses" {{ $pengaduan->status == 'diproses' ? 'selected' : '' }}>Diproses</option>
-                                <option value="selesai" {{ $pengaduan->status == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                            </select>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small fw-bold text-muted mb-0">Update Manual (Opsional):</label>
+                            <span class="badge bg-light text-muted border fw-normal" style="font-size: 0.65rem;">Biasanya diubah oleh Teknisi</span>
                         </div>
-                        <div class="mb-3">
-                            <textarea name="catatan_admin" class="form-control" rows="2" placeholder="Catatan (opsional)">{{ $pengaduan->catatan_admin }}</textarea>
+                        <div class="d-grid gap-2">
+                            @if($pengaduan->status == 'pending')
+                                <button type="submit" name="status" value="diverifikasi" class="btn btn-info text-white">
+                                    <i class="fas fa-clipboard-check me-2"></i>Verifikasi Pengaduan
+                                </button>
+                            @elseif($pengaduan->status == 'diverifikasi')
+                                <button type="submit" name="status" value="diproses" class="btn btn-warning text-dark">
+                                    <i class="fas fa-tools me-2"></i>Mulai Proses Pengerjaan
+                                </button>
+                            @elseif($pengaduan->status == 'diproses')
+                                <button type="submit" name="status" value="selesai" class="btn btn-success">
+                                    <i class="fas fa-check-circle me-2"></i>Tandai Selesai
+                                </button>
+                            @endif
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Update Status</button>
+                        
+                        <div class="mt-3">
+                            <label class="form-label small text-muted">Catatan Status (Opsional)</label>
+                            <textarea name="catatan_admin" class="form-control form-control-sm" rows="2" placeholder="Tambahkan catatan untuk perubahan status ini..."></textarea>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -130,19 +178,35 @@
             <div class="card mb-4">
                 <div class="card-header"><i class="fas fa-user-cog me-2"></i>Tugaskan Teknisi</div>
                 <div class="card-body">
+                    @if($pengaduan->teknisi_id)
+                        <div class="alert alert-info d-flex align-items-center mb-3">
+                            <i class="fas fa-user-check fa-2x me-3"></i>
+                            <div>
+                                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Teknisi Saat Ini</small>
+                                <div class="fw-bold">{{ $pengaduan->assignedTo->name }}</div>
+                            </div>
+                        </div>
+                    @endif
+
                     <form action="{{ route('admin.pengaduan.assign', $pengaduan) }}" method="POST">
                         @csrf
                         <div class="mb-3">
-                            <select name="teknisi_id" class="form-select" required>
-                                <option value="">Pilih Teknisi</option>
-                                @foreach($teknisis as $teknisi)
-                                    <option value="{{ $teknisi->id }}" {{ $pengaduan->teknisi_id == $teknisi->id ? 'selected' : '' }}>
-                                        {{ $teknisi->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label small text-muted">Pilih Teknisi</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
+                                <select name="teknisi_id" class="form-select" required>
+                                    <option value="">-- Pilih Teknisi --</option>
+                                    @foreach($teknisis as $teknisi)
+                                        <option value="{{ $teknisi->id }}" {{ $pengaduan->teknisi_id == $teknisi->id ? 'selected' : '' }}>
+                                            {{ $teknisi->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">Tugaskan</button>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-user-plus me-2"></i>{{ $pengaduan->teknisi_id ? 'Ganti Teknisi' : 'Tugaskan Teknisi' }}
+                        </button>
                     </form>
                 </div>
             </div>
@@ -177,18 +241,18 @@
         @endif
 
         <!-- Feedback -->
-        @if($pengaduan->feedback)
+        @if($pengaduan->feedbackDetail)
             <div class="card mt-4">
                 <div class="card-header"><i class="fas fa-star me-2"></i>Feedback</div>
                 <div class="card-body">
                     <div class="rating-stars mb-2">
                         @for($i = 1; $i <= 5; $i++)
-                            <i class="fas fa-star {{ $i <= $pengaduan->feedback->average_rating ? '' : 'empty' }}"></i>
+                            <i class="fas fa-star {{ $i <= $pengaduan->feedbackDetail->average_rating ? '' : 'empty' }}"></i>
                         @endfor
-                        <span class="ms-2">{{ number_format($pengaduan->feedback->average_rating, 1) }}/5</span>
+                        <span class="ms-2">{{ number_format($pengaduan->feedbackDetail->average_rating, 1) }}/5</span>
                     </div>
-                    @if($pengaduan->feedback->komentar)
-                        <p class="mb-0 small text-muted">{{ $pengaduan->feedback->komentar }}</p>
+                    @if($pengaduan->feedbackDetail->komentar)
+                        <p class="mb-0 small text-muted">{{ $pengaduan->feedbackDetail->komentar }}</p>
                     @endif
                 </div>
             </div>

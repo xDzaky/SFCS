@@ -115,7 +115,9 @@
                         <!-- Mobile Card View -->
                         <div class="d-md-none">
                             @foreach($pengaduans as $pengaduan)
-                                <div class="card mb-2 border shadow-sm">
+                                <div class="card mb-2 border shadow-sm" 
+                                     style="cursor: pointer;" 
+                                     onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location='{{ route('pengaduan.show', $pengaduan->kode_pengaduan) }}'">
                                     <div class="card-body p-3">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <span class="badge bg-light text-dark font-monospace small">
@@ -177,7 +179,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($pengaduans as $pengaduan)
-                                        <tr>
+                                        <tr style="cursor: pointer;" onclick="if(!event.target.closest('a') && !event.target.closest('button') && !getSelection().toString()) window.location='{{ route('pengaduan.show', $pengaduan->kode_pengaduan) }}'">
                                             <td>
                                                 <span class="badge bg-light text-dark font-monospace">
                                                     {{ $pengaduan->kode_pengaduan }}

@@ -89,7 +89,9 @@
                 <!-- Mobile Card View -->
                 <div class="d-md-none">
                     @foreach($assignedPengaduans as $pengaduan)
-                        <div class="card mb-2 border shadow-sm {{ $pengaduan->prioritas === 'urgent' ? 'border-danger' : '' }}">
+                        <div class="card mb-2 border shadow-sm {{ $pengaduan->prioritas === 'urgent' ? 'border-danger' : '' }}" 
+                             style="cursor: pointer;" 
+                             onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location='{{ route('teknisi.pengaduan.show', $pengaduan) }}'">
                             <div class="card-body p-3">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <span class="badge bg-light text-dark font-monospace small">
@@ -165,7 +167,9 @@
                         </thead>
                         <tbody>
                             @foreach($assignedPengaduans as $pengaduan)
-                                <tr class="{{ $pengaduan->prioritas === 'urgent' ? 'table-danger table-danger-soft' : '' }}">
+                                <tr class="{{ $pengaduan->prioritas === 'urgent' ? 'table-danger table-danger-soft' : '' }}" 
+                                    style="cursor: pointer;" 
+                                    onclick="if(!event.target.closest('a') && !event.target.closest('button') && !getSelection().toString()) window.location='{{ route('teknisi.pengaduan.show', $pengaduan) }}'">
                                     <td>
                                         <span class="badge bg-light text-dark font-monospace">{{ $pengaduan->kode_pengaduan }}</span>
                                     </td>

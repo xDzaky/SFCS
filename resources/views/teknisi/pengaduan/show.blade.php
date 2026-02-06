@@ -21,13 +21,22 @@
                 <h5 class="card-title mb-0"><i class="fas fa-tools me-2"></i>{{ $pengaduan->judul }}</h5>
                 @php
                     $statusBadges = [
-                        'ditugaskan' => 'bg-info',
-                        'dikerjakan' => 'bg-warning text-dark',
+                        'pending' => 'bg-secondary',
+                        'diverifikasi' => 'bg-info',
+                        'diproses' => 'bg-warning text-dark',
                         'selesai' => 'bg-success',
+                        'ditolak' => 'bg-danger',
+                    ];
+                    $statusLabels = [
+                        'pending' => 'Menunggu',
+                        'diverifikasi' => 'Ditugaskan',
+                        'diproses' => 'Dikerjakan',
+                        'selesai' => 'Selesai',
+                        'ditolak' => 'Ditolak',
                     ];
                 @endphp
                 <span class="badge {{ $statusBadges[$pengaduan->status] ?? 'bg-secondary' }} fs-6">
-                    <i class="fas fa-flag me-1"></i>{{ ucfirst($pengaduan->status) }}
+                    <i class="fas fa-flag me-1"></i>{{ $statusLabels[$pengaduan->status] ?? ucfirst($pengaduan->status) }}
                 </span>
             </div>
             <div class="card-body">
@@ -52,8 +61,8 @@
                             @foreach($pengaduan->photos as $photo)
                                 <div class="col-md-4 col-6">
                                     <div class="card">
-                                        <a href="{{ asset('storage/' . $photo->path) }}" target="_blank" data-lightbox="pengaduan-{{ $pengaduan->id }}" data-title="Foto {{ $loop->iteration }}">
-                                            <img src="{{ asset('storage/' . $photo->path) }}" class="card-img-top" alt="Foto {{ $loop->iteration }}" style="height: 200px; object-fit: cover;">
+                                        <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" data-caption="Foto {{ $loop->iteration }} - {{ $pengaduan->judul }}">
+                                            <img src="{{ asset('storage/' . $photo->file_path) }}" class="card-img-top" alt="Foto {{ $loop->iteration }}" style="height: 200px; object-fit: cover;">
                                         </a>
                                         <div class="card-body text-center py-2">
                                             <small class="text-muted">Foto {{ $loop->iteration }}</small>
@@ -85,20 +94,20 @@
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="me-3">
                                         @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= $pengaduan->feedback->average_rating)
+                                            @if($i <= $pengaduan->feedbackDetail->average_rating)
                                                 <i class="fas fa-star text-warning"></i>
                                             @else
                                                 <i class="far fa-star text-muted"></i>
                                             @endif
                                         @endfor
                                     </div>
-                                    <span class="badge bg-primary">{{ number_format($pengaduan->feedback->average_rating, 1) }}/5</span>
+                                    <span class="badge bg-primary">{{ number_format($pengaduan->feedbackDetail->average_rating, 1) }}/5</span>
                                 </div>
-                                @if($pengaduan->feedback->komentar)
-                                    <p class="mb-0">{{ $pengaduan->feedback->komentar }}</p>
+                                @if($pengaduan->feedbackDetail->komentar)
+                                    <p class="mb-0">{{ $pengaduan->feedbackDetail->komentar }}</p>
                                 @endif
                                 <small class="text-muted">
-                                    Diberikan pada {{ $pengaduan->feedback->created_at->format('d F Y H:i') }}
+                                    Diberikan pada {{ $pengaduan->feedbackDetail->created_at->format('d F Y H:i') }}
                                 </small>
                             </div>
                         </div>
@@ -108,7 +117,7 @@
         </div>
 
         <!-- Action Buttons -->
-        @if($pengaduan->status === 'ditugaskan')
+        @if($pengaduan->status === 'diverifikasi')
             <div class="card mb-4 border-warning">
                 <div class="card-header bg-warning text-dark">
                     <h5 class="card-title mb-0"><i class="fas fa-play-circle me-2"></i>Mulai Pengerjaan</h5>
@@ -118,9 +127,10 @@
                         <i class="fas fa-info-circle me-1"></i>
                         Klik tombol di bawah untuk memulai mengerjakan pengaduan ini. Status akan berubah menjadi <strong>"Dikerjakan"</strong>.
                     </p>
-                    <form action="{{ route('teknisi.pengaduan.start', $pengaduan) }}" method="POST">
+                    <form action="{{ route('teknisi.pengaduan.update-status', $pengaduan) }}" method="POST">
                         @csrf
-                        @method('PATCH')
+                        @method('POST')
+                        <input type="hidden" name="status" value="diproses">
                         <button type="submit" class="btn btn-warning btn-lg w-100">
                             <i class="fas fa-play me-2"></i> Mulai Kerjakan Sekarang
                         </button>
@@ -129,7 +139,7 @@
             </div>
         @endif
 
-        @if($pengaduan->status === 'dikerjakan')
+        @if($pengaduan->status === 'diproses')
             <div class="card mb-4 border-success">
                 <div class="card-header bg-success text-white">
                     <h5 class="card-title mb-0"><i class="fas fa-check-circle me-2"></i>Selesaikan Pengaduan</h5>
@@ -141,14 +151,14 @@
                     </div>
                     <form action="{{ route('teknisi.pengaduan.complete', $pengaduan) }}" method="POST">
                         @csrf
-                        @method('PATCH')
+                        @method('POST')
                         <div class="mb-3">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-clipboard-check me-1"></i>
                                 Catatan Penyelesaian <span class="text-danger">*</span>
                             </label>
-                            <textarea name="catatan_penyelesaian" class="form-control @error('catatan_penyelesaian') is-invalid @enderror" rows="5" required placeholder="Contoh: AC sudah diperbaiki, freon ditambah 1kg, filter dibersihkan. AC sudah berfungsi normal kembali."></textarea>
-                            @error('catatan_penyelesaian')
+                            <textarea name="catatan_teknisi" class="form-control @error('catatan_teknisi') is-invalid @enderror" rows="5" required placeholder="Contoh: AC sudah diperbaiki, freon ditambah 1kg, filter dibersihkan. AC sudah berfungsi normal kembali."></textarea>
+                            @error('catatan_teknisi')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <small class="text-muted">Minimal 20 karakter</small>
@@ -270,13 +280,13 @@
                         </div>
                     @endif
 
-                    @if(in_array($pengaduan->status, ['dikerjakan', 'selesai']))
+                    @if(in_array($pengaduan->status, ['diproses', 'selesai']))
                         <div class="timeline-item">
                             <div class="timeline-marker bg-warning"></div>
                             <div class="timeline-content">
                                 <strong><i class="fas fa-tools me-1"></i>Mulai Dikerjakan</strong>
                                 <p class="text-muted small mb-0">
-                                    <i class="far fa-clock me-1"></i>{{ $pengaduan->updated_at->format('d F Y, H:i') }} WIB
+                                    <i class="far fa-clock me-1"></i>{{ $pengaduan->started_at ? $pengaduan->started_at->format('d F Y, H:i') . ' WIB' : '' }}
                                 </p>
                             </div>
                         </div>

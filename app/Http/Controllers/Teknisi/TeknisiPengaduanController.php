@@ -70,7 +70,7 @@ class TeknisiPengaduanController extends Controller
             'ruangan.gedung',
             'user',
             'photos',
-            'feedback',
+            'feedbackDetail',
         ]);
 
         // Get logs for this pengaduan

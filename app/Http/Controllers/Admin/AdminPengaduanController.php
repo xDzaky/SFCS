@@ -82,7 +82,7 @@ class AdminPengaduanController extends Controller
             'user',
             'assignedTo',
             'photos',
-            'feedback',
+            'feedbackDetail',
         ]);
 
         $teknisis = User::where('role', 'teknisi')

@@ -14,8 +14,10 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Fancybox CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
 
     <!-- Custom CSS -->
     <style>
@@ -501,7 +503,7 @@
                             $notifications = auth()->user()->notifications()->latest()->take(5)->get();
                         @endphp
                         @forelse($notifications as $notification)
-                            <a href="{{ route('notifications.index') }}" class="dropdown-item py-2 {{ $notification->is_read ? '' : 'bg-light' }}">
+                            <a href="{{ $notification->link ?? route('notifications.index') }}" class="dropdown-item py-2 {{ $notification->is_read ? '' : 'bg-light' }}">
                                 <div class="d-flex">
                                     <div class="me-2">
                                         <i class="fas {{ $notification->jenis_icon }}"></i>
@@ -583,6 +585,14 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Fancybox JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+    <script>
+        Fancybox.bind("[data-fancybox]", {
+            // Your custom options
+        });
+    </script>
+
     <!-- Custom JS -->
     <script>
         // Sidebar Toggle
@@ -611,6 +621,62 @@
                 bsAlert.close();
             });
         }, 5000);
+
+        // Browser Notification Support
+        if ('Notification' in window && 'serviceWorker' in navigator) {
+            // Request notification permission
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // Check for new notifications every 30 seconds
+            setInterval(checkNewNotifications, 30000);
+            
+            let lastNotificationCount = {{ auth()->user()->notifications()->whereNull('read_at')->count() }};
+            
+            function checkNewNotifications() {
+                fetch('/notifications/unread-count')
+                    .then(response => response.json())
+                    .then(data => {
+                        const currentCount = data.count;
+                        
+                        // Update badge
+                        const badge = document.querySelector('.notification-badge .badge');
+                        if (badge) {
+                            badge.textContent = currentCount;
+                            badge.style.display = currentCount > 0 ? 'inline-block' : 'none';
+                        }
+                        
+                        // Show browser notification if new notifications
+                        if (currentCount > lastNotificationCount && Notification.permission === 'granted') {
+                            fetch('/notifications/latest')
+                                .then(response => response.json())
+                                .then(notif => {
+                                    if (notif && notif.judul) {
+                                        const notification = new Notification('SFCS - ' + notif.judul, {
+                                            body: notif.pesan,
+                                            icon: '/favicon.ico',
+                                            badge: '/favicon.ico',
+                                            tag: 'sfcs-notification-' + notif.id,
+                                            requireInteraction: false
+                                        });
+                                        
+                                        notification.onclick = function() {
+                                            window.focus();
+                                            if (notif.link) {
+                                                window.location.href = notif.link;
+                                            }
+                                            notification.close();
+                                        };
+                                    }
+                                });
+                        }
+                        
+                        lastNotificationCount = currentCount;
+                    })
+                    .catch(err => console.error('Failed to check notifications:', err));
+            }
+        }
     </script>
 
     @stack('scripts')

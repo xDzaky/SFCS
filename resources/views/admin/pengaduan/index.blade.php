@@ -103,7 +103,9 @@
                     </thead>
                     <tbody>
                         @foreach($pengaduans as $pengaduan)
-                            <tr class="{{ $pengaduan->prioritas === 'urgent' && !in_array($pengaduan->status, ['selesai', 'ditolak']) ? 'table-danger' : '' }}">
+                            <tr class="{{ $pengaduan->prioritas === 'urgent' && !in_array($pengaduan->status, ['selesai', 'ditolak']) ? 'table-danger' : '' }}" 
+                                style="cursor: pointer;" 
+                                onclick="if(!event.target.closest('input') && !event.target.closest('a') && !event.target.closest('button')) window.location='{{ route('admin.pengaduan.show', $pengaduan) }}'">
                                 <td>
                                     <input type="checkbox" class="form-check-input pengaduan-check" value="{{ $pengaduan->id }}">
                                 </td>

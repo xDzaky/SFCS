@@ -31,49 +31,154 @@
 
 ### ✅ Solusi yang Ditawarkan
 
-- ✅ Pengaduan digital dengan upload foto dokumentasi
+- ✅ Pengaduan digital dengan upload foto & kamera langsung
 - ✅ Real-time tracking status pengaduan
 - ✅ Sistem prioritas otomatis (urgent, tinggi, sedang, rendah)
 - ✅ Dashboard analytics untuk semua level user
-- ✅ Notifikasi real-time untuk setiap update
+- ✅ Notifikasi real-time + browser push notification
 - ✅ Rating & feedback system untuk evaluasi kualitas
+- ✅ Remember me login (30 hari tetap login)
+
+---
+
+## 🔄 Alur Sistem & Peran Setiap Role
+
+### 📌 Alur Pengaduan (End-to-End)
+
+```
+Siswa/Guru          Admin               Teknisi           Kepsek/SuperAdmin
+    │                  │                    │                     │
+    ▼                  │                    │                     │
+ 1. Buat Pengaduan     │                    │                     │
+    (foto + deskripsi) │                    │                     │
+    │                  │                    │                     │
+    │──── notifikasi ──▶                    │                     │
+    │                  ▼                    │                     │
+    │            2. Verifikasi              │                     │
+    │               Pengaduan              │                     │
+    │               (approve/reject)       │                     │
+    │                  │                    │                     │
+    │                  ▼                    │                     │
+    │            3. Assign Teknisi ─────────▶                     │
+    │                  │               4. Terima Tugas            │
+    │                  │                    │                     │
+    │◀─── notifikasi ──│                    ▼                     │
+    │                  │              5. Kerjakan &               │
+    │                  │                 Update Progress          │
+    │                  │                    │                     │
+    │                  │                    ▼                     │
+    │                  │              6. Tandai Selesai           │
+    │                  │                    │                     │
+    │◀─── notifikasi ──│◀───────────────────│                     │
+    │                  │                    │                     │
+    ▼                  │                    │                     │
+ 7. Beri Rating        │                    │                     │
+    & Feedback         │                    │                     │
+    │                  │                    │          8. Lihat Laporan
+    │                  │                    │             & Analytics
+    ▼                  ▼                    ▼                     ▼
+                    [ SELESAI ]
+```
+
+### 👨‍🎓 Siswa (siswa)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| 📝 Buat Pengaduan | Buat laporan kerusakan fasilitas dengan form step-by-step |
+| 📸 Ambil Foto | Langsung dari kamera HP/laptop atau upload dari galeri |
+| 📋 Pengaduan Saya | Lihat daftar semua pengaduan yang pernah dibuat |
+| 🔍 Lacak Pengaduan | Tracking real-time status pengaduan |
+| ⭐ Beri Feedback | Rating & komentar setelah pengaduan selesai |
+| 🔔 Notifikasi | Update status pengaduan via web & browser push notification |
+
+**Akses:** `/dashboard` → `/pengaduan` → `/pengaduan/create`
+
+### 👩‍🏫 Guru (guru)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| 📝 Buat Pengaduan | Sama seperti siswa, bisa buat laporan kerusakan |
+| 📋 Pengaduan Saya | Lihat & lacak semua pengaduan sendiri |
+| ⭐ Beri Feedback | Rating setelah pengaduan selesai |
+| 🔔 Notifikasi | Update status via notifikasi |
+
+**Akses:** Sama dengan siswa
+
+### 👨‍🔧 Teknisi (teknisi)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| 📋 Daftar Tugas | Lihat pengaduan yang ditugaskan oleh admin |
+| 🚨 Prioritas Tugas | Tugas diurutkan berdasarkan urgensi |
+| 🔄 Update Status | Update progress pengerjaan (diproses → selesai) |
+| ✅ Selesaikan Tugas | Tandai pengaduan selesai dengan catatan |
+| 🔔 Notifikasi | Dapat notifikasi saat ditugaskan tugas baru |
+
+**Akses:** `/dashboard` → `/teknisi/pengaduan`
+
+### 👨‍💼 Admin (admin)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| ✔️ Verifikasi Pengaduan | Approve atau reject pengaduan masuk |
+| 👷 Assign Teknisi | Tugaskan teknisi untuk setiap pengaduan |
+| 🔄 Update Status | Ubah status pengaduan secara manual |
+| 📈 Dashboard Statistik | Statistik pengaduan, performa, tren |
+| 👥 Kelola Pengguna | Tambah, edit, aktifkan/nonaktifkan user |
+| 📁 Kelola Kategori | Atur kategori & sub-kategori pengaduan |
+| 🏢 Kelola Gedung | Atur gedung & ruangan |
+| 📊 Laporan | Export laporan pengaduan & performa |
+| 🔔 Notifikasi | Dapat notifikasi saat ada pengaduan baru |
+
+**Akses:** `/dashboard` → `/admin/pengaduan` → `/admin/users` → `/admin/kategoris` → `/admin/gedungs` → `/admin/reports`
+
+### 👨‍🏫 Kepala Sekolah (kepsek)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| 📊 Dashboard Analytics | Statistik komprehensif seluruh pengaduan |
+| 📈 Performa Kategori | Lihat kategori mana yang paling banyak masalah |
+| ⭐ Rating Teknisi | Monitoring performa teknisi berdasarkan rating |
+| 🚨 Prioritas Tinggi | Alert untuk pengaduan urgent |
+| 📈 Tren Bulanan | Grafik tren pengaduan per bulan |
+| 📄 Laporan | Akses laporan untuk evaluasi |
+
+**Akses:** `/dashboard` → `/kepsek/reports`
+
+### 👑 Super Admin (superadmin)
+
+| Fitur | Deskripsi |
+|-------|-----------|
+| ⚙️ Semua Fitur Admin | Akses penuh ke semua fitur admin |
+| 🔧 Pengaturan Sistem | Konfigurasi nama sekolah, logo, maintenance mode |
+| 📝 Activity Log | Lihat seluruh log aktivitas user |
+| 🔐 Manajemen Role | Akses penuh ke manajemen pengguna |
+
+**Akses:** `/dashboard` → semua route admin + `/superadmin/settings` → `/superadmin/logs`
 
 ---
 
 ## ✨ Fitur Utama
 
-### 👨‍🎓 Untuk Siswa & Guru
-- 📝 Buat pengaduan dengan form yang mudah
-- 📸 Upload foto dokumentasi kerusakan
-- 🔍 Lacak status pengaduan real-time
-- ⭐ Berikan rating & feedback setelah selesai
-- 🔔 Notifikasi update status
+### 🔔 Sistem Notifikasi
+- Notifikasi real-time di dalam aplikasi
+- **Browser Push Notification** (muncul di layar laptop/PC/HP)
+- Auto-check setiap 30 detik untuk notifikasi baru
+- Auto mark as read saat diklik
+- Filter berdasarkan status & tipe
+- Link otomatis disesuaikan berdasarkan role user
 
-### 👨‍🔧 Untuk Teknisi
-- 📋 Lihat daftar tugas yang ditugaskan
-- 🚨 Prioritas tugas berdasarkan urgensi
-- 📊 Update progress pengerjaan
-- ✅ Tandai tugas selesai dengan dokumentasi
+### 📸 Kamera & Upload Foto
+- Ambil foto langsung dari kamera belakang (mobile)
+- Upload dari galeri
+- Preview foto sebelum submit
+- Multiple foto per pengaduan
 
-### 👨‍💼 Untuk Admin
-- ✔️ Verifikasi pengaduan masuk
-- 👷 Assign teknisi untuk setiap pengaduan
-- 📈 Dashboard statistik pengaduan
-- 🏢 Kelola data gedung, ruangan, kategori
-- 👥 Kelola user dan hak akses
-
-### 👨‍🏫 Untuk Kepala Sekolah
-- 📊 Dashboard analytics komprehensif
-- 📈 Laporan performa per kategori
-- ⭐ Monitoring rating teknisi
-- 🚨 Alert isu prioritas tinggi
-- 📄 Export laporan berkala
-
-### 👑 Untuk Super Admin
-- ⚙️ Pengaturan sistem lengkap
-- 📝 Activity logging
-- 🔐 Manajemen role & permission
-- 💾 Backup & restore data
+### 🔐 Keamanan & Session
+- Remember me login (30 hari session)
+- Role-based access control (6 role)
+- Auto-redirect berdasarkan role
+- CSRF & XSS protection
 
 ---
 
@@ -87,6 +192,8 @@
 | **Authentication** | Laravel Breeze |
 | **Icons** | Font Awesome 6 |
 | **Build Tool** | Vite |
+| **Camera API** | MediaDevices.getUserMedia() |
+| **Push Notification** | Web Notifications API |
 
 ---
 
@@ -100,58 +207,37 @@ Aplikasi ini didesain dengan pendekatan **mobile-first** sehingga dapat diakses 
 
 ---
 
-## 📸 Screenshots
-
-<details>
-<summary>🖼️ Klik untuk melihat screenshots</summary>
-
-### Dashboard Siswa
-![Dashboard Siswa](screenshots/dashboard-siswa.png)
-
-### Dashboard Admin
-![Dashboard Admin](screenshots/dashboard-admin.png)
-
-### Form Pengaduan
-![Form Pengaduan](screenshots/form-pengaduan.png)
-
-### Detail Pengaduan
-![Detail Pengaduan](screenshots/detail-pengaduan.png)
-
-</details>
-
----
-
 ## 🏗️ Arsitektur Sistem
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                        SFCS Architecture                         │
-├─────────────────────────────────────────────────────────────────┤
+├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │
-│  │  Siswa   │  │   Guru   │  │ Teknisi  │  │ Admin/Kepsek/SA  │ │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────────┬─────────┘ │
-│       │             │             │                  │          │
-│       └─────────────┴──────┬──────┴──────────────────┘          │
-│                            │                                     │
-│                    ┌───────▼───────┐                            │
-│                    │   Frontend    │                            │
-│                    │  (Bootstrap)  │                            │
-│                    └───────┬───────┘                            │
-│                            │                                     │
-│                    ┌───────▼───────┐                            │
-│                    │    Laravel    │                            │
-│                    │   (Backend)   │                            │
-│                    └───────┬───────┘                            │
-│                            │                                     │
-│          ┌─────────────────┼─────────────────┐                  │
-│          │                 │                 │                  │
-│    ┌─────▼─────┐    ┌──────▼──────┐   ┌─────▼─────┐            │
-│    │  MySQL    │    │   Storage   │   │  Mailer   │            │
-│    │ Database  │    │   (Files)   │   │  (SMTP)   │            │
-│    └───────────┘    └─────────────┘   └───────────┘            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐   │
+│  │  Siswa   │  │   Guru   │  │ Teknisi  │  │ Admin/Kepsek   │   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬────────┘   │
+│       │              │             │                │            │
+│       └──────────────┴──────┬──────┴────────────────┘            │
+│                             │                                    │
+│                     ┌───────▼───────┐                            │
+│                     │   Frontend    │                            │
+│                     │  (Bootstrap)  │                            │
+│                     └───────┬───────┘                            │
+│                             │                                    │
+│                     ┌───────▼───────┐                            │
+│                     │    Laravel    │                            │
+│                     │   (Backend)   │                            │
+│                     └───────┬───────┘                            │
+│                             │                                    │
+│           ┌─────────────────┼─────────────────┐                  │
+│           │                 │                 │                  │
+│     ┌─────▼─────┐   ┌──────▼──────┐   ┌──────▼──────┐           │
+│     │  MySQL    │   │   Storage   │   │   Push      │           │
+│     │ Database  │   │   (Files)   │   │ Notification│           │
+│     └───────────┘   └─────────────┘   └─────────────┘           │
 │                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -180,16 +266,40 @@ Settings (System Configuration)
 
 ---
 
+## 🚀 Deployment
+
+### Production Server
+- **Hosting:** NusantaraHost (Shared Hosting)
+- **URL:** [sfcs.xdzaky.my.id](https://sfcs.xdzaky.my.id)
+- **PHP:** 8.2+
+- **Database:** MySQL
+
+### Deploy ke Production
+
+```bash
+# Di server cPanel terminal
+cd ~/sfcs-app
+git pull origin main
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+---
+
 ## 🔒 Security Features
 
-- ✅ Role-based Access Control (RBAC)
+- ✅ Role-based Access Control (RBAC) - 6 role
 - ✅ CSRF Protection
-- ✅ XSS Prevention
+- ✅ XSS Prevention (Blade escaping)
 - ✅ SQL Injection Prevention (Eloquent ORM)
 - ✅ Password Hashing (Bcrypt)
-- ✅ Session Security
+- ✅ Session Security (30 hari remember me)
 - ✅ Activity Logging
 - ✅ Input Validation & Sanitization
+- ✅ Route-level middleware protection
+- ✅ Owner-only access untuk pengaduan
 
 ---
 
@@ -217,26 +327,12 @@ Copyright (c) 2026 Dzaky. All Rights Reserved.
 This project is proprietary software. Unauthorized copying, modification,
 distribution, or use of this software, via any medium, is strictly prohibited
 without explicit written permission from the author.
-
-For licensing inquiries, please contact the author.
 ```
-
-**⚠️ PENTING**: Project ini dilindungi hak cipta. Penggunaan, penyalinan, atau modifikasi tanpa izin tertulis dari penulis adalah **DILARANG**.
-
----
-
-## 📞 Contact
-
-Untuk pertanyaan, kolaborasi, atau perizinan penggunaan:
-
-- 📧 Email: [Your Email]
-- 💼 LinkedIn: [Your LinkedIn]
-- 🌐 Portfolio: [Your Portfolio URL]
 
 ---
 
 <p align="center">
   <strong>© 2026 Dzaky. All Rights Reserved.</strong>
   <br/>
-  <em>SFCS - School Facility Complaint System</em>
+  <em>SFCS v1.1.0 - School Facility Complaint System</em>
 </p>

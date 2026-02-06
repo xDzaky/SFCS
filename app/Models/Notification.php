@@ -98,6 +98,26 @@ class Notification extends Model
         string $pesan,
         ?string $link = null
     ): self {
+        // Auto-adjust link based on user role if it's a pengaduan link
+        if ($link && str_contains($link, 'pengaduan')) {
+            $user = User::find($userId);
+            if ($user) {
+                // If user is siswa/guru, use siswa route
+                if (in_array($user->role, ['siswa', 'guru'])) {
+                    $link = str_replace('/admin/pengaduan', '/pengaduan', $link);
+                }
+                // If user is teknisi, use teknisi route
+                elseif ($user->role === 'teknisi') {
+                    if (str_contains($link, '/admin/pengaduan')) {
+                        $link = str_replace('/admin/pengaduan', '/teknisi/pengaduan', $link);
+                    } elseif (!str_contains($link, '/teknisi/pengaduan') && str_contains($link, '/pengaduan')) {
+                        $link = str_replace('/pengaduan', '/teknisi/pengaduan', $link);
+                    }
+                }
+                // Admin/superadmin keep admin route
+            }
+        }
+        
         return self::create([
             'user_id' => $userId,
             'jenis' => $jenis,

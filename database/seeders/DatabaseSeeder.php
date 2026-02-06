@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             GedungSeeder::class,
             RuanganSeeder::class,
             SettingSeeder::class,
-            PengaduanSeeder::class,
+            // PengaduanSeeder::class, // Commented: Jangan create sample data
         ]);
     }
 }

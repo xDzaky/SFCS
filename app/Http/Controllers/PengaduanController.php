@@ -153,13 +153,13 @@ class PengaduanController extends Controller
                     Notification::JENIS_PENGADUAN_CREATED,
                     'Pengaduan Baru',
                     "Pengaduan baru #{$pengaduan->kode_pengaduan}: {$pengaduan->judul}",
-                    route('admin.pengaduan.show', $pengaduan->id)
+                    route('admin.pengaduan.show', $pengaduan->kode_pengaduan)
                 );
             }
 
             DB::commit();
 
-            return redirect()->route('pengaduan.show', $pengaduan)
+            return redirect()->route('pengaduan.show', $pengaduan->kode_pengaduan)
                 ->with('success', 'Pengaduan berhasil dibuat dengan kode: ' . $pengaduan->kode_pengaduan);
 
         } catch (\Exception $e) {
@@ -178,7 +178,7 @@ class PengaduanController extends Controller
             abort(403);
         }
 
-        $pengaduan->load(['kategori', 'subKategori', 'gedung', 'ruangan', 'photos', 'assignedTo', 'feedback', 'logs']);
+        $pengaduan->load(['kategori', 'subKategori', 'gedung', 'ruangan', 'photos', 'assignedTo', 'feedbackDetail', 'logs']);
 
         return view('pengaduan.show', compact('pengaduan'));
     }
@@ -265,7 +265,7 @@ class PengaduanController extends Controller
 
             DB::commit();
 
-            return redirect()->route('pengaduan.show', $pengaduan)
+            return redirect()->route('pengaduan.show', $pengaduan->kode_pengaduan)
                 ->with('success', 'Pengaduan berhasil diperbarui');
 
         } catch (\Exception $e) {
@@ -345,7 +345,7 @@ class PengaduanController extends Controller
         }
 
         // Check if already has feedback
-        if ($pengaduan->feedback) {
+        if ($pengaduan->feedbackDetail) {
             return back()->with('error', 'Anda sudah memberikan feedback untuk pengaduan ini');
         }
 

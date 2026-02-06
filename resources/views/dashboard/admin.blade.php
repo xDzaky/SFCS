@@ -166,7 +166,9 @@
                 <div class="card-body p-2 p-md-3">
                     @forelse($recentPengaduans as $pengaduan)
                         <!-- Mobile Card View -->
-                        <div class="d-md-none card mb-2 border">
+                        <div class="d-md-none card mb-2 border hover-clickable" 
+                             style="cursor: pointer;" 
+                             onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location='{{ route('admin.pengaduan.show', $pengaduan) }}'">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <span class="badge bg-light text-dark font-monospace small">
@@ -216,7 +218,7 @@
                             </thead>
                             <tbody>
                                 @forelse($recentPengaduans as $pengaduan)
-                                    <tr>
+                                <tr style="cursor: pointer;" onclick="if(!event.target.closest('a') && !event.target.closest('button') && !getSelection().toString()) window.location='{{ route('admin.pengaduan.show', $pengaduan) }}'">
                                         <td><span class="badge bg-light text-dark font-monospace">{{ $pengaduan->kode_pengaduan }}</span></td>
                                         <td>{{ Str::limit($pengaduan->judul, 30) }}</td>
                                         <td>{{ $pengaduan->user->name ?? '-' }}</td>

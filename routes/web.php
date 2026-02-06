@@ -43,6 +43,8 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/latest', [NotificationController::class, 'latest'])->name('notifications.latest');
 
     /*
     |--------------------------------------------------------------------------
@@ -51,6 +53,14 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     */
     Route::middleware(['role:siswa,guru,admin,superadmin'])->group(function () {
         // Pengaduan CRUD
+        // Fix for legacy notifications with numeric IDs
+        Route::get('/pengaduan/{id}', function ($id) {
+            $pengaduan = \App\Models\Pengaduan::find($id);
+            return $pengaduan 
+                ? redirect()->route('pengaduan.show', $pengaduan) 
+                : abort(404);
+        })->where('id', '[0-9]+');
+        
         Route::resource('pengaduan', PengaduanController::class);
         
         // Track pengaduan
@@ -77,8 +87,22 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:teknisi,admin,superadmin'])->prefix('teknisi')->name('teknisi.')->group(function () {
+        // Fix for accidental double-prefix in notifications
+        Route::get('/teknisi/pengaduan/{pengaduan}', function ($pengaduan) {
+            return redirect()->route('teknisi.pengaduan.show', $pengaduan);
+        });
+        
         Route::get('/pengaduan', [App\Http\Controllers\Teknisi\TeknisiPengaduanController::class, 'index'])
             ->name('pengaduan.index');
+
+        // Fix for legacy notifications with numeric IDs
+        Route::get('/pengaduan/{id}', function ($id) {
+            $pengaduan = \App\Models\Pengaduan::find($id);
+            return $pengaduan 
+                ? redirect()->route('teknisi.pengaduan.show', $pengaduan) 
+                : abort(404);
+        })->where('id', '[0-9]+');
+
         Route::get('/pengaduan/{pengaduan}', [App\Http\Controllers\Teknisi\TeknisiPengaduanController::class, 'show'])
             ->name('pengaduan.show');
         Route::post('/pengaduan/{pengaduan}/update-status', [App\Http\Controllers\Teknisi\TeknisiPengaduanController::class, 'updateStatus'])
@@ -95,6 +119,15 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
     Route::middleware(['role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
         // Pengaduan Management
         Route::get('/pengaduan', [AdminPengaduanController::class, 'index'])->name('pengaduan.index');
+        
+        // Fix for legacy notifications with numeric IDs
+        Route::get('/pengaduan/{id}', function ($id) {
+            $pengaduan = \App\Models\Pengaduan::find($id);
+            return $pengaduan 
+                ? redirect()->route('admin.pengaduan.show', $pengaduan) 
+                : abort(404);
+        })->where('id', '[0-9]+');
+
         Route::get('/pengaduan/{pengaduan}', [AdminPengaduanController::class, 'show'])->name('pengaduan.show');
         Route::post('/pengaduan/{pengaduan}/status', [AdminPengaduanController::class, 'updateStatus'])->name('pengaduan.status');
         Route::post('/pengaduan/{pengaduan}/assign', [AdminPengaduanController::class, 'assign'])->name('pengaduan.assign');

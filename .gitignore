@@ -56,3 +56,5 @@ ehthumbs.db
 npm-debug.log
 yarn-error.log
 
+*.zip
+*.backup

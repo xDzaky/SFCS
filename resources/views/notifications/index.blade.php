@@ -2,6 +2,19 @@
 
 @section('title', 'Notifikasi')
 
+@push('styles')
+<style>
+    .list-group-item[style*="cursor: pointer"]:hover {
+        background-color: #f8f9fa !important;
+        transform: translateX(5px);
+        transition: all 0.2s ease;
+    }
+    .list-group-item.bg-light[style*="cursor: pointer"]:hover {
+        background-color: #e9ecef !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -92,39 +105,40 @@
     <div class="card-body p-0">
         <div class="list-group list-group-flush">
             @forelse($notifications as $notification)
-                <div class="list-group-item {{ !$notification->read_at ? 'bg-light' : '' }}">
+                @php
+                    // Tentukan link tujuan dari kolom link
+                    $targetLink = $notification->link;
+                @endphp
+                <div class="list-group-item {{ !$notification->read_at ? 'bg-light' : '' }} position-relative" style="cursor: {{ $targetLink ? 'pointer' : 'default' }};" data-notification-id="{{ $notification->id }}">
+                    @if($targetLink)
+                        <a href="{{ $targetLink }}" class="stretched-link" style="text-decoration: none; color: inherit;"></a>
+                    @endif
                     <div class="d-flex align-items-start">
                         <div class="me-3">
                             @php
                                 $iconClass = 'fa-bell';
                                 $iconBg = 'bg-primary';
                                 
-                                if(isset($notification->data['type'])) {
-                                    switch($notification->data['type']) {
-                                        case 'pengaduan_baru':
-                                            $iconClass = 'fa-plus-circle';
-                                            $iconBg = 'bg-success';
-                                            break;
-                                        case 'status_update':
-                                            $iconClass = 'fa-sync';
-                                            $iconBg = 'bg-info';
-                                            break;
-                                        case 'assignment':
-                                            $iconClass = 'fa-user-check';
-                                            $iconBg = 'bg-warning';
-                                            break;
-                                        case 'feedback':
-                                            $iconClass = 'fa-star';
-                                            $iconBg = 'bg-purple';
-                                            break;
-                                        case 'rejected':
-                                            $iconClass = 'fa-times-circle';
-                                            $iconBg = 'bg-danger';
-                                            break;
-                                        case 'completed':
-                                            $iconClass = 'fa-check-circle';
-                                            $iconBg = 'bg-success';
-                                            break;
+                                // Deteksi dari kolom jenis
+                                if($notification->jenis) {
+                                    if(str_contains($notification->jenis, 'created') || str_contains($notification->jenis, 'baru')) {
+                                        $iconClass = 'fa-plus-circle';
+                                        $iconBg = 'bg-success';
+                                    } elseif(str_contains($notification->jenis, 'status') || str_contains($notification->jenis, 'changed')) {
+                                        $iconClass = 'fa-sync';
+                                        $iconBg = 'bg-info';
+                                    } elseif(str_contains($notification->jenis, 'assign')) {
+                                        $iconClass = 'fa-user-check';
+                                        $iconBg = 'bg-warning';
+                                    } elseif(str_contains($notification->jenis, 'feedback')) {
+                                        $iconClass = 'fa-star';
+                                        $iconBg = 'bg-purple';
+                                    } elseif(str_contains($notification->jenis, 'reject') || str_contains($notification->jenis, 'overdue')) {
+                                        $iconClass = 'fa-times-circle';
+                                        $iconBg = 'bg-danger';
+                                    } elseif(str_contains($notification->jenis, 'selesai') || str_contains($notification->jenis, 'complete')) {
+                                        $iconClass = 'fa-check-circle';
+                                        $iconBg = 'bg-success';
                                     }
                                 }
                             @endphp
@@ -134,12 +148,12 @@
                         </div>
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
+                                <div class="flex-grow-1">
                                     <h6 class="mb-1 {{ !$notification->read_at ? 'fw-bold' : '' }}">
-                                        {{ $notification->data['title'] ?? 'Notifikasi' }}
+                                        {{ $notification->judul }}
                                     </h6>
                                     <p class="mb-1 text-muted">
-                                        {{ $notification->data['message'] ?? '' }}
+                                        {{ $notification->pesan }}
                                     </p>
                                     <small class="text-muted">
                                         <i class="fas fa-clock me-1"></i>
@@ -150,14 +164,14 @@
                                     @if(!$notification->read_at)
                                         <span class="badge bg-warning me-2">Baru</span>
                                     @endif
-                                    <div class="dropdown">
+                                    <div class="dropdown" style="position: relative; z-index: 2;">
                                         <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             @if(!$notification->read_at)
                                                 <li>
-                                                    <form action="{{ route('notifications.mark-read', $notification->id) }}" method="POST">
+                                                    <form action="{{ route('notifications.read', $notification->id) }}" method="POST">
                                                         @csrf
                                                         <button type="submit" class="dropdown-item">
                                                             <i class="fas fa-check me-2"></i> Tandai Dibaca
@@ -165,10 +179,10 @@
                                                     </form>
                                                 </li>
                                             @endif
-                                            @if(isset($notification->data['pengaduan_id']))
+                                            @if($notification->link)
                                                 <li>
-                                                    <a class="dropdown-item" href="{{ route('pengaduan.show', $notification->data['pengaduan_id']) }}">
-                                                        <i class="fas fa-eye me-2"></i> Lihat Pengaduan
+                                                    <a class="dropdown-item" href="{{ $notification->link }}">
+                                                        <i class="fas fa-eye me-2"></i> Lihat Detail
                                                     </a>
                                                 </li>
                                             @endif
@@ -204,4 +218,29 @@
     background-color: #6f42c1 !important;
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto mark as read when notification link is clicked
+    document.querySelectorAll('.stretched-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const notifItem = this.closest('.list-group-item');
+            const notifId = notifItem.dataset.notificationId;
+            
+            if (notifId) {
+                // Send mark as read request
+                fetch(`/notifications/${notifId}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                }).catch(err => console.error('Failed to mark notification as read:', err));
+            }
+        });
+    });
+});
+</script>
 @endpush
