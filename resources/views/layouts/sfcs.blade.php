@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SFCS">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
 
     <title>{{ config('app.name', 'SFCS') }} - @yield('title', 'Dashboard')</title>
 
@@ -20,10 +28,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"/>
 
     <!-- Custom CSS -->
+    @php
+        $primaryColor = \App\Models\Setting::getValue('theme_primary_color', '#4f46e5');
+        $secondaryColor = \App\Models\Setting::getValue('theme_secondary_color', '#6c757d');
+        $schoolLogo = \App\Models\Setting::getValue('school_logo');
+        $schoolName = \App\Models\Setting::getValue('school_name', 'SFCS');
+        $appName = \App\Models\Setting::getValue('app_name', 'SFCS');
+    @endphp
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
+            --primary-color: {{ $primaryColor }};
+            --primary-hover: {{ $primaryColor }}dd;
+            --secondary-color: {{ $secondaryColor }};
             --sidebar-width: 260px;
             --sidebar-collapsed: 70px;
             --header-height: 60px;
@@ -387,8 +403,12 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <i class="fas fa-school me-2"></i>
-            <span>SFCS</span>
+            @if($schoolLogo)
+                <img src="{{ Storage::url($schoolLogo) }}" alt="Logo" style="height: 36px; margin-right: 10px;">
+            @else
+                <i class="fas fa-school me-2"></i>
+            @endif
+            <span>{{ $appName }}</span>
         </div>
 
         <nav class="sidebar-nav">
@@ -677,6 +697,75 @@
                     .catch(err => console.error('Failed to check notifications:', err));
             }
         }
+    </script>
+
+    <!-- PWA Service Worker Registration & Install Prompt -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installBanner = document.createElement('div');
+        installBanner.id = 'pwa-install-banner';
+        installBanner.innerHTML = `
+            <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 9999; display: none; align-items: center; justify-content: space-between; gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-mobile-alt" style="font-size: 24px;"></i>
+                    <div>
+                        <div style="font-weight: 600;">Install SFCS</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Akses lebih cepat dari home screen</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="pwa-install-btn" style="background: white; color: #4f46e5; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">Install</button>
+                    <button id="pwa-dismiss-btn" style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; border-radius: 8px; cursor: pointer;">Nanti</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(installBanner);
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Check if user dismissed before
+            if (!localStorage.getItem('pwa-install-dismissed')) {
+                const banner = document.querySelector('#pwa-install-banner > div');
+                if (banner) banner.style.display = 'flex';
+            }
+        });
+
+        document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('PWA install outcome:', outcome);
+                deferredPrompt = null;
+            }
+            document.querySelector('#pwa-install-banner > div').style.display = 'none';
+        });
+
+        document.getElementById('pwa-dismiss-btn')?.addEventListener('click', () => {
+            document.querySelector('#pwa-install-banner > div').style.display = 'none';
+            localStorage.setItem('pwa-install-dismissed', 'true');
+        });
+
+        // Hide banner if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed');
+            document.querySelector('#pwa-install-banner > div').style.display = 'none';
+        });
     </script>
 
     @stack('scripts')

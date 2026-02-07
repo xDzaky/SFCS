@@ -411,7 +411,7 @@ class PengaduanController extends Controller
                 ->first();
 
             if (!$pengaduan) {
-                return back()->with('error', 'Pengaduan tidak ditemukan');
+                return view('pengaduan.track', ['pengaduan' => null, 'error_msg' => 'Pengaduan dengan kode tersebut tidak ditemukan.']);
             }
         }
 

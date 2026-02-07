@@ -24,6 +24,9 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Public Track Pengaduan (tanpa login)
+Route::get('/track', [PengaduanController::class, 'track'])->name('pengaduan.track');
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
@@ -62,9 +65,6 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         })->where('id', '[0-9]+');
         
         Route::resource('pengaduan', PengaduanController::class);
-        
-        // Track pengaduan
-        Route::get('/track', [PengaduanController::class, 'track'])->name('pengaduan.track');
         
         // Delete photo
         Route::delete('/pengaduan/photo/{photo}', [PengaduanController::class, 'deletePhoto'])

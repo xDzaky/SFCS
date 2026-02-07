@@ -102,6 +102,11 @@
                         </button>
                     </form>
                 @endif
+                
+                {{-- Share Link Button --}}
+                <button type="button" class="btn btn-outline-primary rounded-pill px-4 flex-fill flex-md-grow-0 d-flex align-items-center justify-content-center" onclick="shareTrackingLink()">
+                    <i class="fas fa-share-alt me-2"></i>Bagikan Link
+                </button>
             </div>
         </div>
     </div>
@@ -702,4 +707,28 @@
         padding: 0.75rem 1rem;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    function shareTrackingLink() {
+        const trackingUrl = "{{ route('pengaduan.track', ['kode' => $pengaduan->kode_pengaduan]) }}";
+        const shareData = {
+            title: 'Lacak Status Pengaduan SFCS',
+            text: 'Cek status pengaduan "{{ $pengaduan->judul }}" di sini:',
+            url: trackingUrl
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => console.log('Link shared successfully'))
+                .catch((error) => console.log('Error sharing:', error));
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(trackingUrl).then(() => {
+                alert('Link tracking berhasil disalin ke clipboard!');
+            });
+        }
+    }
+</script>
 @endpush
