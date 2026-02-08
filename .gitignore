@@ -47,6 +47,17 @@ storage/app/public/*
 .Trashes
 ehthumbs.db
 
+# Test & Development Files (removed for commercial sale)
+/tests
+/screenshots
+phpunit.xml
+CONTRIBUTING.md
+SECURITY.md
+
+# Documentation for internal use only
+error-*.md
+*-debug.md
+
 # Test Coverage
 /coverage
 .phpunit.cache
