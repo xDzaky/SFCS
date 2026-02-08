@@ -174,7 +174,8 @@ class PengaduanController extends Controller
     public function show(Pengaduan $pengaduan)
     {
         // Check if user owns this pengaduan or is admin
-        if ($pengaduan->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        // Use == instead of !== to handle potential type mismatch between string and int
+        if ($pengaduan->user_id != Auth::id() && !Auth::user()->isAdmin()) {
             abort(403);
         }
 
@@ -189,7 +190,8 @@ class PengaduanController extends Controller
     public function edit(Pengaduan $pengaduan)
     {
         // Only allow edit if status is pending and user owns it
-        if ($pengaduan->user_id !== Auth::id() || $pengaduan->status !== 'pending') {
+        // Use != instead of !== to handle potential type mismatch
+        if ($pengaduan->user_id != Auth::id() || $pengaduan->status !== 'pending') {
             abort(403);
         }
 
@@ -205,7 +207,7 @@ class PengaduanController extends Controller
     public function update(Request $request, Pengaduan $pengaduan)
     {
         // Only allow update if status is pending and user owns it
-        if ($pengaduan->user_id !== Auth::id() || $pengaduan->status !== 'pending') {
+        if ($pengaduan->user_id != Auth::id() || $pengaduan->status !== 'pending') {
             abort(403);
         }
 
@@ -280,7 +282,7 @@ class PengaduanController extends Controller
     public function destroy(Pengaduan $pengaduan)
     {
         // Only allow delete if status is pending and user owns it
-        if ($pengaduan->user_id !== Auth::id() || $pengaduan->status !== 'pending') {
+        if ($pengaduan->user_id != Auth::id() || $pengaduan->status !== 'pending') {
             abort(403);
         }
 
@@ -323,7 +325,7 @@ class PengaduanController extends Controller
         $pengaduan = $photo->pengaduan;
 
         // Check permission
-        if ($pengaduan->user_id !== Auth::id() || $pengaduan->status !== 'pending') {
+        if ($pengaduan->user_id != Auth::id() || $pengaduan->status !== 'pending') {
             abort(403);
         }
 
@@ -340,7 +342,7 @@ class PengaduanController extends Controller
     public function submitFeedback(Request $request, Pengaduan $pengaduan)
     {
         // Check if user owns this and status is selesai
-        if ($pengaduan->user_id !== Auth::id() || $pengaduan->status !== 'selesai') {
+        if ($pengaduan->user_id != Auth::id() || $pengaduan->status !== 'selesai') {
             abort(403);
         }
 
