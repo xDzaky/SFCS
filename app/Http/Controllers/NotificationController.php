@@ -41,7 +41,7 @@ class NotificationController extends Controller
     public function markAsRead(Notification $notification)
     {
         // Check ownership
-        if ($notification->user_id !== Auth::id()) {
+        if ($notification->user_id != Auth::id()) {
             abort(403);
         }
 

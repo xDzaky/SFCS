@@ -60,7 +60,7 @@ class TeknisiPengaduanController extends Controller
         $user = Auth::user();
 
         // Check if assigned to this teknisi
-        if ($pengaduan->teknisi_id !== $user->id && !$user->isAdmin()) {
+        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin()) {
             abort(403, 'Pengaduan ini tidak ditugaskan kepada Anda');
         }
 
@@ -90,7 +90,7 @@ class TeknisiPengaduanController extends Controller
         $user = Auth::user();
 
         // Check if assigned to this teknisi
-        if ($pengaduan->teknisi_id !== $user->id && !$user->isAdmin()) {
+        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin()) {
             abort(403);
         }
 
@@ -135,7 +135,7 @@ class TeknisiPengaduanController extends Controller
         $user = Auth::user();
 
         // Check if assigned to this teknisi
-        if ($pengaduan->teknisi_id !== $user->id && !$user->isAdmin()) {
+        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin()) {
             abort(403);
         }
 
