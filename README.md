@@ -36,12 +36,12 @@
 
 | Dokumen | Deskripsi |
 |---------|-----------|
+| **[DEVELOPER-HANDOFF.md](DEVELOPER-HANDOFF.md)** | 🧠 Catatan handoff developer, setup Windows, `.env`, command, struktur project, dan mapping fitur |
 | **[QUICK-START.md](QUICK-START.md)** | 🚀 Panduan cepat untuk memulai (BACA INI DULU!) |
 | **[INSTALLATION.md](INSTALLATION.md)** | 📦 Panduan instalasi lengkap (cPanel & VPS) |
-| **[sfcs-app/README.md](sfcs-app/README.md)** | 📚 Dokumentasi sistem & fitur detail |
+| **[README.md](README.md)** | 📚 Dokumentasi sistem & fitur detail |
 | **[LICENSE.md](LICENSE.md)** | ⚖️ Informasi lisensi & harga |
-| **[CHANGELOG.md](sfcs-app/CHANGELOG.md)** | 📝 Riwayat update & perubahan |
-| **[tech-spec-document.md](tech-spec-document.md)** | 🔧 Spesifikasi teknis sistem |
+| **[CHANGELOG.md](CHANGELOG.md)** | 📝 Riwayat update & perubahan |
 
 ---
 
@@ -135,17 +135,20 @@
    ```
 
 3. **Configure Environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env dengan database & email settings
-   php artisan key:generate
-   ```
+```bash
+cp .env.example .env
+# Edit .env dengan database & email settings
+php artisan key:generate
+```
+
+Gunakan user database aplikasi seperti `sfcs_user`, jangan `root`. Untuk setup lokal awal, driver `file/sync` pada session, cache, dan queue lebih aman.
 
 4. **Setup Database**
-   ```bash
-   php artisan migrate --force
-   php artisan db:seed --force
-   ```
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+php artisan app:doctor
+```
 
 5. **Set Permissions**
    ```bash

@@ -41,7 +41,7 @@ Ikuti step-by-step di INSTALLATION.md:
 5. Login dengan akun default
 
 ### 4️⃣ Customize untuk Sekolah Anda
-1. **Ganti password default** (PENTING!)
+1. **Login dengan akun default** lalu ganti password manual bila diperlukan
 2. Update nama sekolah di settings
 3. Tambah data gedung & ruangan
 4. Tambah kategori pengaduan
@@ -52,28 +52,26 @@ Ikuti step-by-step di INSTALLATION.md:
 ## 📂 Struktur File
 
 ```
-SFCS/
-├── 📄 INSTALLATION.md          ← Panduan instalasi lengkap (BACA INI DULU!)
+sfcs-app/
+├── 📄 INSTALLATION.md          ← Panduan instalasi lengkap
+├── 📄 DEVELOPER-HANDOFF.md     ← Catatan teknis developer / maintainer
 ├── 📄 README.md                ← Dokumentasi sistem & fitur
 ├── 📄 LICENSE.md               ← Informasi lisensi
 ├── 📄 CHANGELOG.md             ← Riwayat update
-├── 📄 tech-spec-document.md    ← Spesifikasi teknis
-├── 📄 database-setup.sql       ← Backup database schema
-└── sfcs-app/                   ← Source code aplikasi
-    ├── app/                    ← Controller, Model, Middleware
-    ├── config/                 ← File konfigurasi
-    ├── database/               ← Migration & Seeder
-    ├── public/                 ← Public folder (document root)
-    ├── resources/              ← Views (Blade templates)
-    ├── routes/                 ← Route definitions
-    └── storage/                ← File upload & logs
+├── app/                        ← Controller, Model, Middleware, Services
+├── config/                     ← File konfigurasi
+├── database/                   ← Migration & Seeder
+├── public/                     ← Public folder (document root)
+├── resources/                  ← Views (Blade templates)
+├── routes/                     ← Route definitions
+└── storage/                    ← File upload & logs
 ```
 
 ---
 
 ## 👥 Role & Akses Default
 
-Setelah instalasi, login dengan akun berikut (kemudian **GANTI PASSWORD**):
+Setelah instalasi, login dengan akun berikut:
 
 | Role | Email | Password | Fungsi Utama |
 |------|-------|----------|--------------|
@@ -84,7 +82,7 @@ Setelah instalasi, login dengan akun berikut (kemudian **GANTI PASSWORD**):
 | 👩‍🏫 Guru | sri.wahyuni@sfcs.sch.id | password | Buat laporan pengaduan |
 | 👨‍🎓 Siswa | andi@sfcs.sch.id | password | Buat laporan pengaduan |
 
-⚠️ **SEGERA GANTI SEMUA PASSWORD SETELAH LOGIN PERTAMA!**
+Password default saat ini boleh langsung dipakai. Jika ingin mengganti password, lakukan manual lewat menu profil.
 
 ---
 

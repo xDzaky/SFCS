@@ -118,6 +118,10 @@
    MAIL_FROM_NAME="SFCS Sekolah"
    ```
 
+   Catatan:
+   - Gunakan user database khusus aplikasi, jangan memakai `root`.
+   - Untuk local development, `SESSION_DRIVER=file`, `CACHE_STORE=file`, dan `QUEUE_CONNECTION=sync` lebih aman saat setup awal.
+
 3. Generate application key:
    ```bash
    php artisan key:generate
@@ -132,6 +136,11 @@
 2. Seed data awal (kategori, gedung, user admin):
    ```bash
    php artisan db:seed --force
+   ```
+
+3. Jalankan pemeriksaan kesiapan aplikasi:
+   ```bash
+   php artisan app:doctor
    ```
 
 ### Step 7: Set Permissions
@@ -164,14 +173,54 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-### Step 10: Test Akses
+### Step 10: Jalankan Queue Worker & Scheduler (WAJIB)
+
+Notifikasi sekarang diproses async via queue.
+
+```bash
+# Worker queue (contoh systemd/supervisor command)
+php artisan queue:work --queue=default --tries=3 --backoff=30
+
+# Scheduler (jalankan tiap menit via cron)
+* * * * * cd /path/to/sfcs-app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Task terjadwal default:
+- `tickets:check-sla` tiap 15 menit
+- `backup:run` harian jam 01:30
+
+### Step 10b: Import Master Data Sekolah (Opsional tapi Direkomendasikan)
+
+Untuk sinkron data real sekolah (kategori, gedung, ruangan, jurusan), jalankan:
+
+```bash
+php artisan master-data:import-school-layout /path/file-master.zip --mode=replace_safe --actor=1
+```
+
+Format file:
+- `ZIP` berisi `kategori.csv`, `gedung.csv`, `ruangan.csv`, `mapping_jurusan_ruang.csv`
+- atau `XLSX` dengan nama sheet yang sama
+
+### Step 11: Test Akses
 1. Buka browser dan akses domain: `https://sfcs.namasekolah.sch.id`
 2. Login dengan akun default:
    - **Super Admin**: superadmin@sfcs.sch.id / password
    - **Admin**: admin@sfcs.sch.id / password
    - **Kepala Sekolah**: kepsek@sfcs.sch.id / password
+   - **Teknisi**: teknisi1@sfcs.sch.id / password
+   - **Guru**: sri.wahyuni@sfcs.sch.id / password
+   - **Siswa**: andi@sfcs.sch.id / password
 
-3. ⚠️ **PENTING**: Segera ganti password default!
+3. Password default saat ini boleh langsung dipakai login.
+   Jika ingin mengganti password, lakukan manual lewat menu `Profil`.
+
+### Step 12: Backup & Restore Drill
+1. Jalankan backup manual:
+   ```bash
+   php artisan backup:run
+   ```
+2. Pastikan file backup muncul di `storage/app/backups`.
+3. Lakukan uji restore di server staging sebelum go-live.
 
 ---
 
@@ -213,7 +262,7 @@ EXIT;
 ### Step 3: Clone & Setup Project
 ```bash
 cd /var/www
-sudo git clone https://github.com/yourusername/SFCS.git
+sudo git clone https://github.com/xDzaky/SFCS.git
 cd SFCS
 
 # Install dependencies
@@ -334,7 +383,10 @@ Setelah seeding, sistem akan membuat akun berikut:
 | Guru | sri.wahyuni@sfcs.sch.id | password | Buat pengaduan |
 | Siswa | andi@sfcs.sch.id | password | Buat pengaduan |
 
-⚠️ **SANGAT PENTING**: Segera ganti semua password default setelah instalasi!
+Catatan:
+- password default saat ini tidak lagi dipaksa diganti saat login pertama
+- user tetap bisa mengganti password manual dari menu profil
+- untuk daftar akun seed yang lebih lengkap, lihat `DEVELOPER-HANDOFF.md`
 
 ---
 
@@ -417,7 +469,7 @@ chmod -R 775 storage bootstrap/cache
 Untuk bantuan teknis atau pertanyaan:
 - Email: support@xdzaky.my.id
 - Documentation: [README.md](README.md)
-- Technical Spec: [tech-spec-document.md](tech-spec-document.md)
+- Developer Handoff: [DEVELOPER-HANDOFF.md](DEVELOPER-HANDOFF.md)
 
 ---
 
