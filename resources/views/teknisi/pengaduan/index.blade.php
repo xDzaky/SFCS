@@ -139,7 +139,10 @@
                 </h5>
                 <p class="text-muted small mb-3">
                     <i class="fas fa-map-marker-alt me-1 text-danger"></i> 
-                    {{ $pengaduan->ruangan->gedung->nama ?? '-' }} - {{ $pengaduan->ruangan->nama ?? '-' }}
+                    {{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}
+                    @if($pengaduan->ruangan)
+                        - {{ $pengaduan->ruangan->nama }}
+                    @endif
                 </p>
                 
                 <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light position-relative" style="z-index: 2;">
@@ -209,8 +212,14 @@
                                 <div class="text-muted small"><i class="fas fa-tag me-1 text-light-emphasis"></i>{{ $pengaduan->subKategori->nama ?? '-' }}</div>
                             </td>
                              <td>
-                                <div class="text-dark fw-medium">{{ $pengaduan->ruangan->gedung->nama ?? '-' }}</div>
-                                <div class="text-muted small">{{ $pengaduan->ruangan->nama ?? '-' }}</div>
+                                <div class="text-dark fw-medium">{{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}</div>
+                                <div class="text-muted small">
+                                    @if($pengaduan->ruangan)
+                                        {{ $pengaduan->ruangan->nama }}
+                                    @else
+                                        Lantai {{ $pengaduan->lantai ?? '-' }}
+                                    @endif
+                                </div>
                             </td>
                              <td>
                                 <span class="badge {{ $prioritasBadges[$pengaduan->prioritas] ?? 'bg-secondary' }} rounded-pill px-3 py-2 border border-light-subtle">

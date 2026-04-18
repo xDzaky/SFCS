@@ -28,11 +28,28 @@ class Pengaduan extends Model
         'gedung_id',
         'lantai',
         'ruangan_id',
+        'school_map_id',
+        'school_map_layer_id',
+        'map_point_x',
+        'map_point_y',
+        'map_zoom',
+        'map_source',
         'lokasi_detail',
         'judul',
         'deskripsi',
         'tanggal_kejadian',
         'prioritas',
+        'requested_prioritas',
+        'priority_score',
+        'prioritas_adjusted_by',
+        'prioritas_adjust_reason',
+        'prioritas_adjusted_at',
+        'needs_priority_review',
+        'impact_safety_risk',
+        'impact_learning_blocked',
+        'impact_exam_related',
+        'impact_area_scope',
+        'impact_utilities',
         'status',
         'teknisi_id',
         'catatan_admin',
@@ -40,8 +57,33 @@ class Pengaduan extends Model
         'alasan_tolak',
         'verified_at',
         'assigned_at',
+        'planned_start_at',
+        'planned_end_at',
+        'reschedule_count',
+        'last_reschedule_reason',
+        'last_rescheduled_by',
+        'last_rescheduled_at',
+        'is_overload_delayed',
+        'delay_minutes',
+        'triage_score',
+        'queue_rank',
+        'triage_bucket',
+        'load_snapshot',
         'started_at',
         'completed_at',
+        'duplicate_of_id',
+        'duplicate_marked_by',
+        'duplicate_marked_at',
+        'duplicate_note',
+        'auto_closed_by_duplicate',
+        'auto_closed_from_master_id',
+        'auto_closed_at',
+        'sla_due_at',
+        'first_response_at',
+        'reopen_count',
+        'reopen_requested_at',
+        'reopen_requested_by',
+        'reopen_reason',
         'rating',
         'feedback',
     ];
@@ -49,9 +91,34 @@ class Pengaduan extends Model
     protected $casts = [
         'verified_at' => 'datetime',
         'assigned_at' => 'datetime',
+        'planned_start_at' => 'datetime',
+        'planned_end_at' => 'datetime',
+        'reschedule_count' => 'integer',
+        'last_rescheduled_at' => 'datetime',
+        'is_overload_delayed' => 'boolean',
+        'delay_minutes' => 'integer',
+        'triage_score' => 'integer',
+        'queue_rank' => 'integer',
+        'load_snapshot' => 'array',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'duplicate_marked_at' => 'datetime',
+        'auto_closed_by_duplicate' => 'boolean',
+        'auto_closed_at' => 'datetime',
+        'sla_due_at' => 'datetime',
+        'first_response_at' => 'datetime',
+        'reopen_requested_at' => 'datetime',
         'tanggal_kejadian' => 'date',
+        'prioritas_adjusted_at' => 'datetime',
+        'needs_priority_review' => 'boolean',
+        'impact_safety_risk' => 'boolean',
+        'impact_learning_blocked' => 'boolean',
+        'impact_exam_related' => 'boolean',
+        'school_map_id' => 'integer',
+        'school_map_layer_id' => 'integer',
+        'map_point_x' => 'float',
+        'map_point_y' => 'float',
+        'map_zoom' => 'integer',
     ];
 
     // Status constants
@@ -151,6 +218,16 @@ class Pengaduan extends Model
         return $this->belongsTo(Ruangan::class);
     }
 
+    public function schoolMap(): BelongsTo
+    {
+        return $this->belongsTo(SchoolMap::class);
+    }
+
+    public function schoolMapLayer(): BelongsTo
+    {
+        return $this->belongsTo(SchoolMapLayer::class);
+    }
+
     /**
      * Get assigned teknisi
      */
@@ -165,6 +242,16 @@ class Pengaduan extends Model
     public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teknisi_id');
+    }
+
+    public function priorityAdjustedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'prioritas_adjusted_by');
+    }
+
+    public function lastRescheduledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'last_rescheduled_by');
     }
 
     /**
@@ -224,6 +311,51 @@ class Pengaduan extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(HistoryPengaduan::class)->orderBy('created_at', 'desc');
+    }
+
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(PengaduanSchedule::class)->orderByDesc('created_at');
+    }
+
+    /**
+     * Get the master pengaduan if this ticket is marked as duplicate.
+     */
+    public function duplicateOf(): BelongsTo
+    {
+        return $this->belongsTo(Pengaduan::class, 'duplicate_of_id');
+    }
+
+    /**
+     * Get tickets marked as duplicate of this ticket.
+     */
+    public function duplicates(): HasMany
+    {
+        return $this->hasMany(Pengaduan::class, 'duplicate_of_id');
+    }
+
+    /**
+     * Get admin user who marked this ticket as duplicate.
+     */
+    public function duplicateMarker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'duplicate_marked_by');
+    }
+
+    /**
+     * Get master ticket that auto-closed this duplicate.
+     */
+    public function autoClosedFromMaster(): BelongsTo
+    {
+        return $this->belongsTo(Pengaduan::class, 'auto_closed_from_master_id');
+    }
+
+    /**
+     * Get user who requested ticket reopen.
+     */
+    public function reopenRequestedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reopen_requested_by');
     }
 
     // ==================== ACCESSORS ====================
@@ -287,11 +419,56 @@ class Pengaduan extends Model
     }
 
     /**
+     * Check if this ticket has been manually marked as duplicate.
+     */
+    public function getIsMarkedDuplicateAttribute(): bool
+    {
+        return !is_null($this->duplicate_of_id);
+    }
+
+    /**
+     * Check if this ticket is still active for duplicate detection.
+     */
+    public function getIsActiveTicketAttribute(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_PENDING,
+            self::STATUS_DIVERIFIKASI,
+            self::STATUS_DIPROSES,
+        ], true);
+    }
+
+    /**
+     * Check if this ticket was auto-closed because master duplicate was completed.
+     */
+    public function getIsAutoClosedDuplicateAttribute(): bool
+    {
+        return $this->auto_closed_by_duplicate === true;
+    }
+
+    /**
+     * Check if this ticket has pending reopen request.
+     */
+    public function getHasReopenRequestAttribute(): bool
+    {
+        return $this->reopen_requested_at !== null;
+    }
+
+    /**
      * Get full location
      */
     public function getFullLocationAttribute(): string
     {
-        return $this->gedung->nama . ' - Lantai ' . $this->lantai . ' - ' . $this->ruangan->nama;
+        $parts = [
+            $this->gedung->nama ?? $this->ruangan->gedung->nama ?? '-',
+            'Lantai ' . ($this->lantai ?? '-'),
+        ];
+
+        if ($this->ruangan?->nama) {
+            $parts[] = $this->ruangan->nama;
+        }
+
+        return implode(' - ', $parts);
     }
 
     /**
@@ -319,7 +496,9 @@ class Pengaduan extends Model
      */
     public function canGiveFeedback(): bool
     {
-        return $this->status === self::STATUS_SELESAI && !$this->feedback;
+        return $this->status === self::STATUS_SELESAI
+            && !$this->feedback
+            && !$this->is_auto_closed_duplicate;
     }
 
     /**

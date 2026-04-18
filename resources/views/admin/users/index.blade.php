@@ -3,6 +3,10 @@
 @section('title', 'Kelola Pengguna')
 
 @section('content')
+@php
+    $promotePreview = session('promote_preview');
+    $promoteApplyResult = session('promote_apply_result');
+@endphp
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3">
     <div>
         <h1 class="h3 fw-bold mb-1">Kelola Pengguna</h1>
@@ -14,9 +18,14 @@
         </nav>
     </div>
     <div class="d-flex gap-2 w-100 w-lg-auto">
-        <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-fill flex-lg-grow-0" data-bs-toggle="modal" data-bs-target="#importModal">
-            <i class="fas fa-file-import me-lg-2"></i> <span class="d-none d-lg-inline">Import</span>
-        </button>
+        @if(auth()->user()->role === 'superadmin')
+            <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center flex-fill flex-lg-grow-0" data-bs-toggle="modal" data-bs-target="#promoteClassModal">
+                <i class="fas fa-arrow-up-right-dots me-lg-2"></i> <span class="d-none d-lg-inline">Promote Kelas</span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center flex-fill flex-lg-grow-0" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import me-lg-2"></i> <span class="d-none d-lg-inline">Import</span>
+            </button>
+        @endif
         <a href="{{ route('admin.users.export') }}" class="btn btn-outline-success d-flex align-items-center justify-content-center flex-fill flex-lg-grow-0">
             <i class="fas fa-file-export me-lg-2"></i> <span class="d-none d-lg-inline">Export</span>
         </a>
@@ -72,7 +81,7 @@
                         <button type="submit" class="btn btn-primary rounded-pill flex-grow-1 fw-bold shadow-sm">
                             <i class="fas fa-filter me-1"></i> Filter
                         </button>
-                        <a href="{{ route('admin.users.index') }}" class="btn btn-light rounded-pill border data-bs-toggle="tooltip" title="Reset">
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-light rounded-pill border" data-bs-toggle="tooltip" title="Reset">
                             <i class="fas fa-redo"></i>
                         </a>
                     </div>
@@ -217,7 +226,7 @@
                                     </div>
                                     <div>
                                         <div class="fw-bold text-dark">{{ $user->name }}</div>
-                                        <div class="text-muted small">NIS/NIP: {{ $user->nis_nip ?? '-' }}</div>
+                                        <div class="text-muted small">NIS/NIP: {{ $user->nis ?? ($user->nip ?? '-') }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -298,41 +307,186 @@
     {{ $users->links() }}
 </div>
 
-<!-- Import Modal -->
-<div class="modal fade" id="importModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <form action="{{ route('admin.users.import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
+@if($promoteApplyResult)
+    <div class="card border-0 shadow-sm rounded-4 mt-4">
+        <div class="card-header bg-white border-bottom-0 py-3">
+            <h6 class="mb-0 fw-bold">Hasil Promote Kelas Terakhir</h6>
+        </div>
+        <div class="card-body">
+            @php
+                $applied = $promoteApplyResult['applied'] ?? [];
+            @endphp
+            <div class="row g-3">
+                <div class="col-md-3"><div class="border rounded-3 p-3"><small class="text-muted d-block">Applied</small><span class="fw-bold">{{ $applied['applied_total'] ?? 0 }}</span></div></div>
+                <div class="col-md-3"><div class="border rounded-3 p-3"><small class="text-muted d-block">Updated Kelas</small><span class="fw-bold">{{ $applied['updated_class'] ?? 0 }}</span></div></div>
+                <div class="col-md-3"><div class="border rounded-3 p-3"><small class="text-muted d-block">XII Dinonaktifkan</small><span class="fw-bold">{{ $applied['deactivated'] ?? 0 }}</span></div></div>
+                <div class="col-md-3"><div class="border rounded-3 p-3"><small class="text-muted d-block">Skipped</small><span class="fw-bold">{{ $applied['skipped'] ?? 0 }}</span></div></div>
+            </div>
+        </div>
+    </div>
+@endif
+
+@if(auth()->user()->role === 'superadmin')
+    <!-- Promote Class Modal -->
+    <div class="modal fade" id="promoteClassModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold">Import Pengguna</h5>
+                    <h5 class="modal-title fw-bold">Promote Kelas Otomatis</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-4 text-center">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <i class="fas fa-file-csv fa-3x text-success"></i>
+                    <form action="{{ route('admin.users.promote.preview') }}" method="POST" class="mb-4">
+                        @csrf
+                        <label class="form-label fw-bold small text-uppercase text-muted">Angkatan Target</label>
+                        <div class="d-flex flex-column flex-md-row gap-2">
+                            <select name="target_grade" class="form-select">
+                                @php
+                                    $selectedTarget = old('target_grade', $promotePreview['options']['target_grade'] ?? 'all');
+                                @endphp
+                                <option value="all" {{ $selectedTarget === 'all' ? 'selected' : '' }}>Semua (X, XI, XII)</option>
+                                <option value="x" {{ $selectedTarget === 'X' || $selectedTarget === 'x' ? 'selected' : '' }}>Hanya X</option>
+                                <option value="xi" {{ $selectedTarget === 'XI' || $selectedTarget === 'xi' ? 'selected' : '' }}>Hanya XI</option>
+                                <option value="xii" {{ $selectedTarget === 'XII' || $selectedTarget === 'xii' ? 'selected' : '' }}>Hanya XII</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-search me-1"></i> Preview
+                            </button>
                         </div>
-                        <p class="text-muted small mb-0">Upload file CSV untuk menambahkan pengguna secara massal.</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase text-muted">File CSV</label>
-                        <input type="file" name="file" class="form-control" accept=".csv" required>
-                    </div>
-                    <div class="alert alert-light border rounded-3 small">
-                        <div class="fw-bold mb-1"><i class="fas fa-info-circle me-1 text-primary"></i> Format CSV yang didukung:</div>
-                        <code class="d-block bg-white p-2 border rounded text-muted">name, email, password, role, nis_nip, kelas</code>
-                        <div class="mt-2 text-muted fst-italic">Contoh: John Doe, john@email.com, 123456, siswa, 101, X IPA 1</div>
-                    </div>
+                        <div class="form-text">Rule: X->XI, XI->XII, XII dinonaktifkan. Hanya untuk siswa aktif.</div>
+                    </form>
+
+                    @if($promotePreview)
+                        @php
+                            $summary = $promotePreview['summary'] ?? [];
+                            $skippedSample = $promotePreview['skipped_sample'] ?? [];
+                            $skippedRemaining = $promotePreview['skipped_remaining'] ?? 0;
+                        @endphp
+                        <div class="alert alert-info small">
+                            Preview token aktif {{ $promotePreview['ttl_minutes'] ?? 15 }} menit.
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4"><div class="border rounded-3 p-3"><small class="text-muted d-block">Total Siswa Aktif</small><span class="fw-bold">{{ $summary['total_active_students'] ?? 0 }}</span></div></div>
+                            <div class="col-md-4"><div class="border rounded-3 p-3"><small class="text-muted d-block">Targeted</small><span class="fw-bold">{{ $summary['targeted_students'] ?? 0 }}</span></div></div>
+                            <div class="col-md-4"><div class="border rounded-3 p-3"><small class="text-muted d-block">Skipped</small><span class="fw-bold">{{ $summary['skipped'] ?? 0 }}</span></div></div>
+                            <div class="col-md-4"><div class="border rounded-3 p-3"><small class="text-muted d-block">X -> XI</small><span class="fw-bold">{{ $summary['x_to_xi'] ?? 0 }}</span></div></div>
+                            <div class="col-md-4"><div class="border rounded-3 p-3"><small class="text-muted d-block">XI -> XII</small><span class="fw-bold">{{ $summary['xi_to_xii'] ?? 0 }}</span></div></div>
+                            <div class="col-md-4"><div class="border rounded-3 p-3"><small class="text-muted d-block">XII -> Nonaktif</small><span class="fw-bold">{{ $summary['xii_to_nonactive'] ?? 0 }}</span></div></div>
+                        </div>
+
+                        @if(!empty($skippedSample))
+                            <div class="border rounded-3 p-3">
+                                <div class="fw-bold mb-2">Sample Skipped</div>
+                                <div class="small text-muted mb-2">Maksimal 50 baris ditampilkan.</div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama</th>
+                                                <th>NIS</th>
+                                                <th>Kelas</th>
+                                                <th>Alasan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($skippedSample as $skip)
+                                                <tr>
+                                                    <td>{{ $skip['name'] ?? '-' }}</td>
+                                                    <td>{{ $skip['nis'] ?? '-' }}</td>
+                                                    <td>{{ $skip['kelas'] ?? '-' }}</td>
+                                                    <td>{{ $skip['reason'] ?? '-' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @if($skippedRemaining > 0)
+                                    <div class="small text-muted mt-2">Dan {{ $skippedRemaining }} data skipped lainnya.</div>
+                                @endif
+                            </div>
+                        @endif
+                    @endif
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">
-                        <i class="fas fa-upload me-1"></i> Import Data
-                    </button>
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                    @if($promotePreview && !empty($promotePreview['preview_token']))
+                        <form action="{{ route('admin.users.promote.apply') }}" method="POST" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="preview_token" value="{{ $promotePreview['preview_token'] }}">
+                            <button type="submit" class="btn btn-success rounded-pill px-4">
+                                <i class="fas fa-check me-1"></i> Terapkan Promote
+                            </button>
+                        </form>
+                    @endif
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <form action="{{ route('admin.users.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Import Pengguna</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-4 text-center">
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-file-csv fa-3x text-success"></i>
+                            </div>
+                            <p class="text-muted small mb-0">Upload file CSV untuk menambahkan pengguna secara massal.</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">File CSV</label>
+                            <input type="file" name="file" class="form-control" accept=".csv" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Mode Import</label>
+                            <select name="mode" class="form-select">
+                                <option value="replace_siswa">Replace Siswa (default)</option>
+                                <option value="upsert_only">Upsert Only</option>
+                            </select>
+                            <div class="form-text">Replace: siswa yang tidak ada di file akan dinonaktifkan.</div>
+                        </div>
+                        <div class="alert alert-light border rounded-3 small">
+                            <div class="fw-bold mb-1"><i class="fas fa-info-circle me-1 text-primary"></i> Format CSV yang didukung:</div>
+                            <code class="d-block bg-white p-2 border rounded text-muted">nama,email,nis,kelas,no_hp,role,password</code>
+                            <div class="mt-2 text-muted fst-italic">Role boleh kosong atau siswa. Email dan password boleh kosong.</div>
+                            <a href="{{ route('admin.users.import.template') }}" class="btn btn-link btn-sm px-0 mt-1">Download Template CSV</a>
+                        </div>
+                        @if(session('import_errors'))
+                            <div class="alert alert-warning small">
+                                <div class="fw-bold mb-1">Detail error import:</div>
+                                @foreach(session('import_errors') as $importError)
+                                    <div>- {{ $importError }}</div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-upload me-1"></i> Import Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
+
+@if(auth()->user()->role === 'superadmin' && ($promotePreview || $errors->has('target_grade') || $errors->has('preview_token')))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = document.getElementById('promoteClassModal');
+            if (modal) {
+                new bootstrap.Modal(modal).show();
+            }
+        });
+    </script>
+@endif
 @endsection

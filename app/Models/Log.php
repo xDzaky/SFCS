@@ -38,6 +38,10 @@ class Log extends Model
     const ACTION_PHOTO_UPLOADED = 'photo_uploaded';
     const ACTION_FEEDBACK_GIVEN = 'feedback_given';
     const ACTION_REOPENED = 'reopened';
+    const ACTION_DUPLICATE_AUTO_CLOSED = 'duplicate_auto_closed';
+    const ACTION_MASTER_DATA_IMPORT = 'master_data_import';
+    const ACTION_STUDENT_PROMOTE_PREVIEW = 'student_promote_preview';
+    const ACTION_STUDENT_PROMOTE_APPLY = 'student_promote_apply';
 
     /**
      * Get pengaduan
@@ -67,6 +71,10 @@ class Log extends Model
             self::ACTION_PHOTO_UPLOADED => 'Foto diupload',
             self::ACTION_FEEDBACK_GIVEN => 'Feedback diberikan',
             self::ACTION_REOPENED => 'Pengaduan dibuka kembali',
+            self::ACTION_DUPLICATE_AUTO_CLOSED => 'Duplikat ditutup otomatis',
+            self::ACTION_MASTER_DATA_IMPORT => 'Import master data sekolah',
+            self::ACTION_STUDENT_PROMOTE_PREVIEW => 'Preview promote kelas siswa',
+            self::ACTION_STUDENT_PROMOTE_APPLY => 'Promote kelas siswa diterapkan',
             default => ucfirst(str_replace('_', ' ', $this->action)),
         };
     }
@@ -83,6 +91,10 @@ class Log extends Model
             self::ACTION_PHOTO_UPLOADED => 'fa-camera',
             self::ACTION_FEEDBACK_GIVEN => 'fa-star',
             self::ACTION_REOPENED => 'fa-redo',
+            self::ACTION_DUPLICATE_AUTO_CLOSED => 'fa-link',
+            self::ACTION_MASTER_DATA_IMPORT => 'fa-database',
+            self::ACTION_STUDENT_PROMOTE_PREVIEW => 'fa-eye',
+            self::ACTION_STUDENT_PROMOTE_APPLY => 'fa-arrow-up-right-dots',
             default => 'fa-info-circle',
         };
     }

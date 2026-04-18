@@ -7,7 +7,7 @@
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#4f46e5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SFCS">
     <link rel="manifest" href="/manifest.json">
@@ -48,6 +48,7 @@
         body {
             font-family: 'Figtree', sans-serif;
             background-color: #f3f4f6;
+            overflow-x: hidden;
         }
 
         /* Sidebar */
@@ -139,12 +140,14 @@
         /* Main Content */
         .main-content {
             margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
             transition: all 0.3s ease;
             min-height: 100vh;
         }
 
         .sidebar.collapsed + .main-content {
             margin-left: var(--sidebar-collapsed);
+            width: calc(100% - var(--sidebar-collapsed));
         }
 
         /* Header */
@@ -200,15 +203,6 @@
             right: -5px;
             font-size: 0.65rem;
             padding: 0.25em 0.5em;
-        }
-
-        /* Page Content */
-        .page-content {
-            padding: 1.5rem;
-        }
-
-        .page-header {
-            margin-bottom: 1.5rem;
         }
 
         .page-title {
@@ -290,42 +284,144 @@
         .badge-sedang { background: #fef3c7; color: #92400e; }
         .badge-tinggi { background: #fee2e2; color: #991b1b; }
 
-        /* Tables */
+        /* ── Tables ───────────────────────────────────────────── */
         .table-modern {
             margin-bottom: 0;
+            font-size: .875rem;
         }
-
         .table-modern th {
             background: #f9fafb;
-            font-weight: 600;
-            font-size: 0.75rem;
+            font-weight: 700;
+            font-size: .7rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: .06em;
             color: #6b7280;
             border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+            padding: .65rem .75rem;
         }
-
         .table-modern td {
             vertical-align: middle;
-            padding: 1rem 0.75rem;
+            padding: .75rem .75rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .table-modern tbody tr { transition: background .12s; }
+        .table-modern tbody tr:hover { background: #f8fafc; }
+        .table-modern tbody tr:last-child td { border-bottom: none; }
+
+        /* Scrollable table wrapper always */
+        .table-responsive { border-radius: 0 0 .75rem .75rem; }
+
+        /* ── Page content responsive padding ─────────────────── */
+        .page-content {
+            padding: 1.25rem 1.5rem;
+        }
+        @media (min-width: 1200px) {
+            .page-content { padding: 1.5rem 2rem; }
+        }
+        @media (max-width: 767.98px) {
+            .page-content { padding: .875rem 1rem; }
+            .page-title { font-size: 1.2rem; }
+        }
+        @media (max-width: 575.98px) {
+            .page-content { padding: .75rem .75rem; }
         }
 
-        /* Buttons */
+        /* ── Cards ────────────────────────────────────────────── */
+        .card {
+            border: none;
+            border-radius: .875rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
+        }
+        .card-header {
+            background: #fff;
+            border-bottom: 1px solid #f3f4f6;
+            padding: .875rem 1.25rem;
+            font-weight: 600;
+            border-radius: .875rem .875rem 0 0 !important;
+        }
+        .card-footer {
+            background: #fafafa;
+            border-top: 1px solid #f3f4f6;
+            border-radius: 0 0 .875rem .875rem !important;
+        }
+
+        /* ── Buttons ──────────────────────────────────────────── */
         .btn-primary {
             background: var(--primary-color);
             border-color: var(--primary-color);
         }
-
         .btn-primary:hover {
             background: var(--primary-hover);
             border-color: var(--primary-hover);
         }
+        .btn { transition: all .15s; }
+        .btn:active { transform: scale(.97); }
+        /* Touch-friendly min height on mobile */
+        @media (max-width: 767.98px) {
+            .btn { min-height: 38px; }
+            .btn-sm { min-height: 32px; }
+        }
 
-        /* Forms */
+        /* ── Forms ────────────────────────────────────────────── */
+        .form-control, .form-select {
+            border-color: #e5e7eb;
+            border-radius: .5rem;
+            font-size: .9rem;
+            transition: border-color .15s, box-shadow .15s;
+        }
         .form-control:focus, .form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
         }
+        .form-label {
+            font-weight: 600;
+            font-size: .82rem;
+            margin-bottom: .35rem;
+            color: #374151;
+        }
+        .input-group-text { border-color: #e5e7eb; }
+        @media (max-width: 767.98px) {
+            .form-control, .form-select { font-size: .95rem; min-height: 42px; }
+        }
+
+        /* ── Page Header ──────────────────────────────────────── */
+        .page-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        @media (max-width: 575.98px) {
+            .page-header { margin-bottom: .875rem; padding-bottom: .875rem; }
+        }
+
+        /* ── Badge helpers ────────────────────────────────────── */
+        .badge { font-weight: 600; }
+
+        /* ── Pagination ───────────────────────────────────────── */
+        .pagination .page-link {
+            border-radius: .5rem;
+            margin: 0 2px;
+            border-color: #e5e7eb;
+            color: #374151;
+            font-size: .83rem;
+        }
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ── Modal ────────────────────────────────────────────── */
+        .modal-content { border: none; border-radius: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+        .modal-header { border-bottom: 1px solid #f3f4f6; padding: 1.1rem 1.5rem; }
+        .modal-footer { border-top: 1px solid #f3f4f6; padding: .875rem 1.5rem; }
+        @media (max-width: 575.98px) {
+            .modal-dialog { margin: .5rem; }
+            .modal-content { border-radius: .875rem; }
+        }
+
+        /* ── Alert ────────────────────────────────────────────── */
+        .alert { border-radius: .75rem; border: none; }
 
         /* User Avatar */
         .user-avatar {
@@ -342,9 +438,10 @@
         }
 
         /* Mobile Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 991.98px) {
             .sidebar {
                 transform: translateX(-100%);
+                width: var(--sidebar-width);
             }
 
             .sidebar.show {
@@ -353,6 +450,7 @@
 
             .main-content {
                 margin-left: 0;
+                width: 100%;
             }
 
             .sidebar-overlay {
@@ -394,8 +492,138 @@
         }
     </style>
 
-    @stack('styles')
-</head>
+    <style>
+        /* ── Notification System ──────────────────────────────── */
+        .notif-bell-btn {
+            position: relative;
+            color: #6b7280 !important;
+            padding: .45rem .55rem;
+            border-radius: .5rem;
+            transition: background .15s, color .15s;
+        }
+        .notif-bell-btn:hover { background: #f3f4f6; color: #374151 !important; }
+        .notif-bell-btn.has-unread { color: var(--primary-color) !important; }
+
+        /* Badge always in DOM, toggled via JS */
+        #notifBadge {
+            position: absolute;
+            top: -4px; right: -4px;
+            font-size: .6rem;
+            padding: .22em .42em;
+            min-width: 18px;
+            line-height: 1.1;
+            pointer-events: none;
+        }
+
+        /* Dropdown menu */
+        .notif-menu {
+            padding: 0 !important;
+            border: 1px solid #e5e7eb;
+            border-radius: .875rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,.12);
+            overflow: hidden;
+        }
+        .notif-menu-header {
+            background: #fff;
+            padding: .75rem 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Individual notification row */
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            padding: .75rem 1rem;
+            cursor: pointer;
+            transition: background .12s;
+            border-bottom: 1px solid #f3f4f6;
+            text-decoration: none;
+            color: inherit;
+            border-left: 3px solid transparent;
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item.unread {
+            background: #eef2ff;
+            border-left-color: var(--primary-color);
+        }
+        .notif-item.read { background: #fff; }
+        .notif-item:hover { background: #f5f6ff; }
+        .notif-item.unread:hover { background: #e0e7ff; }
+
+        .notif-icon {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: #e0e7ff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .85rem;
+            flex-shrink: 0;
+            margin-right: .75rem;
+        }
+        .notif-icon.icon-green  { background: #dcfce7; color: #16a34a; }
+        .notif-icon.icon-blue   { background: #dbeafe; color: #2563eb; }
+        .notif-icon.icon-yellow { background: #fef9c3; color: #ca8a04; }
+        .notif-icon.icon-red    { background: #fee2e2; color: #dc2626; }
+        .notif-icon.icon-purple { background: #f3e8ff; color: #9333ea; }
+        .notif-icon.icon-gray   { background: #f3f4f6; color: #6b7280; }
+
+        .notif-title { font-size: .83rem; font-weight: 600; color: #111827; line-height: 1.35; }
+        .notif-item.read .notif-title { font-weight: 400; color: #4b5563; }
+        .notif-msg { font-size: .77rem; color: #6b7280; margin-top: 1px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .notif-time { font-size: .72rem; color: #9ca3af; margin-top: 3px; }
+
+        .notif-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: var(--primary-color);
+            flex-shrink: 0; margin-top: 5px; margin-left: 4px;
+        }
+
+        .notif-empty { text-align: center; padding: 2rem 1rem; color: #9ca3af; }
+
+        /* ── In-page Toast ────────────────────────────────────── */
+        #notif-toast-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            max-width: 340px;
+            pointer-events: none;
+        }
+        .notif-toast {
+            background: #fff;
+            border-left: 4px solid var(--primary-color);
+            border-radius: .75rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,.15);
+            padding: .85rem 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            pointer-events: auto;
+            cursor: pointer;
+            animation: toastSlideIn .3s ease;
+            will-change: transform, opacity;
+        }
+        .notif-toast.out { animation: toastSlideOut .3s ease forwards; }
+        @keyframes toastSlideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to   { transform: translateX(120%); opacity: 0; }
+        }
+        .notif-toast-icon { width: 34px; height: 34px; border-radius: 50%; background: #eef2ff; color: var(--primary-color); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .notif-toast-title { font-size: .82rem; font-weight: 600; color: #111827; }
+        .notif-toast-msg { font-size: .76rem; color: #6b7280; margin-top: 1px; line-height: 1.4; }
+        .notif-toast-close { margin-left: auto; color: #9ca3af; background: none; border: none; padding: 0; cursor: pointer; font-size: .9rem; }
+
+    </style>
+
+    @stack('styles')</head>
 <body>
     <!-- Sidebar Overlay (Mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -428,6 +656,11 @@
                     <i class="fas fa-plus-circle"></i>
                     <span>Buat Pengaduan</span>
                 </a>
+                <div class="nav-section-title">Peminjaman</div>
+                <a href="{{ route('pinjaman.index') }}" class="sidebar-link {{ request()->routeIs('pinjaman.*') ? 'active' : '' }}">
+                    <i class="fas fa-box-open"></i>
+                    <span>Pinjam Barang</span>
+                </a>
             @endif
 
             @if(auth()->user()->isTeknisi())
@@ -435,6 +668,10 @@
                 <a href="{{ route('teknisi.pengaduan.index') }}" class="sidebar-link {{ request()->routeIs('teknisi.pengaduan.*') ? 'active' : '' }}">
                     <i class="fas fa-tasks"></i>
                     <span>Pengaduan Ditugaskan</span>
+                </a>
+                <a href="{{ route('teknisi.peta-digital.index') }}" class="sidebar-link {{ request()->routeIs('teknisi.peta-digital.*') ? 'active' : '' }}">
+                    <i class="fas fa-map"></i>
+                    <span>Peta Digital</span>
                 </a>
             @endif
 
@@ -460,6 +697,26 @@
                     <i class="fas fa-chart-bar"></i>
                     <span>Laporan</span>
                 </a>
+                <a href="{{ route('admin.overload-board') }}" class="sidebar-link {{ request()->routeIs('admin.overload-board') ? 'active' : '' }}">
+                    <i class="fas fa-gauge-high"></i>
+                    <span>Overload Board</span>
+                </a>
+                <a href="{{ route('admin.pinjaman.index') }}" class="sidebar-link {{ request()->routeIs('admin.pinjaman.*') ? 'active' : '' }}">
+                    <i class="fas fa-boxes-stacked"></i>
+                    <span>Kelola Pinjaman</span>
+                </a>
+                <a href="{{ route('admin.barangs.index') }}" class="sidebar-link {{ request()->routeIs('admin.barangs.*') ? 'active' : '' }}">
+                    <i class="fas fa-box-open"></i>
+                    <span>Master Barang</span>
+                </a>
+                <a href="{{ route('admin.peta-digital') }}" class="sidebar-link {{ request()->routeIs('admin.peta-digital') ? 'active' : '' }}">
+                    <i class="fas fa-map-location-dot"></i>
+                    <span>Peta Digital</span>
+                </a>
+                <a href="{{ route('admin.denah.index') }}" class="sidebar-link {{ request()->routeIs('admin.denah.*') ? 'active' : '' }}">
+                    <i class="fas fa-draw-polygon"></i>
+                    <span>Kelola Denah</span>
+                </a>
             @endif
 
             @if(auth()->user()->isKepsek())
@@ -472,6 +729,10 @@
 
             @if(auth()->user()->isSuperAdmin())
                 <div class="nav-section-title">Sistem</div>
+                <a href="{{ route('admin.master-data.index') }}" class="sidebar-link {{ request()->routeIs('admin.master-data.*') ? 'active' : '' }}">
+                    <i class="fas fa-database"></i>
+                    <span>Master Data</span>
+                </a>
                 <a href="{{ route('superadmin.settings.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.settings.*') ? 'active' : '' }}">
                     <i class="fas fa-cog"></i>
                     <span>Pengaturan</span>
@@ -499,51 +760,36 @@
 
             <div class="header-right">
                 <!-- Notifications -->
-                <div class="dropdown notification-badge">
-                    <button class="btn btn-link text-secondary position-relative" type="button" data-bs-toggle="dropdown">
+                <div class="dropdown" id="notifDropdown">
+                    <button class="btn btn-link notif-bell-btn" type="button" id="notifBellBtn"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-bell fa-lg"></i>
-                        @php
-                            $unreadCount = auth()->user()->notifications()->where('is_read', false)->count();
-                        @endphp
-                        @if($unreadCount > 0)
-                            <span class="badge bg-danger rounded-pill">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
-                        @endif
+                        <span class="badge bg-danger rounded-pill d-none" id="notifBadge">0</span>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-end" style="width: 320px; max-height: 400px; overflow-y: auto;">
-                        <h6 class="dropdown-header d-flex justify-content-between align-items-center">
-                            Notifikasi
-                            @if($unreadCount > 0)
-                                <form action="{{ route('notifications.read-all') }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-link btn-sm p-0">Tandai semua dibaca</button>
-                                </form>
-                            @endif
-                        </h6>
-                        @php
-                            $notifications = auth()->user()->notifications()->latest()->take(5)->get();
-                        @endphp
-                        @forelse($notifications as $notification)
-                            <a href="{{ $notification->link ?? route('notifications.index') }}" class="dropdown-item py-2 {{ $notification->is_read ? '' : 'bg-light' }}">
-                                <div class="d-flex">
-                                    <div class="me-2">
-                                        <i class="fas {{ $notification->jenis_icon }}"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="small fw-semibold">{{ $notification->judul }}</div>
-                                        <div class="small text-muted text-truncate" style="max-width: 240px;">{{ $notification->pesan }}</div>
-                                        <div class="small text-muted">{{ $notification->created_at->diffForHumans() }}</div>
-                                    </div>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="dropdown-item text-center text-muted py-3">
-                                Tidak ada notifikasi
+
+                    <div class="dropdown-menu dropdown-menu-end notif-menu"
+                         id="notifMenu" style="width: 340px; max-height: 480px; overflow-y: auto;">
+                        <!-- Header -->
+                        <div class="notif-menu-header d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold" style="font-size:.9rem;">Notifikasi</span>
+                            <button class="btn btn-link btn-sm p-0 text-primary"
+                                    id="notifMarkAllBtn" style="display:none; font-size:.8rem;">
+                                Tandai semua dibaca
+                            </button>
+                        </div>
+                        <!-- Items rendered by JS -->
+                        <div id="notifList">
+                            <div class="notif-empty">
+                                <i class="fas fa-spinner fa-spin"></i>
                             </div>
-                        @endforelse
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('notifications.index') }}" class="dropdown-item text-center small">
-                            Lihat Semua Notifikasi
-                        </a>
+                        </div>
+                        <!-- Footer -->
+                        <div class="border-top text-center py-2">
+                            <a href="{{ route('notifications.index') }}"
+                               class="small text-primary text-decoration-none">
+                                Lihat Semua Notifikasi
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -602,6 +848,9 @@
         </main>
     </div>
 
+    <!-- In-page Toast Container -->
+    <div id="notif-toast-container"></div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -619,9 +868,25 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mobileBreakpoint = 991.98;
+
+        const isMobileViewport = () => window.innerWidth <= mobileBreakpoint;
+
+        const syncSidebarLayout = () => {
+            if (isMobileViewport()) {
+                // On mobile/tablet, sidebar should behave as off-canvas.
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+            } else {
+                // On desktop, ensure overlay states are cleared.
+                sidebar.classList.remove('show');
+                sidebarOverlay.classList.remove('show');
+            }
+        };
 
         sidebarToggle.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
+            if (isMobileViewport()) {
                 sidebar.classList.toggle('show');
                 sidebarOverlay.classList.toggle('show');
             } else {
@@ -634,6 +899,9 @@
             sidebarOverlay.classList.remove('show');
         });
 
+        window.addEventListener('resize', syncSidebarLayout);
+        syncSidebarLayout();
+
         // Auto-hide alerts after 5 seconds
         setTimeout(() => {
             document.querySelectorAll('.alert').forEach(alert => {
@@ -642,60 +910,273 @@
             });
         }, 5000);
 
-        // Browser Notification Support
-        if ('Notification' in window && 'serviceWorker' in navigator) {
-            // Request notification permission
-            if (Notification.permission === 'default') {
-                Notification.requestPermission();
+        // ═══════════════════════════════════════════════════════
+        //  NOTIFICATION SYSTEM
+        // ═══════════════════════════════════════════════════════
+
+        const CSRF      = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const bellBtn   = document.getElementById('notifBellBtn');
+        const badge     = document.getElementById('notifBadge');
+        const notifList = document.getElementById('notifList');
+        const markAllBtn = document.getElementById('notifMarkAllBtn');
+
+        let lastUnreadCount = 0;
+        let dropdownLoaded  = false;
+        let cachedData      = null;   // stores last successful dropdown payload
+
+        // ── Icon map ──────────────────────────────────────────
+        const iconMap = {
+            pengaduan_created : { cls: 'fa-plus-circle',          bg: 'icon-green'  },
+            status_changed    : { cls: 'fa-exchange-alt',          bg: 'icon-blue'   },
+            assigned          : { cls: 'fa-user-tag',              bg: 'icon-yellow' },
+            feedback_reminder : { cls: 'fa-star',                  bg: 'icon-purple' },
+            overdue           : { cls: 'fa-exclamation-triangle',  bg: 'icon-red'    },
+            pinjaman_created  : { cls: 'fa-box-open',              bg: 'icon-blue'   },
+            pinjaman_status   : { cls: 'fa-arrow-right-arrow-left',bg: 'icon-blue'   },
+            priority_adjusted : { cls: 'fa-sliders',               bg: 'icon-yellow' },
+            rescheduled       : { cls: 'fa-calendar-days',         bg: 'icon-yellow' },
+            overload_alert    : { cls: 'fa-gauge-high',            bg: 'icon-red'    },
+        };
+        function getIcon(jenis) {
+            return iconMap[jenis] ?? { cls: 'fa-bell', bg: 'icon-gray' };
+        }
+
+        // ── Update badge ──────────────────────────────────────
+        function updateBadge(count) {
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.remove('d-none');
+                bellBtn.classList.add('has-unread');
+            } else {
+                badge.classList.add('d-none');
+                bellBtn.classList.remove('has-unread');
+            }
+        }
+
+        // ── Render one notification row ───────────────────────
+        function renderNotifItem(n) {
+            const icon  = getIcon(n.jenis);
+            const link  = n.link || null;
+            const el    = document.createElement('a');
+            el.href     = 'javascript:void(0)';
+            el.className = `notif-item ${n.is_read ? 'read' : 'unread'}`;
+            el.dataset.id   = n.id;
+            el.dataset.link = link ?? '';
+
+            el.innerHTML = `
+                <div class="notif-icon ${icon.bg}">
+                    <i class="fas ${icon.cls}"></i>
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <div class="notif-title">${escHtml(n.judul)}</div>
+                    <div class="notif-msg">${escHtml(n.pesan)}</div>
+                    <div class="notif-time">${escHtml(n.time)}</div>
+                </div>
+                ${!n.is_read ? '<span class="notif-dot"></span>' : ''}
+            `;
+
+            el.addEventListener('click', () => handleNotifClick(n.id, link, el));
+            return el;
+        }
+
+        // ── Render full dropdown contents ─────────────────────
+        function renderNotifList(data) {
+            notifList.innerHTML = '';
+            if (!data.notifications || data.notifications.length === 0) {
+                notifList.innerHTML = `
+                    <div class="notif-empty">
+                        <i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>
+                        Tidak ada notifikasi
+                    </div>`;
+                markAllBtn.style.display = 'none';
+                return;
+            }
+            data.notifications.forEach(n => notifList.appendChild(renderNotifItem(n)));
+            markAllBtn.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
+        }
+
+        // ── Fetch dropdown data ───────────────────────────────
+        function fetchDropdown(showSpinner = false) {
+            // Show cached data immediately to avoid empty flash
+            if (cachedData && !showSpinner) {
+                renderNotifList(cachedData);
+            } else if (showSpinner) {
+                notifList.innerHTML = '<div class="notif-empty"><i class="fas fa-spinner fa-spin"></i></div>';
             }
 
-            // Check for new notifications every 30 seconds
-            setInterval(checkNewNotifications, 30000);
-            
-            let lastNotificationCount = {{ auth()->user()->notifications()->whereNull('read_at')->count() }};
-            
-            function checkNewNotifications() {
-                fetch('/notifications/unread-count')
-                    .then(response => response.json())
-                    .then(data => {
-                        const currentCount = data.count;
-                        
-                        // Update badge
-                        const badge = document.querySelector('.notification-badge .badge');
-                        if (badge) {
-                            badge.textContent = currentCount;
-                            badge.style.display = currentCount > 0 ? 'inline-block' : 'none';
-                        }
-                        
-                        // Show browser notification if new notifications
-                        if (currentCount > lastNotificationCount && Notification.permission === 'granted') {
-                            fetch('/notifications/latest')
-                                .then(response => response.json())
-                                .then(notif => {
-                                    if (notif && notif.judul) {
-                                        const notification = new Notification('SFCS - ' + notif.judul, {
-                                            body: notif.pesan,
-                                            icon: '/favicon.ico',
-                                            badge: '/favicon.ico',
-                                            tag: 'sfcs-notification-' + notif.id,
-                                            requireInteraction: false
-                                        });
-                                        
-                                        notification.onclick = function() {
-                                            window.focus();
-                                            if (notif.link) {
-                                                window.location.href = notif.link;
-                                            }
-                                            notification.close();
-                                        };
+            fetch('/notifications/dropdown', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    cachedData       = data;
+                    updateBadge(data.unread_count);
+                    renderNotifList(data);
+                    dropdownLoaded   = true;
+                    lastUnreadCount  = data.unread_count;
+                })
+                .catch(() => {
+                    if (!cachedData) {
+                        notifList.innerHTML = '<div class="notif-empty text-danger">Gagal memuat notifikasi.</div>';
+                    }
+                });
+        }
+
+        // ── Fetch count only (background polling) ────────────
+        function fetchCountAndNotify() {
+            fetch('/notifications/unread-count', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    const count = data.count ?? 0;
+
+                    // New notification arrived while user is on page
+                    if (count > lastUnreadCount) {
+                        // Refresh dropdown cache (always, no spinner)
+                        fetchDropdown(false);
+
+                        // Fetch latest for toast/browser notif
+                        fetch('/notifications/latest', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(r => r.json())
+                            .then(notif => {
+                                if (notif && notif.judul) {
+                                    // Strip absolute URL to avoid cross-host 403
+                                    if (notif.link) {
+                                        notif.link = notif.link.replace(/^https?:\/\/[^/]+/, '');
                                     }
-                                });
-                        }
-                        
-                        lastNotificationCount = currentCount;
-                    })
-                    .catch(err => console.error('Failed to check notifications:', err));
+                                    showToast(notif);
+                                    showBrowserNotif(notif);
+                                }
+                            });
+                    } else {
+                        updateBadge(count);
+                    }
+
+                    lastUnreadCount = count;
+                })
+                .catch(() => {});
+        }
+
+        // ── Click: mark as read, then navigate ────────────────
+        function handleNotifClick(id, link, el) {
+            // Optimistic UI
+            el.classList.remove('unread');
+            el.classList.add('read');
+            const dot = el.querySelector('.notif-dot');
+            if (dot) dot.remove();
+
+            // Update cache
+            if (cachedData) {
+                const n = cachedData.notifications.find(x => x.id == id);
+                if (n) n.is_read = true;
+                cachedData.unread_count = Math.max(0, (cachedData.unread_count || 1) - 1);
+                updateBadge(cachedData.unread_count);
             }
+
+            // Tell server (fire-and-forget), then navigate
+            fetch(`/notifications/${id}/read`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+            }).finally(() => {
+                // link is already relative path (stripped by dropdown API)
+                if (link) window.location.href = link;
+            });
+        }
+
+        // ── Mark all as read (AJAX) ────────────────────────────
+        markAllBtn.addEventListener('click', () => {
+            fetch('/notifications/read-all', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(r => r.json())
+            .then(() => {
+                document.querySelectorAll('.notif-item.unread').forEach(el => {
+                    el.classList.remove('unread');
+                    el.classList.add('read');
+                    const dot = el.querySelector('.notif-dot');
+                    if (dot) dot.remove();
+                });
+                // Update cache
+                if (cachedData) {
+                    cachedData.unread_count = 0;
+                    cachedData.notifications.forEach(n => n.is_read = true);
+                }
+                updateBadge(0);
+                markAllBtn.style.display = 'none';
+                lastUnreadCount = 0;
+            });
+        });
+
+        // ── Load dropdown when bell is opened ─────────────────
+        const bsDropdown = document.getElementById('notifDropdown');
+        bsDropdown.addEventListener('show.bs.dropdown', () => {
+            // If we have cached data, show immediately (no spinner)
+            // then silently refresh in background
+            fetchDropdown(cachedData === null);
+        });
+
+        // ── In-page Toast ──────────────────────────────────────
+        const toastContainer = document.getElementById('notif-toast-container');
+
+        function showToast(notif) {
+            const icon = getIcon(notif.jenis);
+            const toast = document.createElement('div');
+            toast.className = 'notif-toast';
+            toast.innerHTML = `
+                <div class="notif-toast-icon ${icon.bg}">
+                    <i class="fas ${icon.cls}"></i>
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <div class="notif-toast-title">${escHtml(notif.judul)}</div>
+                    <div class="notif-toast-msg">${escHtml(notif.pesan ?? '')}</div>
+                </div>
+                <button class="notif-toast-close" title="Tutup">&times;</button>
+            `;
+
+            const link = notif.link;
+            toast.addEventListener('click', e => {
+                if (!e.target.classList.contains('notif-toast-close') && link) {
+                    window.location.href = link;
+                }
+            });
+            toast.querySelector('.notif-toast-close').addEventListener('click', () => dismissToast(toast));
+
+            toastContainer.appendChild(toast);
+            setTimeout(() => dismissToast(toast), 6000);
+        }
+
+        function dismissToast(toast) {
+            toast.classList.add('out');
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        // ── Browser Push Notification ──────────────────────────
+        function showBrowserNotif(notif) {
+            if (Notification.permission === 'granted') {
+                const n = new Notification('SFCS — ' + notif.judul, {
+                    body   : notif.pesan ?? '',
+                    icon   : '/images/icons/icon-192x192.png',
+                    tag    : 'sfcs-notif-' + notif.id,
+                    requireInteraction: false,
+                });
+                n.onclick = () => {
+                    window.focus();
+                    if (notif.link) window.location.href = notif.link;
+                    n.close();
+                };
+            }
+        }
+
+        // ── Request browser notification permission ────────────
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // ── Bootstrap: load data immediately on page load ─────
+        fetchDropdown(false);                               // pre-warm cache silently
+        setInterval(fetchCountAndNotify, 15000);
+
+        // ── Utility ───────────────────────────────────────────
+        function escHtml(str) {
+            return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
     </script>
 
@@ -769,5 +1250,6 @@
     </script>
 
     @stack('scripts')
+
 </body>
 </html>

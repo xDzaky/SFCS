@@ -134,6 +134,104 @@ class SettingSeeder extends Seeder
                 'type' => 'number',
                 'description' => 'Pengali untuk kasus urgent (contoh: 0.5 = setengah dari waktu normal)',
             ],
+            [
+                'key' => 'sla_darurat_minutes',
+                'value' => '240',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Batas SLA tiket urgent/darurat (menit)',
+            ],
+            [
+                'key' => 'sla_tinggi_hours',
+                'value' => '24',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Batas SLA tiket tinggi (jam)',
+            ],
+            [
+                'key' => 'sla_sedang_hours',
+                'value' => '72',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Batas SLA tiket sedang (jam)',
+            ],
+            [
+                'key' => 'sla_rendah_hours',
+                'value' => '168',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Batas SLA tiket rendah (jam)',
+            ],
+            [
+                'key' => 'escalation_warning_minutes_before_due',
+                'value' => '60',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Jendela peringatan sebelum SLA jatuh tempo (menit)',
+            ],
+            [
+                'key' => 'priority_threshold_urgent',
+                'value' => '80',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Ambang skor untuk prioritas urgent',
+            ],
+            [
+                'key' => 'priority_threshold_tinggi',
+                'value' => '50',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Ambang skor untuk prioritas tinggi',
+            ],
+            [
+                'key' => 'priority_threshold_sedang',
+                'value' => '25',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Ambang skor untuk prioritas sedang',
+            ],
+            [
+                'key' => 'priority_score_safety',
+                'value' => '50',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Skor tambahan untuk risiko keselamatan',
+            ],
+            [
+                'key' => 'priority_score_learning_blocked',
+                'value' => '25',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Skor tambahan untuk dampak belajar terhenti',
+            ],
+            [
+                'key' => 'priority_score_exam_related',
+                'value' => '30',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Skor tambahan untuk dampak ujian',
+            ],
+            [
+                'key' => 'priority_score_scope_lantai',
+                'value' => '15',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Skor tambahan untuk dampak 1 lantai',
+            ],
+            [
+                'key' => 'priority_score_scope_gedung',
+                'value' => '30',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Skor tambahan untuk dampak 1 gedung',
+            ],
+            [
+                'key' => 'priority_score_utilities_critical',
+                'value' => '20',
+                'group' => 'sla',
+                'type' => 'number',
+                'description' => 'Skor tambahan utilitas kritikal (listrik/air)',
+            ],
 
             // Pengaturan Maintenance
             [
@@ -176,7 +274,10 @@ class SettingSeeder extends Seeder
         ];
 
         foreach ($settings as $setting) {
-            Setting::create($setting);
+            Setting::updateOrCreate(
+                ['key' => $setting['key']],
+                $setting
+            );
         }
     }
 }

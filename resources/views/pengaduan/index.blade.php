@@ -95,7 +95,10 @@
                             <div class="d-flex align-items-center text-muted small">
                                  <i class="fas fa-map-marker-alt me-2 text-danger"></i> 
                                  <span class="text-truncate" style="max-width: 120px;">
-                                    {{ $pengaduan->ruangan->gedung->nama ?? '' }} - {{ $pengaduan->ruangan->nama ?? 'Lokasi' }}
+                                    {{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}
+                                    @if($pengaduan->ruangan)
+                                        - {{ $pengaduan->ruangan->nama }}
+                                    @endif
                                  </span>
                             </div>
                             @if($pengaduan->photos->count() > 0)
@@ -160,8 +163,14 @@
                                                 <i class="fas fa-map-marker-alt"></i>
                                             </div>
                                             <div>
-                                                <div class="small fw-bold">{{ $pengaduan->ruangan->gedung->nama ?? '-' }}</div>
-                                                <small class="text-muted">{{ $pengaduan->ruangan->nama ?? '-' }}</small>
+                                                <div class="small fw-bold">{{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}</div>
+                                                <small class="text-muted">
+                                                    @if($pengaduan->ruangan)
+                                                        {{ $pengaduan->ruangan->nama }}
+                                                    @else
+                                                        Lantai {{ $pengaduan->lantai ?? '-' }}
+                                                    @endif
+                                                </small>
                                             </div>
                                         </div>
                                     </td>

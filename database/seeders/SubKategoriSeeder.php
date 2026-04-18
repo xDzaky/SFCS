@@ -16,28 +16,37 @@ class SubKategoriSeeder extends Seeder
         // Sub-kategori per kategori sesuai dengan data di database
         $subKategoris = [
             'Kelistrikan' => [
-                'Stop Kontak', 'Saklar Lampu', 'Lampu', 'MCB/Sekring', 
-                'Kabel', 'Instalasi Listrik'
+                'Lampu Kelas', 'Stop Kontak', 'Saklar Lampu', 'MCB/Sekring',
+                'Kabel Listrik', 'Instalasi Listrik'
             ],
             'Plumbing' => [
-                'Keran Air', 'Kloset', 'Wastafel', 'Pipa', 
-                'Floor Drain', 'Shower', 'Tandon Air'
+                'Keran Air', 'Wastafel', 'Kloset', 'Pipa Air',
+                'Saluran Air', 'Floor Drain', 'Tandon Air'
             ],
             'Furniture' => [
-                'Meja', 'Kursi', 'Lemari', 'Papan Tulis', 
-                'Rak', 'Pintu', 'Jendela'
+                'Papan Tulis', 'Meja Siswa', 'Kursi Siswa', 'Meja Guru',
+                'Lemari', 'Rak Buku'
             ],
             'AC & Pendingin' => [
-                'AC Split', 'AC Central', 'Kipas Angin', 
+                'AC Split', 'AC Central', 'Kipas Angin',
                 'Exhaust Fan', 'Remote AC'
             ],
             'Bangunan' => [
-                'Atap/Plafon', 'Lantai', 'Dinding', 'Cat', 
-                'Pagar', 'Tangga', 'Kanopi'
+                'Atap/Plafon', 'Lantai', 'Dinding', 'Pintu',
+                'Jendela', 'Tangga', 'Kanopi'
             ],
             'IT & Multimedia' => [
-                'Komputer', 'Proyektor', 'WiFi', 'CCTV', 
-                'Sound System', 'Printer', 'Jaringan LAN'
+                'LCD/Proyektor', 'Komputer', 'WiFi', 'Jaringan LAN',
+                'Printer', 'Speaker Kelas', 'CCTV'
+            ],
+            'Kebersihan' => [
+                'Toilet', 'Tempat Sampah', 'Drainase', 'Area Kotor'
+            ],
+            'Keamanan' => [
+                'Kunci Pintu', 'Gembok', 'Pagar', 'Lampu Keamanan', 'APAR'
+            ],
+            'Lainnya' => [
+                'Fasilitas Lainnya'
             ],
         ];
 

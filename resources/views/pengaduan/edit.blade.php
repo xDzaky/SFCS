@@ -20,13 +20,13 @@
     <div class="col-lg-8">
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body">
-                <form action="{{ route('pengaduan.update', $pengaduan) }}" method="POST" enctype="multipart/form-data">
+                <form id="pengaduanEditForm" action="{{ route('pengaduan.update', $pengaduan) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
                     <!-- Judul -->
                     <div class="mb-4">
-                        <label for="judul" class="form-label">Judul Pengaduan <span class="text-danger">*</span></label>
+                        <label for="judul" class="form-label">Fasilitas/Barang yang Rusak <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('judul') is-invalid @enderror" 
                                id="judul" name="judul" value="{{ old('judul', $pengaduan->judul) }}" 
                                maxlength="100"
@@ -39,7 +39,7 @@
 
                     <!-- Deskripsi -->
                     <div class="mb-4">
-                        <label for="deskripsi" class="form-label">Deskripsi Kerusakan <span class="text-danger">*</span></label>
+                        <label for="deskripsi" class="form-label">Detail Kerusakan <span class="text-danger">*</span></label>
                         <textarea class="form-control @error('deskripsi') is-invalid @enderror" 
                                   id="deskripsi" name="deskripsi" rows="5" 
                                   minlength="20"
@@ -53,15 +53,28 @@
                     <div class="row mb-4">
                         <!-- Kategori -->
                         <div class="col-md-6 mb-3 mb-md-0">
-                            <label for="kategori_id" class="form-label">Kategori Fasilitas <span class="text-danger">*</span></label>
+                            <label for="kategori_id" class="form-label">Jenis Fasilitas/Barang <span class="text-danger">*</span></label>
+                            @php
+                                $kategoriAlias = [
+                                    'Kelistrikan' => 'Listrik (Lampu, Stop Kontak, Saklar)',
+                                    'Plumbing' => 'Air & Sanitasi (Keran, Wastafel, Toilet)',
+                                    'Furniture' => 'Perabot Kelas (Meja, Kursi, Papan Tulis)',
+                                    'AC & Pendingin' => 'Pendingin Ruangan (AC, Kipas)',
+                                    'Bangunan' => 'Bangunan (Atap, Dinding, Lantai, Pintu)',
+                                    'IT & Multimedia' => 'IT & Multimedia (LCD, Komputer, WiFi)',
+                                    'Kebersihan' => 'Kebersihan Lingkungan',
+                                    'Keamanan' => 'Keamanan Sekolah',
+                                    'Lainnya' => 'Lainnya',
+                                ];
+                            @endphp
                             <select class="form-select @error('kategori_id') is-invalid @enderror" 
                                     id="kategori_id" name="kategori_id" required>
-                                <option value="">Pilih Kategori</option>
+                                <option value="">Pilih Jenis</option>
                                 @foreach($kategoris as $kategori)
                                     <option value="{{ $kategori->id }}" 
                                             data-sub-kategoris='@json($kategori->subKategoris)'
                                             {{ old('kategori_id', $pengaduan->kategori_id) == $kategori->id ? 'selected' : '' }}>
-                                        {{ $kategori->nama }}
+                                        {{ $kategoriAlias[$kategori->nama] ?? $kategori->nama }}
                                     </option>
                                 @endforeach
                             </select>
@@ -72,10 +85,10 @@
 
                         <!-- Sub Kategori -->
                         <div class="col-md-6">
-                            <label for="sub_kategori_id" class="form-label">Sub Kategori</label>
+                            <label for="sub_kategori_id" class="form-label">Detail Fasilitas/Barang <span class="text-danger">*</span></label>
                             <select class="form-select @error('sub_kategori_id') is-invalid @enderror" 
-                                    id="sub_kategori_id" name="sub_kategori_id">
-                                <option value="">Pilih Sub Kategori (Opsional)</option>
+                                    id="sub_kategori_id" name="sub_kategori_id" required>
+                                <option value="">Pilih Detail</option>
                             </select>
                             @error('sub_kategori_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -85,7 +98,7 @@
 
                     <div class="row mb-4">
                         <!-- Gedung -->
-                        <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="col-md-6 mb-3 mb-md-0">
                             <label for="gedung_id" class="form-label">Gedung/Bangunan <span class="text-danger">*</span></label>
                             <select class="form-select @error('gedung_id') is-invalid @enderror" 
                                     id="gedung_id" name="gedung_id" required>
@@ -93,7 +106,6 @@
                                 @foreach($gedungs as $gedung)
                                     <option value="{{ $gedung->id }}" 
                                             data-lantai="{{ $gedung->jumlah_lantai }}"
-                                            data-ruangans='@json($gedung->ruangans)'
                                             {{ old('gedung_id', $pengaduan->gedung_id) == $gedung->id ? 'selected' : '' }}>
                                         {{ $gedung->nama }}
                                     </option>
@@ -105,25 +117,13 @@
                         </div>
 
                         <!-- Lantai -->
-                        <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="col-md-6 mb-3 mb-md-0">
                             <label for="lantai" class="form-label">Lantai <span class="text-danger">*</span></label>
                             <select class="form-select @error('lantai') is-invalid @enderror" 
                                     id="lantai" name="lantai" required>
                                 <option value="">Pilih Lantai</option>
                             </select>
                             @error('lantai')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Ruangan -->
-                        <div class="col-md-4">
-                            <label for="ruangan_id" class="form-label">Ruangan</label>
-                            <select class="form-select @error('ruangan_id') is-invalid @enderror" 
-                                    id="ruangan_id" name="ruangan_id">
-                                <option value="">Pilih Ruangan (Opsional)</option>
-                            </select>
-                            @error('ruangan_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -138,6 +138,18 @@
                         @error('lokasi_detail')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        @include('partials.pengaduan-map-picker', [
+                            'pickerId' => 'edit-pengaduan-map-picker',
+                            'formId' => 'pengaduanEditForm',
+                            'selectedMapId' => old('school_map_id', $pengaduan->school_map_id),
+                            'selectedLayerId' => old('school_map_layer_id', $pengaduan->school_map_layer_id),
+                            'selectedPointX' => old('map_point_x', $pengaduan->map_point_x),
+                            'selectedPointY' => old('map_point_y', $pengaduan->map_point_y),
+                            'selectedZoom' => old('map_zoom', $pengaduan->map_zoom ?? 2),
+                        ])
                     </div>
 
                     <!-- Tanggal Kejadian -->
@@ -194,6 +206,48 @@
                         @enderror
                     </div>
 
+                    <div class="mb-4">
+                        <label class="form-label">Dampak Kerusakan (Wajib)</label>
+                        <div class="form-text mb-2">Dipakai sistem untuk validasi prioritas final.</div>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" name="impact_safety_risk" id="impact_safety_risk" {{ old('impact_safety_risk', $pengaduan->impact_safety_risk) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="impact_safety_risk">Risiko keselamatan</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" name="impact_learning_blocked" id="impact_learning_blocked" {{ old('impact_learning_blocked', $pengaduan->impact_learning_blocked) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="impact_learning_blocked">Belajar terhambat</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" name="impact_exam_related" id="impact_exam_related" {{ old('impact_exam_related', $pengaduan->impact_exam_related) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="impact_exam_related">Terkait ujian</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">Skala Area</label>
+                                <select name="impact_area_scope" class="form-select form-select-sm" required>
+                                    <option value="1_kelas" {{ old('impact_area_scope', $pengaduan->impact_area_scope ?? '1_kelas') === '1_kelas' ? 'selected' : '' }}>1 Kelas</option>
+                                    <option value="1_lantai" {{ old('impact_area_scope', $pengaduan->impact_area_scope) === '1_lantai' ? 'selected' : '' }}>1 Lantai</option>
+                                    <option value="1_gedung" {{ old('impact_area_scope', $pengaduan->impact_area_scope) === '1_gedung' ? 'selected' : '' }}>1 Gedung</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">Utilitas</label>
+                                <select name="impact_utilities" class="form-select form-select-sm" required>
+                                    <option value="none" {{ old('impact_utilities', $pengaduan->impact_utilities ?? 'none') === 'none' ? 'selected' : '' }}>Tidak ada utilitas kritikal</option>
+                                    <option value="listrik" {{ old('impact_utilities', $pengaduan->impact_utilities) === 'listrik' ? 'selected' : '' }}>Listrik</option>
+                                    <option value="air" {{ old('impact_utilities', $pengaduan->impact_utilities) === 'air' ? 'selected' : '' }}>Air</option>
+                                    <option value="internet" {{ old('impact_utilities', $pengaduan->impact_utilities) === 'internet' ? 'selected' : '' }}>Internet</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Current Photos -->
                     @if($pengaduan->photos && $pengaduan->photos->count() > 0)
                         <div class="mb-4">
@@ -204,13 +258,10 @@
                                         <div class="position-relative">
                                             <img src="{{ asset('storage/' . $photo->file_path) }}" class="img-fluid rounded" 
                                                  style="width: 100%; height: 120px; object-fit: cover;">
-                                            <form action="{{ route('pengaduan.photo.delete', $photo) }}" method="POST" class="position-absolute" style="top: 5px; right: 5px;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hapus foto ini?')">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 5px; right: 5px;"
+                                                    onclick="if(confirm('Hapus foto ini?')) document.getElementById('delete-photo-{{ $photo->id }}').submit()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 @endforeach
@@ -229,7 +280,7 @@
                         @error('photos.*')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <div class="form-text">Opsional - Maksimal 5 foto total, masing-masing maksimal 5MB (JPG, PNG)</div>
+                        <div class="form-text">Opsional - Maksimal 5 foto total, masing-masing maksimal 5MB (JPG, PNG, WEBP)</div>
                         
                         <!-- Preview -->
                         <div id="photoPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
@@ -245,6 +296,15 @@
                         </a>
                     </div>
                 </form>
+
+                @if($pengaduan->photos && $pengaduan->photos->count() > 0)
+                    @foreach($pengaduan->photos as $photo)
+                        <form id="delete-photo-{{ $photo->id }}" action="{{ route('pengaduan.photo.delete', $photo) }}" method="POST" class="d-none">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
@@ -289,14 +349,13 @@
 <script>
     const oldSubKategoriId = {{ old('sub_kategori_id', $pengaduan->sub_kategori_id ?? 'null') }};
     const oldLantai = '{{ old('lantai', $pengaduan->lantai ?? '') }}';
-    const oldRuanganId = {{ old('ruangan_id', $pengaduan->ruangan_id ?? 'null') }};
 
     // Load sub kategoris when kategori changes
     document.getElementById('kategori_id').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const subKategoriSelect = document.getElementById('sub_kategori_id');
         
-        subKategoriSelect.innerHTML = '<option value="">Pilih Sub Kategori (Opsional)</option>';
+        subKategoriSelect.innerHTML = '<option value="">Pilih Detail</option>';
         
         if (this.value && selected.dataset.subKategoris) {
             try {
@@ -313,15 +372,13 @@
         }
     });
 
-    // Load lantai and ruangans when gedung changes
+    // Load lantai when gedung changes
     document.getElementById('gedung_id').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const lantaiSelect = document.getElementById('lantai');
-        const ruanganSelect = document.getElementById('ruangan_id');
         
         // Reset
         lantaiSelect.innerHTML = '<option value="">Pilih Lantai</option>';
-        ruanganSelect.innerHTML = '<option value="">Pilih Ruangan (Opsional)</option>';
         
         if (this.value) {
             // Load lantai
@@ -329,34 +386,6 @@
             for (let i = 1; i <= jumlahLantai; i++) {
                 const isSelected = i.toString() == oldLantai ? 'selected' : '';
                 lantaiSelect.innerHTML += `<option value="${i}" ${isSelected}>Lantai ${i}</option>`;
-            }
-            
-            // Store ruangans data
-            lantaiSelect.dataset.ruangans = selected.dataset.ruangans || '[]';
-            
-            // Trigger lantai change if has old value
-            if (oldLantai) {
-                lantaiSelect.dispatchEvent(new Event('change'));
-            }
-        }
-    });
-
-    // Load ruangans when lantai changes
-    document.getElementById('lantai').addEventListener('change', function() {
-        const ruanganSelect = document.getElementById('ruangan_id');
-        const lantai = this.value;
-        
-        ruanganSelect.innerHTML = '<option value="">Pilih Ruangan (Opsional)</option>';
-        
-        if (lantai && this.dataset.ruangans) {
-            try {
-                const ruangans = JSON.parse(this.dataset.ruangans);
-                ruangans.filter(r => r.lantai == lantai && r.is_active).forEach(item => {
-                    const isSelected = item.id == oldRuanganId ? 'selected' : '';
-                    ruanganSelect.innerHTML += `<option value="${item.id}" ${isSelected}>${item.nama}</option>`;
-                });
-            } catch(e) {
-                console.error('Error parsing ruangans:', e);
             }
         }
     });
@@ -397,7 +426,7 @@
         // Trigger kategori change to load sub kategoris
         document.getElementById('kategori_id').dispatchEvent(new Event('change'));
         
-        // Trigger gedung change to load lantai and ruangans
+        // Trigger gedung change to load lantai
         document.getElementById('gedung_id').dispatchEvent(new Event('change'));
     });
 </script>

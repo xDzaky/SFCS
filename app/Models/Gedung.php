@@ -12,6 +12,7 @@ class Gedung extends Model
     protected $fillable = [
         'nama',
         'kode',
+        'source_ref',
         'deskripsi',
         'jumlah_lantai',
         'is_active',

@@ -3,57 +3,89 @@
 @section('title', 'Log Aktivitas')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h1 class="h3 mb-1">Log Aktivitas</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Log</li>
-            </ol>
-        </nav>
+        <h1 class="page-title">Log Aktivitas</h1>
+        <p class="page-subtitle">Rekaman aktivitas dan audit trail sistem</p>
+    </div>
+    <a href="{{ route('superadmin.logs.export', request()->query()) }}" class="btn btn-outline-success">
+        <i class="fas fa-download me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-4">
+        <div class="card border-0 h-100" style="background: #fee2e2;">
+            <div class="card-body py-3">
+                <small class="text-muted d-block">Failed Jobs (24 jam)</small>
+                <div class="h4 mb-0 text-danger">{{ $errorStats['failed_jobs_24h'] ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card border-0 h-100" style="background: #fef9c3;">
+            <div class="card-body py-3">
+                <small class="text-muted d-block">Failed Jobs (7 hari)</small>
+                <div class="h4 mb-0 text-warning">{{ $errorStats['failed_jobs_7d'] ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card border-0 h-100" style="background: #e0f2fe;">
+            <div class="card-body py-3">
+                <small class="text-muted d-block">Aktivitas (24 jam)</small>
+                <div class="h4 mb-0 text-info">{{ $errorStats['activity_24h'] ?? 0 }}</div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form action="{{ route('superadmin.logs.index') }}" method="GET">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Cari</label>
-                    <input type="text" name="search" class="form-control" placeholder="Cari aktivitas..." value="{{ request('search') }}">
+<div class="card mb-4 {{ request()->hasAny(['search','action','user_id','date_from','date_to']) ? 'border-primary' : '' }}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2 px-3">
+        <span class="fw-semibold small"><i class="fas fa-filter me-2 text-muted"></i>Filter Log</span>
+        <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#logFilterBody">
+            <i class="fas fa-chevron-down me-1"></i>Tampilkan
+        </button>
+    </div>
+    <div class="collapse{{ request()->hasAny(['search','action','user_id','date_from','date_to']) ? ' show' : '' }} d-md-block" id="logFilterBody">
+        <div class="card-body pt-2">
+            <form action="{{ route('superadmin.logs.index') }}" method="GET">
+                <div class="row g-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label small mb-1">Cari</label>
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari aktivitas..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">Aksi</label>
+                        <select name="action" class="form-select form-select-sm">
+                            <option value="">Semua Aksi</option>
+                            @foreach($actions as $action)
+                                <option value="{{ $action }}" {{ request('action') == $action ? 'selected' : '' }}>
+                                    {{ ucfirst(str_replace('_', ' ', $action)) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">User ID</label>
+                        <input type="text" name="user_id" class="form-control form-control-sm" placeholder="User ID" value="{{ request('user_id') }}">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">Dari</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from') }}">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small mb-1">Sampai</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to') }}">
+                    </div>
+                    <div class="col-12 col-md-1 d-flex align-items-end gap-1">
+                        <button type="submit" class="btn btn-sm btn-primary flex-grow-1"><i class="fas fa-search"></i></button>
+                        <a href="{{ route('superadmin.logs.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Aksi</label>
-                    <select name="action" class="form-select">
-                        <option value="">Semua Aksi</option>
-                        @foreach($actions as $action)
-                            <option value="{{ $action }}" {{ request('action') == $action ? 'selected' : '' }}>
-                                {{ ucfirst(str_replace('_', ' ', $action)) }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">User</label>
-                    <input type="text" name="user_id" class="form-control" placeholder="User ID" value="{{ request('user_id') }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Dari Tanggal</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Sampai Tanggal</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -61,7 +93,7 @@
 <div class="card">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-modern table-hover mb-0">
                 <thead class="table-light">
                     <tr>
                         <th width="180">Waktu</th>
@@ -105,6 +137,7 @@
                                         'photo_uploaded' => 'bg-primary',
                                         'feedback_given' => 'bg-success',
                                         'reopened' => 'bg-danger',
+                                        'duplicate_auto_closed' => 'bg-info text-dark',
                                     ];
                                 @endphp
                                 <span class="badge {{ $actionBadges[$log->action] ?? 'bg-secondary' }}">
@@ -113,8 +146,8 @@
                             </td>
                             <td>
                                 @if($log->pengaduan)
-                                    <a href="{{ route('admin.pengaduan.show', $log->pengaduan_id) }}" class="text-decoration-none">
-                                        #{{ $log->pengaduan_id }}
+                                    <a href="{{ route('admin.pengaduan.show', $log->pengaduan) }}" class="text-decoration-none">
+                                        {{ $log->pengaduan->kode_pengaduan }}
                                     </a>
                                 @else
                                     <span class="text-muted">-</span>

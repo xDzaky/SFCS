@@ -79,7 +79,7 @@ class KepsekDashboardController extends Controller
             ->get();
 
         // Recent high priority issues
-        $highPriorityPengaduans = Pengaduan::with(['kategori', 'ruangan.gedung', 'user', 'teknisi'])
+        $highPriorityPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user', 'teknisi'])
             ->whereIn('prioritas', ['urgent', 'tinggi'])
             ->whereNotIn('status', ['selesai', 'ditolak'])
             ->latest()
