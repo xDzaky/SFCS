@@ -86,6 +86,14 @@
                     </div>
                 @endif
 
+                @include('partials.pengaduan-map-card', [
+                    'mapPayload' => $mapPayload,
+                    'viewerId' => 'teknisi-pengaduan-map',
+                    'title' => 'Lokasi Kerusakan di Denah',
+                    'fullMapUrl' => route('teknisi.peta-digital.index'),
+                    'showInfoDenah' => false,
+                ])
+
                 @if($pengaduan->feedback)
                     <div class="mb-4">
                         <h6 class="text-muted mb-2">Feedback dari Pelapor</h6>
@@ -139,6 +147,73 @@
             </div>
         @endif
 
+        @if(in_array($pengaduan->status, ['diverifikasi', 'diproses']))
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-calendar-days me-2"></i>Jadwal Penanganan</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Queue Rank</small>
+                            <strong>{{ $pengaduan->queue_rank ?? '-' }}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Triage Score</small>
+                            <strong>{{ $pengaduan->triage_score ?? 0 }}</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Prediksi Delay</small>
+                            <strong class="{{ $pengaduan->is_overload_delayed ? 'text-danger' : '' }}">{{ $pengaduan->delay_minutes ?? 0 }} menit</strong>
+                        </div>
+                    </div>
+                    <form action="{{ route('teknisi.pengaduan.reschedule', $pengaduan) }}" method="POST" class="row g-2">
+                        @csrf
+                        <div class="col-md-6">
+                            <label class="form-label">Mulai Baru</label>
+                            <input type="datetime-local" name="planned_start_at" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Selesai Baru</label>
+                            <input type="datetime-local" name="planned_end_at" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Alasan Reschedule</label>
+                            <textarea name="reason" class="form-control" rows="2" minlength="10" required placeholder="Contoh: Menunggu suku cadang, dijadwalkan besok pagi."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-info text-white">
+                                <i class="fas fa-arrows-rotate me-2"></i>Reschedule
+                            </button>
+                        </div>
+                    </form>
+                    <form action="{{ route('teknisi.pengaduan.recompute-queue') }}" method="POST" class="mt-2">
+                        @csrf
+                        <input type="hidden" name="teknisi_id" value="{{ auth()->id() }}">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="fas fa-calculator me-2"></i>Hitung Ulang Antrean
+                        </button>
+                    </form>
+
+                    @if($pengaduan->schedules->count() > 0)
+                        <hr>
+                        <h6 class="mb-2">Riwayat Reschedule</h6>
+                        @foreach($pengaduan->schedules->take(3) as $schedule)
+                            <div class="small {{ !$loop->last ? 'mb-2 pb-2 border-bottom' : '' }}">
+                                <div>
+                                    <strong>{{ optional($schedule->from_start)->format('d/m H:i') ?? '-' }}</strong>
+                                    <i class="fas fa-arrow-right mx-1"></i>
+                                    <strong>{{ optional($schedule->to_start)->format('d/m H:i') ?? '-' }}</strong>
+                                </div>
+                                <div class="text-muted">{{ $schedule->reason }}</div>
+                                <div class="text-muted">oleh {{ $schedule->changer->name ?? 'Sistem' }}</div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+        @endif
+
         @if($pengaduan->status === 'diproses')
             <div class="card mb-4 border-success">
                 <div class="card-header bg-success text-white">
@@ -155,13 +230,13 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-clipboard-check me-1"></i>
-                                Catatan Penyelesaian <span class="text-danger">*</span>
+                                Catatan Penyelesaian <span class="text-muted fw-normal">(opsional)</span>
                             </label>
-                            <textarea name="catatan_teknisi" class="form-control @error('catatan_teknisi') is-invalid @enderror" rows="5" required placeholder="Contoh: AC sudah diperbaiki, freon ditambah 1kg, filter dibersihkan. AC sudah berfungsi normal kembali."></textarea>
+                            <textarea name="catatan_teknisi" class="form-control @error('catatan_teknisi') is-invalid @enderror" rows="5" placeholder="Contoh: AC sudah diperbaiki, freon ditambah 1kg, filter dibersihkan. AC sudah berfungsi normal kembali."></textarea>
                             @error('catatan_teknisi')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Minimal 20 karakter</small>
+                            <small class="text-muted">Boleh dikosongkan — diisi jika ada catatan tambahan.</small>
                         </div>
                         <button type="submit" class="btn btn-success btn-lg w-100">
                             <i class="fas fa-check me-2"></i> Tandai Selesai
@@ -194,7 +269,7 @@
                 <div class="mb-3 pb-3 border-bottom">
                     <small class="text-muted d-block mb-1"><i class="fas fa-map-marker-alt me-1"></i>Lokasi</small>
                     <strong class="d-block">
-                        <i class="fas fa-building me-1 text-primary"></i>{{ $pengaduan->ruangan->gedung->nama ?? '-' }}
+                        <i class="fas fa-building me-1 text-primary"></i>{{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}
                     </strong>
                     @if($pengaduan->ruangan)
                         <small class="text-muted d-block"><i class="fas fa-door-open me-1"></i>{{ $pengaduan->ruangan->nama ?? '-' }}</small>

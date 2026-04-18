@@ -3,14 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Log;
+use App\Models\User;
+use App\Services\StudentClassPromotionService;
+use App\Services\StudentBulkImportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly StudentBulkImportService $studentImportService,
+        private readonly StudentClassPromotionService $studentClassPromotionService
+    )
+    {
+    }
+
     /**
      * Display a listing of users
      */
@@ -28,19 +38,33 @@ class UserController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
+        // Filter by kelas
+        if ($request->filled('kelas')) {
+            $query->where('kelas', 'like', '%'.$request->kelas.'%');
+        }
+
         // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('nis_nip', 'like', "%{$search}%");
+                    ->orWhere('nis', 'like', "%{$search}%")
+                    ->orWhere('nip', 'like', "%{$search}%");
             });
         }
 
         $users = $query->latest()->paginate(15);
+        $stats = [
+            'total' => User::count(),
+            'siswa' => User::where('role', 'siswa')->count(),
+            'guru' => User::where('role', 'guru')->count(),
+            'teknisi' => User::where('role', 'teknisi')->count(),
+            'admin' => User::whereIn('role', ['admin', 'superadmin'])->count(),
+            'active' => User::where('is_active', true)->count(),
+        ];
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
     /**
@@ -59,23 +83,32 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:siswa,guru,admin,teknisi,kepsek,superadmin'],
-            'nis' => ['nullable', 'string', 'max:50', 'unique:users'],
-            'nip' => ['nullable', 'string', 'max:50', 'unique:users'],
+            'nis' => [
+                Rule::requiredIf(fn () => $request->input('role') === 'siswa'),
+                'nullable',
+                'string',
+                'max:50',
+                'unique:users,nis',
+            ],
+            'nip' => ['nullable', 'string', 'max:50', 'unique:users,nip'],
+            'kelas' => ['nullable', 'string', 'max:50'],
             'no_hp' => ['nullable', 'string', 'max:15'],
             'is_active' => ['boolean'],
         ]);
 
-        $user = User::create([
+        User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'nis' => $validated['nis'] ?? null,
             'nip' => $validated['nip'] ?? null,
+            'kelas' => $validated['kelas'] ?? null,
             'no_hp' => $validated['no_hp'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
+            'force_password_change' => false,
         ]);
 
         return redirect()->route('admin.users.index')
@@ -119,10 +152,17 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:siswa,guru,admin,teknisi,kepsek,superadmin'],
-            'nis' => ['nullable', 'string', 'max:50', 'unique:users,nis,' . $user->id],
+            'nis' => [
+                Rule::requiredIf(fn () => $request->input('role') === 'siswa'),
+                'nullable',
+                'string',
+                'max:50',
+                'unique:users,nis,' . $user->id,
+            ],
             'nip' => ['nullable', 'string', 'max:50', 'unique:users,nip,' . $user->id],
+            'kelas' => ['nullable', 'string', 'max:50'],
             'no_hp' => ['nullable', 'string', 'max:15'],
             'is_active' => ['boolean'],
         ]);
@@ -133,12 +173,14 @@ class UserController extends Controller
             'role' => $validated['role'],
             'nis' => $validated['nis'] ?? null,
             'nip' => $validated['nip'] ?? null,
+            'kelas' => $validated['kelas'] ?? null,
             'no_hp' => $validated['no_hp'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ];
 
         if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
+            $data['force_password_change'] = false;
         }
 
         $user->update($data);
@@ -161,7 +203,6 @@ class UserController extends Controller
         if ($user->pengaduans()->exists()) {
             return back()->with('error', 'User memiliki pengaduan dan tidak dapat dihapus');
         }
-
 
         $user->delete();
 
@@ -187,52 +228,155 @@ class UserController extends Controller
     }
 
     /**
-     * Import users from CSV
+     * Import siswa from CSV.
      */
     public function import(Request $request)
     {
+        if (!Auth::user()?->isSuperAdmin()) {
+            abort(403, 'Hanya superadmin yang dapat melakukan import massal siswa.');
+        }
+
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:2048',
+            'file' => 'required|file|mimes:csv,txt|max:5120',
+            'mode' => 'nullable|in:replace_siswa,upsert_only',
         ]);
 
-        $file = $request->file('file');
-        $handle = fopen($file->getPathname(), 'r');
+        $mode = $request->input('mode', 'replace_siswa');
+        $result = $this->studentImportService->import($request->file('file')->getPathname(), $mode);
 
-        // Skip header row
-        $header = fgetcsv($handle);
+        Log::create([
+            'pengaduan_id' => null,
+            'user_id' => Auth::id(),
+            'action' => 'student_import_batch',
+            'description' => 'Import massal siswa dijalankan dengan mode: '.$mode,
+            'new_value' => [
+                'total_rows' => $result['total_rows'],
+                'created' => $result['created'],
+                'updated' => $result['updated'],
+                'deactivated' => $result['deactivated'],
+                'failed' => $result['failed'],
+            ],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
 
-        $imported = 0;
-        $errors = [];
+        $message = "Import selesai. Created: {$result['created']}, Updated: {$result['updated']}, Deactivated: {$result['deactivated']}, Failed: {$result['failed']}.";
 
-        while (($row = fgetcsv($handle)) !== false) {
-            try {
-                // Expected format: name, email, role, nis_nip, kelas
-                if (count($row) < 3) continue;
+        return back()
+            ->with($result['failed'] > 0 ? 'error' : 'success', $message)
+            ->with('import_errors', $result['errors']);
+    }
 
-                User::create([
-                    'name' => $row[0],
-                    'email' => $row[1],
-                    'password' => Hash::make('password123'), // Default password
-                    'role' => $row[2] ?? 'siswa',
-                    'nis_nip' => $row[3] ?? null,
-                    'kelas' => $row[4] ?? null,
-                    'is_active' => true,
-                ]);
+    /**
+     * Preview promote kelas siswa aktif.
+     */
+    public function promotePreview(Request $request)
+    {
+        if (!Auth::user()?->isSuperAdmin()) {
+            abort(403, 'Hanya superadmin yang dapat melakukan promote kelas.');
+        }
 
-                $imported++;
-            } catch (\Exception $e) {
-                $errors[] = "Row " . ($imported + count($errors) + 2) . ": " . $e->getMessage();
+        $validated = $request->validate([
+            'target_grade' => 'nullable|in:all,x,xi,xii',
+        ]);
+
+        $preview = $this->studentClassPromotionService->preview([
+            'target_grade' => (string) ($validated['target_grade'] ?? 'all'),
+            'actor_id' => (int) Auth::id(),
+        ]);
+
+        Log::create([
+            'pengaduan_id' => null,
+            'user_id' => Auth::id(),
+            'action' => Log::ACTION_STUDENT_PROMOTE_PREVIEW,
+            'description' => 'Preview promote kelas siswa dibuat.',
+            'new_value' => [
+                'target_grade' => $preview['options']['target_grade'] ?? 'all',
+                'summary' => $preview['summary'] ?? [],
+                'preview_token' => $preview['preview_token'] ?? null,
+            ],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
+        return back()
+            ->with('success', 'Preview promote kelas berhasil dibuat. Periksa ringkasan sebelum menerapkan.')
+            ->with('promote_preview', $preview);
+    }
+
+    /**
+     * Apply promote kelas berdasarkan preview token.
+     */
+    public function promoteApply(Request $request)
+    {
+        if (!Auth::user()?->isSuperAdmin()) {
+            abort(403, 'Hanya superadmin yang dapat menerapkan promote kelas.');
+        }
+
+        $validated = $request->validate([
+            'preview_token' => 'required|string',
+        ]);
+
+        try {
+            $result = $this->studentClassPromotionService->apply(
+                (string) $validated['preview_token'],
+                (int) Auth::id()
+            );
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        Log::create([
+            'pengaduan_id' => null,
+            'user_id' => Auth::id(),
+            'action' => Log::ACTION_STUDENT_PROMOTE_APPLY,
+            'description' => 'Promote kelas siswa diterapkan.',
+            'new_value' => [
+                'options' => $result['options'] ?? [],
+                'summary_before' => $result['summary_before'] ?? [],
+                'applied' => $result['applied'] ?? [],
+            ],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
+        $applied = $result['applied'] ?? [];
+        $message = sprintf(
+            'Promote selesai. Updated kelas: %d, Nonaktifkan XII: %d, Skipped: %d.',
+            (int) ($applied['updated_class'] ?? 0),
+            (int) ($applied['deactivated'] ?? 0),
+            (int) ($applied['skipped'] ?? 0)
+        );
+
+        return back()
+            ->with('success', $message)
+            ->with('promote_apply_result', $result);
+    }
+
+    /**
+     * Download CSV template for siswa import.
+     */
+    public function importTemplate()
+    {
+        if (!Auth::user()?->isSuperAdmin()) {
+            abort(403, 'Hanya superadmin yang dapat mengunduh template import siswa.');
+        }
+
+        $rows = $this->studentImportService->templateRows();
+        $filename = 'template-import-siswa-'.date('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($rows) {
+            $stream = fopen('php://output', 'w');
+            foreach ($rows as $row) {
+                fwrite($stream, $row.PHP_EOL);
             }
-        }
-
-        fclose($handle);
-
-        $message = "{$imported} user berhasil diimport.";
-        if (count($errors) > 0) {
-            $message .= " " . count($errors) . " baris gagal.";
-        }
-
-        return back()->with('success', $message);
+            fclose($stream);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     /**
@@ -256,16 +400,17 @@ class UserController extends Controller
         $callback = function () use ($users) {
             $file = fopen('php://output', 'w');
 
-            fputcsv($file, ['Name', 'Email', 'Role', 'NIS/NIP', 'Kelas', 'No. Telp', 'Status', 'Created At']);
+            fputcsv($file, ['Name', 'Email', 'Role', 'NIS', 'NIP', 'Kelas', 'No. HP', 'Status', 'Created At']);
 
             foreach ($users as $user) {
                 fputcsv($file, [
                     $user->name,
                     $user->email,
                     $user->role,
-                    $user->nis_nip ?? '-',
+                    $user->nis ?? '-',
+                    $user->nip ?? '-',
                     $user->kelas ?? '-',
-                    $user->no_telp ?? '-',
+                    $user->no_hp ?? '-',
                     $user->is_active ? 'Active' : 'Inactive',
                     $user->created_at->format('Y-m-d H:i:s'),
                 ]);

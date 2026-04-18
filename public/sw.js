@@ -1,5 +1,5 @@
 // SFCS Service Worker
-const CACHE_NAME = 'sfcs-cache-v1';
+const CACHE_NAME = 'sfcs-cache-v2';
 const STATIC_ASSETS = [
     '/',
     '/dashboard',
@@ -41,6 +41,11 @@ self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
 
+    // Cache API only supports http/https requests.
+    if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) {
+        return;
+    }
+
     // Skip API requests and form submissions
     if (event.request.url.includes('/api/') ||
         event.request.url.includes('/login') ||
@@ -58,7 +63,9 @@ self.addEventListener('fetch', (event) => {
                 // Cache successful responses
                 if (response.status === 200) {
                     caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseClone);
+                        cache.put(event.request, responseClone).catch(() => {
+                            // Ignore cache write failures for unsupported requests/responses.
+                        });
                     });
                 }
 

@@ -82,7 +82,10 @@ class GedungSeeder extends Seeder
         ];
 
         foreach ($gedungs as $gedungData) {
-            Gedung::create($gedungData);
+            Gedung::updateOrCreate(
+                ['kode' => $gedungData['kode']],
+                $gedungData
+            );
         }
     }
 }

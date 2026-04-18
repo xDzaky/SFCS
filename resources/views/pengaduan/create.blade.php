@@ -20,6 +20,17 @@
     <div class="col-12 col-lg-8 mx-auto">
         <div class="card shadow-sm border-0 rounded-4">
             <div class="card-body p-3 p-md-4">
+                @if($errors->any())
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <div class="fw-semibold mb-2">Laporan belum terkirim. Cek bagian yang masih salah:</div>
+                        <ul class="mb-0 ps-3 small">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('pengaduan.store') }}" method="POST" enctype="multipart/form-data" id="pengaduanForm">
                     @csrf
 
@@ -35,11 +46,11 @@
                     <div class="mb-4 form-step">
                         <label for="judul" class="form-label fw-bold fs-6">
                             <span class="badge bg-primary rounded-pill me-2">1</span>
-                            Apa masalahnya? <span class="text-danger">*</span>
+                            Apa fasilitas/barang yang rusak? <span class="text-danger">*</span>
                         </label>
                         <input type="text" class="form-control form-control-lg @error('judul') is-invalid @enderror" 
                                id="judul" name="judul" value="{{ old('judul') }}" 
-                               placeholder="Contoh: Lampu mati di kelas X-1"
+                               placeholder="Contoh: Wastafel rusak di toilet lantai 1"
                                maxlength="100"
                                required>
                         @error('judul')
@@ -56,7 +67,7 @@
                         </label>
                         <textarea class="form-control form-control-lg @error('deskripsi') is-invalid @enderror" 
                                   id="deskripsi" name="deskripsi" rows="4" 
-                                  placeholder="Ceritakan masalahnya... misalnya: Lampu di kelas sudah mati sejak kemarin, ruangan jadi gelap"
+                                  placeholder="Ceritakan detailnya... misalnya: Keran air bocor terus, air tidak bisa ditutup"
                                   minlength="20"
                                   required>{{ old('deskripsi') }}</textarea>
                         @error('deskripsi')
@@ -71,19 +82,35 @@
                             <span class="badge bg-primary rounded-pill me-2">3</span>
                             Dimana lokasinya? <span class="text-danger">*</span>
                         </label>
+                        <div class="alert alert-light border small py-2 mb-3">
+                            Isi 3 hal saja: pilih jenis masalah, pilih gedung, lalu pilih lantai.
+                        </div>
                         
                         <div class="row g-3">
                             <!-- Kategori -->
                             <div class="col-12">
-                                <label for="kategori_id" class="form-label small text-muted">Jenis Kerusakan</label>
+                                <label for="kategori_id" class="form-label small text-muted">1) Jenis Fasilitas/Barang Bermasalah</label>
+                                @php
+                                    $kategoriAlias = [
+                                        'Kelistrikan' => 'Listrik (Lampu, Stop Kontak, Saklar)',
+                                        'Plumbing' => 'Air & Sanitasi (Keran, Wastafel, Toilet)',
+                                        'Furniture' => 'Perabot Kelas (Meja, Kursi, Papan Tulis)',
+                                        'AC & Pendingin' => 'Pendingin Ruangan (AC, Kipas)',
+                                        'Bangunan' => 'Bangunan (Atap, Dinding, Lantai, Pintu)',
+                                        'IT & Multimedia' => 'IT & Multimedia (LCD, Komputer, WiFi)',
+                                        'Kebersihan' => 'Kebersihan Lingkungan',
+                                        'Keamanan' => 'Keamanan Sekolah',
+                                        'Lainnya' => 'Lainnya',
+                                    ];
+                                @endphp
                                 <select class="form-select form-select-lg @error('kategori_id') is-invalid @enderror" 
                                         id="kategori_id" name="kategori_id" required>
-                                    <option value="">-- Pilih jenis kerusakan --</option>
+                                    <option value="">-- Pilih jenis fasilitas/barang --</option>
                                     @foreach($kategoris as $kategori)
                                         <option value="{{ $kategori->id }}" 
                                                 data-sub-kategoris='@json($kategori->subKategoris)'
                                                 {{ old('kategori_id') == $kategori->id ? 'selected' : '' }}>
-                                            {{ $kategori->nama }}
+                                            {{ $kategoriAlias[$kategori->nama] ?? $kategori->nama }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -94,23 +121,25 @@
 
                             <!-- Sub Kategori (Hidden initially) -->
                             <div class="col-12" id="subKategoriWrapper" style="display: none;">
-                                <label for="sub_kategori_id" class="form-label small text-muted">Detail Kerusakan (Opsional)</label>
+                                <label for="sub_kategori_id" class="form-label small text-muted">Detail Fasilitas/Barang <span class="text-danger">*</span></label>
                                 <select class="form-select form-select-lg @error('sub_kategori_id') is-invalid @enderror" 
-                                        id="sub_kategori_id" name="sub_kategori_id">
-                                    <option value="">-- Pilih jika ada --</option>
+                                        id="sub_kategori_id" name="sub_kategori_id" required>
+                                    <option value="">-- Pilih detail fasilitas/barang --</option>
                                 </select>
+                                @error('sub_kategori_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <!-- Gedung -->
                             <div class="col-12 col-md-6">
-                                <label for="gedung_id" class="form-label small text-muted">Gedung</label>
+                                <label for="gedung_id" class="form-label small text-muted">2) Lokasi Gedung</label>
                                 <select class="form-select form-select-lg @error('gedung_id') is-invalid @enderror" 
                                         id="gedung_id" name="gedung_id" required>
-                                    <option value="">-- Pilih gedung --</option>
+                                    <option value="">-- Pilih gedung lokasi kerusakan --</option>
                                     @foreach($gedungs as $gedung)
                                         <option value="{{ $gedung->id }}" 
                                                 data-lantai="{{ $gedung->jumlah_lantai }}"
-                                                data-ruangans='@json($gedung->ruangans)'
                                                 {{ old('gedung_id') == $gedung->id ? 'selected' : '' }}>
                                             {{ $gedung->nama }}
                                         </option>
@@ -123,7 +152,7 @@
 
                             <!-- Lantai -->
                             <div class="col-12 col-md-6">
-                                <label for="lantai" class="form-label small text-muted">Lantai</label>
+                                <label for="lantai" class="form-label small text-muted">3) Lantai</label>
                                 <select class="form-select form-select-lg @error('lantai') is-invalid @enderror" 
                                         id="lantai" name="lantai" required>
                                     <option value="">-- Pilih lantai --</option>
@@ -133,23 +162,26 @@
                                 @enderror
                             </div>
 
-                            <!-- Ruangan -->
-                            <div class="col-12">
-                                <label for="ruangan_id" class="form-label small text-muted">Ruangan (Opsional)</label>
-                                <select class="form-select form-select-lg @error('ruangan_id') is-invalid @enderror" 
-                                        id="ruangan_id" name="ruangan_id">
-                                    <option value="">-- Pilih ruangan jika tahu --</option>
-                                </select>
-                            </div>
-
                             <!-- Lokasi Detail -->
                             <div class="col-12">
-                                <label for="lokasi_detail" class="form-label small text-muted">Keterangan Tambahan (Opsional)</label>
+                                <label for="lokasi_detail" class="form-label small text-muted">Patokan Lokasi (Opsional)</label>
                                 <input type="text" class="form-control form-control-lg @error('lokasi_detail') is-invalid @enderror" 
                                        id="lokasi_detail" name="lokasi_detail" value="{{ old('lokasi_detail') }}" 
-                                       placeholder="Contoh: Dekat jendela samping">
-                                <div class="form-text">Bantu teknisi temukan lokasi lebih cepat</div>
+                                       placeholder="Contoh: dekat tangga / depan kantin">
+                                <div class="form-text">Isi jika ingin teknisi lebih cepat menemukan titik kerusakan</div>
                             </div>
+
+                            <div class="col-12">
+                                <div id="duplicateAlert" class="alert alert-warning d-none mb-0" role="alert"></div>
+                                @error('duplicate_pengaduan')
+                                    <div class="alert alert-warning mb-0">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            @include('partials.pengaduan-map-picker', [
+                                'pickerId' => 'create-pengaduan-map-picker',
+                                'formId' => 'pengaduanForm',
+                            ])
                         </div>
                     </div>
 
@@ -211,6 +243,51 @@
                         </div>
                     </div>
 
+                    <div class="mb-4 form-step">
+                        <label class="form-label fw-bold fs-6 mb-2">
+                            <span class="badge bg-primary rounded-pill me-2">4A</span>
+                            Dampak Kerusakan (Wajib)
+                        </label>
+                        <div class="form-text mb-2">Dipakai sistem untuk validasi urgensi agar tiket adil.</div>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" id="impact_safety_risk" name="impact_safety_risk" {{ old('impact_safety_risk') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="impact_safety_risk">Ada risiko keselamatan</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" id="impact_learning_blocked" name="impact_learning_blocked" {{ old('impact_learning_blocked') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="impact_learning_blocked">Kegiatan belajar terhambat</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" id="impact_exam_related" name="impact_exam_related" {{ old('impact_exam_related') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="impact_exam_related">Terkait ujian/praktik penting</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">Skala Dampak Area</label>
+                                <select name="impact_area_scope" class="form-select form-select-sm" required>
+                                    <option value="1_kelas" {{ old('impact_area_scope', '1_kelas') === '1_kelas' ? 'selected' : '' }}>1 Kelas</option>
+                                    <option value="1_lantai" {{ old('impact_area_scope') === '1_lantai' ? 'selected' : '' }}>1 Lantai</option>
+                                    <option value="1_gedung" {{ old('impact_area_scope') === '1_gedung' ? 'selected' : '' }}>1 Gedung</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">Utilitas Terdampak</label>
+                                <select name="impact_utilities" class="form-select form-select-sm" required>
+                                    <option value="none" {{ old('impact_utilities', 'none') === 'none' ? 'selected' : '' }}>Tidak ada utilitas kritikal</option>
+                                    <option value="listrik" {{ old('impact_utilities') === 'listrik' ? 'selected' : '' }}>Listrik</option>
+                                    <option value="air" {{ old('impact_utilities') === 'air' ? 'selected' : '' }}>Air</option>
+                                    <option value="internet" {{ old('impact_utilities') === 'internet' ? 'selected' : '' }}>Internet</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 5. Foto Bukti (Camera First) -->
                     <div class="mb-4 form-step">
                         <label class="form-label fw-bold fs-6 mb-3">
@@ -230,7 +307,7 @@
 
                         <!-- Hidden File Input -->
                         <input type="file" class="d-none" 
-                               id="photos" name="photos[]" multiple accept="image/*" required>
+                               id="photos" name="photos[]" multiple accept="image/*">
                         
                         <!-- Camera Modal/Canvas -->
                         <div id="cameraContainer" class="card bg-dark text-white mb-3" style="display: none;">
@@ -258,14 +335,23 @@
                         @error('photos.*')
                             <div class="text-danger small mt-2">{{ $message }}</div>
                         @enderror
+                        <div id="photoValidationError" class="text-danger small mt-2 d-none"></div>
                         
                         <div class="form-text mt-2">
-                            📸 Min. 1 foto, maks. 5 foto (masing-masing maks. 5MB)
+                            📸 Min. 1 foto, maks. 5 foto (masing-masing maks. 5MB). Format: JPG, PNG, atau WEBP.
                         </div>
                     </div>
 
                     <!-- Hidden Tanggal Kejadian (Auto set to today) -->
                     <input type="hidden" name="tanggal_kejadian" value="{{ date('Y-m-d') }}">
+                    <input type="hidden" name="force_submit_duplicate" id="force_submit_duplicate" value="0">
+
+                    <div id="duplicateOverrideWrapper" class="form-check mb-3 d-none">
+                        <input class="form-check-input" type="checkbox" value="1" id="duplicateOverride">
+                        <label class="form-check-label small" for="duplicateOverride">
+                            Tetap kirim laporan ini (lokasi/titik kerusakan berbeda).
+                        </label>
+                    </div>
 
                     <!-- Submit Buttons (Sticky on Mobile) -->
                     <div class="sticky-bottom bg-white pt-3 pb-2 pb-md-0">
@@ -321,10 +407,8 @@
     
     /* Sticky button untuk mobile */
     .sticky-bottom {
-        position: sticky;
-        bottom: 0;
-        z-index: 10;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        position: static;
+        box-shadow: none;
     }
     
     /* Camera container */
@@ -340,7 +424,7 @@
         object-fit: cover;
         border-radius: 8px;
     }
-    
+
     /* Progress bar untuk form steps */
     .form-step {
         animation: fadeIn 0.3s ease-in;
@@ -361,6 +445,13 @@
         .btn {
             min-height: 48px;
         }
+
+        .sticky-bottom {
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
     }
 </style>
 @endpush
@@ -368,6 +459,13 @@
 @push('scripts')
 <script>
     // ========== Dynamic Form Dependencies ==========
+    const duplicateAlert = document.getElementById('duplicateAlert');
+    const duplicateOverrideWrapper = document.getElementById('duplicateOverrideWrapper');
+    const duplicateOverride = document.getElementById('duplicateOverride');
+    const forceSubmitDuplicate = document.getElementById('force_submit_duplicate');
+    const photoValidationError = document.getElementById('photoValidationError');
+    let activeDuplicate = null;
+    let duplicateCheckTimer = null;
     
     // Load sub kategoris when kategori changes
     document.getElementById('kategori_id').addEventListener('change', function() {
@@ -375,7 +473,7 @@
         const subKategoriSelect = document.getElementById('sub_kategori_id');
         const subKategoriWrapper = document.getElementById('subKategoriWrapper');
         
-        subKategoriSelect.innerHTML = '<option value="">-- Pilih jika ada --</option>';
+        subKategoriSelect.innerHTML = '<option value="">-- Pilih detail fasilitas/barang --</option>';
         
         if (this.value && selected.dataset.subKategoris) {
             try {
@@ -388,6 +486,7 @@
                     });
                     subKategoriWrapper.style.display = 'block';
                 } else {
+                    subKategoriSelect.innerHTML = '<option value="">-- Tidak ada detail untuk kategori ini --</option>';
                     subKategoriWrapper.style.display = 'none';
                 }
             } catch(e) {
@@ -397,19 +496,18 @@
         } else {
             subKategoriWrapper.style.display = 'none';
         }
-        
+
         updateProgress();
+        scheduleDuplicateCheck();
     });
 
-    // Load lantai and ruangans when gedung changes
+    // Load lantai when gedung changes
     document.getElementById('gedung_id').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const lantaiSelect = document.getElementById('lantai');
-        const ruanganSelect = document.getElementById('ruangan_id');
         
         // Reset
         lantaiSelect.innerHTML = '<option value="">-- Pilih lantai --</option>';
-        ruanganSelect.innerHTML = '<option value="">-- Pilih ruangan jika tahu --</option>';
         
         if (this.value) {
             // Load lantai
@@ -417,34 +515,97 @@
             for (let i = 1; i <= jumlahLantai; i++) {
                 lantaiSelect.innerHTML += `<option value="${i}">Lantai ${i}</option>`;
             }
-            
-            // Store ruangans data
-            lantaiSelect.dataset.ruangans = selected.dataset.ruangans || '[]';
-        }
-        
-        updateProgress();
-    });
 
-    // Load ruangans when lantai changes
-    document.getElementById('lantai').addEventListener('change', function() {
-        const ruanganSelect = document.getElementById('ruangan_id');
-        const lantai = this.value;
-        
-        ruanganSelect.innerHTML = '<option value="">-- Pilih ruangan jika tahu --</option>';
-        
-        if (lantai && this.dataset.ruangans) {
-            try {
-                const ruangans = JSON.parse(this.dataset.ruangans);
-                ruangans.filter(r => r.lantai == lantai && r.is_active).forEach(item => {
-                    ruanganSelect.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-                });
-            } catch(e) {
-                console.error('Error parsing ruangans:', e);
+            if (jumlahLantai === 1) {
+                lantaiSelect.value = '1';
             }
         }
         
         updateProgress();
+        scheduleDuplicateCheck();
     });
+
+    // Trigger progress and duplicate check when lantai changes
+    document.getElementById('lantai').addEventListener('change', function() {
+        updateProgress();
+        scheduleDuplicateCheck();
+    });
+
+    document.getElementById('sub_kategori_id').addEventListener('change', scheduleDuplicateCheck);
+    document.getElementById('lokasi_detail').addEventListener('input', scheduleDuplicateCheck);
+
+    duplicateOverride.addEventListener('change', function() {
+        forceSubmitDuplicate.value = this.checked ? '1' : '0';
+    });
+
+    function canCheckDuplicate() {
+        return Boolean(
+            document.getElementById('kategori_id').value &&
+            document.getElementById('sub_kategori_id').value &&
+            document.getElementById('gedung_id').value &&
+            document.getElementById('lantai').value
+        );
+    }
+
+    function clearDuplicateWarning() {
+        activeDuplicate = null;
+        duplicateAlert.classList.add('d-none');
+        duplicateAlert.innerHTML = '';
+        duplicateOverrideWrapper.classList.add('d-none');
+        duplicateOverride.checked = false;
+        forceSubmitDuplicate.value = '0';
+    }
+
+    function scheduleDuplicateCheck() {
+        clearTimeout(duplicateCheckTimer);
+        duplicateCheckTimer = setTimeout(checkDuplicatePengaduan, 300);
+    }
+
+    async function checkDuplicatePengaduan() {
+        if (!canCheckDuplicate()) {
+            clearDuplicateWarning();
+            return;
+        }
+
+        const params = new URLSearchParams({
+            kategori_id: document.getElementById('kategori_id').value,
+            gedung_id: document.getElementById('gedung_id').value,
+            lantai: document.getElementById('lantai').value,
+            lokasi_detail: document.getElementById('lokasi_detail').value || '',
+        });
+
+        const subKategoriValue = document.getElementById('sub_kategori_id').value;
+        if (subKategoriValue) {
+            params.set('sub_kategori_id', subKategoriValue);
+        }
+
+        try {
+            const response = await fetch(`{{ route('api.pengaduan.check-duplicate') }}?${params.toString()}`);
+            if (!response.ok) {
+                clearDuplicateWarning();
+                return;
+            }
+
+            const data = await response.json();
+            if (!data.has_duplicate) {
+                clearDuplicateWarning();
+                return;
+            }
+
+            activeDuplicate = data.pengaduan;
+            duplicateAlert.innerHTML = `
+                <strong>Lokasi ini kemungkinan sudah dilaporkan.</strong><br>
+                Tiket: <a href="${activeDuplicate.url}" class="alert-link">${activeDuplicate.kode_pengaduan}</a>
+                (${activeDuplicate.status_display}) - ${activeDuplicate.judul}
+            `;
+            duplicateAlert.classList.remove('d-none');
+            duplicateOverrideWrapper.classList.remove('d-none');
+            forceSubmitDuplicate.value = duplicateOverride.checked ? '1' : '0';
+        } catch (error) {
+            console.error('Duplicate check error:', error);
+            clearDuplicateWarning();
+        }
+    }
 
     // ========== Camera Capture Feature ==========
     
@@ -510,6 +671,7 @@
             capturedPhotos.push(file);
             updatePhotoPreview();
             updateFileInput();
+            clearPhotoValidationError();
             
             // Show feedback
             const btn = document.getElementById('captureBtn');
@@ -574,6 +736,7 @@
         capturedPhotos = capturedPhotos.concat(files);
         updatePhotoPreview();
         updateFileInput();
+        clearPhotoValidationError();
         updateProgress();
     });
     
@@ -616,6 +779,9 @@
             capturedPhotos.splice(index, 1);
             updatePhotoPreview();
             updateFileInput();
+            if (capturedPhotos.length > 0) {
+                clearPhotoValidationError();
+            }
             updateProgress();
         }
     };
@@ -627,6 +793,16 @@
             dataTransfer.items.add(file);
         });
         document.getElementById('photos').files = dataTransfer.files;
+    }
+
+    function showPhotoValidationError(message) {
+        photoValidationError.textContent = message;
+        photoValidationError.classList.remove('d-none');
+    }
+
+    function clearPhotoValidationError() {
+        photoValidationError.textContent = '';
+        photoValidationError.classList.add('d-none');
     }
     
     // ========== Form Progress Tracker (Mobile) ==========
@@ -675,10 +851,17 @@
     // ========== Form Validation Before Submit ==========
     
     document.getElementById('pengaduanForm').addEventListener('submit', function(e) {
+        if (activeDuplicate && !duplicateOverride.checked) {
+            e.preventDefault();
+            alert(`Lokasi ini sudah punya laporan aktif (#${activeDuplicate.kode_pengaduan}). Jika titik kerusakan berbeda, centang opsi "Tetap kirim laporan ini".`);
+            duplicateAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+        }
+
         // Check if photos are selected
         if (capturedPhotos.length === 0) {
             e.preventDefault();
-            alert('Minimal 1 foto bukti wajib diupload!');
+            showPhotoValidationError('Minimal 1 foto bukti wajib diupload.');
             document.getElementById('openCameraBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('openCameraBtn').classList.add('btn-danger');
             setTimeout(() => {
@@ -686,6 +869,8 @@
             }, 2000);
             return false;
         }
+
+        clearPhotoValidationError();
         
         // Show loading state
         const submitBtn = document.getElementById('submitBtn');
@@ -711,6 +896,7 @@
     
     // Initial progress update
     updateProgress();
+    scheduleDuplicateCheck();
     
     // Clean up camera on page unload
     window.addEventListener('beforeunload', function() {

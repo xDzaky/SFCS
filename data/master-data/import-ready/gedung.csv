@@ -1,0 +1,22 @@
+kode_gedung,nama_gedung,jumlah_lantai,deskripsi,is_active
+A,Gedung Kelas Utama,2,Ruang kelas reguler untuk X sampai XII dengan format kelas contoh XI RPL 1 XII AK 2 X MP 1,1
+B,Bengkel Keahlian,1,Workshop praktik keahlian,1
+C,Laboratorium Kimia,1,Laboratorium untuk praktikum kimia,1
+D,Laboratorium Komputer,1,Laboratorium komputer dan TI,1
+E,Perpustakaan,2,Gedung perpustakaan sekolah,1
+F,Gedung Administrasi,2,Kantor TU ruang kepala dan ruang guru,1
+G,Mushola,1,Tempat ibadah siswa dan guru,1
+H,Aula Serbaguna,1,Aula untuk kegiatan sekolah dan upacara indoor,1
+I,Kantin dan Koperasi,1,Area kantin dan koperasi siswa lantai 1,1
+J,Gedung Olahraga,1,Fasilitas olahraga basket dan bola,1
+K,Business Centre,1,Pusat kewirausahaan siswa dan unit usaha sekolah,1
+L,Unit Produksi dan Jasa (UPJ),1,Operasional produksi jasa dan praktik bisnis siswa,1
+M,Ruang Kurikulum,1,Ruang kerja bidang kurikulum,1
+N,Ruang Kesiswaan,1,Ruang kerja bidang kesiswaan,1
+O,Kelas Besar,1,Ruang pertemuan pembelajaran kelas gabungan,1
+P,Ruang UKS,1,Layanan kesehatan sekolah,1
+Q,Ruang OSIS,1,Pusat kegiatan organisasi siswa,1
+R,Pos Satpam,1,Pos keamanan dan kontrol akses sekolah,1
+S,Ruang BK,1,Layanan bimbingan dan konseling siswa,1
+T,Ruang Guru Tambahan,1,Ruang kerja guru dan koordinasi pembelajaran,1
+U,Masjid,1,Tempat ibadah utama sekolah dan kegiatan keagamaan,1

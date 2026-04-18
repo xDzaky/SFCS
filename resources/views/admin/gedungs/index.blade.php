@@ -3,24 +3,19 @@
 @section('title', 'Kelola Gedung')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h1 class="h3 mb-1">Kelola Gedung</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Gedung</li>
-            </ol>
-        </nav>
+        <h1 class="page-title">Kelola Gedung</h1>
+        <p class="page-subtitle">Manajemen data gedung dan fasilitas</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGedungModal">
-        <i class="fas fa-plus me-1"></i> Tambah Gedung
+        <i class="fas fa-plus me-1"></i><span class="d-none d-sm-inline"> Tambah Gedung</span>
     </button>
 </div>
 
 <!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-4">
+<div class="row g-3 mb-4">
+    <div class="col-4">
         <div class="card text-center">
             <div class="card-body py-3">
                 <div class="h4 mb-0 text-primary">{{ $gedungs->count() }}</div>
@@ -28,7 +23,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-4">
         <div class="card text-center">
             <div class="card-body py-3">
                 <div class="h4 mb-0 text-info">{{ $gedungs->sum('lantai') }}</div>
@@ -36,7 +31,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-4">
         <div class="card text-center">
             <div class="card-body py-3">
                 <div class="h4 mb-0 text-warning">{{ $gedungs->sum(fn($g) => $g->pengaduans_count ?? 0) }}</div>
@@ -47,7 +42,7 @@
 </div>
 
 <!-- Gedung Cards -->
-<div class="row">
+<div class="row g-3">
     @forelse($gedungs as $gedung)
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card h-100">

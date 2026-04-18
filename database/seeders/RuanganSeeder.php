@@ -22,29 +22,26 @@ class RuanganSeeder extends Seeder
             
             // Generate rooms for each floor of the building
             for ($lantai = 1; $lantai <= $gedung->jumlah_lantai; $lantai++) {
-                // Create 3-5 rooms per floor
-                $roomCount = rand(3, 5);
+                // Keep seeding deterministic and idempotent.
+                $roomCount = 4;
                 
                 for ($i = 1; $i <= $roomCount; $i++) {
                     // Use gedung_id to ensure uniqueness
                     $kode = $prefix . $gedung->id . '-' . $lantai . '-' . str_pad($i, 2, '0', STR_PAD_LEFT);
-                    
-                    // Check if already exists
-                    if (Ruangan::where('kode', $kode)->exists()) {
-                        continue;
-                    }
-                    
+
                     $roomTypes = ['Ruang Kelas', 'Ruang Rapat', 'Ruang Praktik', 'Ruang Lab', 'Ruang Kantor'];
-                    $roomName = $roomTypes[array_rand($roomTypes)] . ' ' . $lantai . str_pad($i, 2, '0', STR_PAD_LEFT);
+                    $roomName = $roomTypes[($i - 1) % count($roomTypes)] . ' ' . $lantai . str_pad($i, 2, '0', STR_PAD_LEFT);
                     
-                    Ruangan::create([
-                        'gedung_id' => $gedung->id,
-                        'kode' => $kode,
-                        'lantai' => (string) $lantai,
-                        'nama' => $roomName,
-                        'kapasitas' => rand(20, 50),
-                        'is_active' => true,
-                    ]);
+                    Ruangan::updateOrCreate(
+                        ['kode' => $kode],
+                        [
+                            'gedung_id' => $gedung->id,
+                            'lantai' => (string) $lantai,
+                            'nama' => $roomName,
+                            'kapasitas' => 30 + ($i * 5),
+                            'is_active' => true,
+                        ]
+                    );
                 }
             }
         }

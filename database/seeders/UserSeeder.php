@@ -13,38 +13,49 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        $defaultPassword = Hash::make('password');
+
         // Super Admin
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@sfcs.sch.id',
-            'password' => Hash::make('password'),
-            'role' => 'superadmin',
-            'nip' => 'SA001',
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'superadmin@sfcs.sch.id'],
+            [
+                'name' => 'Super Admin',
+                'password' => $defaultPassword,
+                'role' => 'superadmin',
+                'nip' => 'SA001',
+                'is_active' => true,
+                'force_password_change' => false,
+                'email_verified_at' => now(),
+            ]
+        );
 
         // Admin
-        User::create([
-            'name' => 'Admin Sarana',
-            'email' => 'admin@sfcs.sch.id',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'nip' => 'ADM001',
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@sfcs.sch.id'],
+            [
+                'name' => 'Admin Sarana',
+                'password' => $defaultPassword,
+                'role' => 'admin',
+                'nip' => 'ADM001',
+                'is_active' => true,
+                'force_password_change' => false,
+                'email_verified_at' => now(),
+            ]
+        );
 
         // Kepala Sekolah
-        User::create([
-            'name' => 'Dr. Budi Santoso, M.Pd',
-            'email' => 'kepsek@sfcs.sch.id',
-            'password' => Hash::make('password'),
-            'role' => 'kepsek',
-            'nip' => 'KS001',
-            'is_active' => true,
-            'email_verified_at' => now(),
-        ]);
+        User::firstOrCreate(
+            ['email' => 'kepsek@sfcs.sch.id'],
+            [
+                'name' => 'Dr. Budi Santoso, M.Pd',
+                'password' => $defaultPassword,
+                'role' => 'kepsek',
+                'nip' => 'KS001',
+                'is_active' => true,
+                'force_password_change' => false,
+                'email_verified_at' => now(),
+            ]
+        );
 
         // Teknisi
         $teknisis = [
@@ -54,15 +65,18 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($teknisis as $teknisi) {
-            User::create([
-                'name' => $teknisi['name'],
-                'email' => $teknisi['email'],
-                'password' => Hash::make('password'),
-                'role' => 'teknisi',
-                'nip' => $teknisi['nip'],
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ]);
+            User::firstOrCreate(
+                ['email' => $teknisi['email']],
+                [
+                    'name' => $teknisi['name'],
+                    'password' => $defaultPassword,
+                    'role' => 'teknisi',
+                    'nip' => $teknisi['nip'],
+                    'is_active' => true,
+                    'force_password_change' => false,
+                    'email_verified_at' => now(),
+                ]
+            );
         }
 
         // Guru
@@ -72,15 +86,18 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($gurus as $guru) {
-            User::create([
-                'name' => $guru['name'],
-                'email' => $guru['email'],
-                'password' => Hash::make('password'),
-                'role' => 'guru',
-                'nip' => $guru['nip'],
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ]);
+            User::firstOrCreate(
+                ['email' => $guru['email']],
+                [
+                    'name' => $guru['name'],
+                    'password' => $defaultPassword,
+                    'role' => 'guru',
+                    'nip' => $guru['nip'],
+                    'is_active' => true,
+                    'force_password_change' => false,
+                    'email_verified_at' => now(),
+                ]
+            );
         }
 
         // Siswa
@@ -93,15 +110,18 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($siswas as $siswa) {
-            User::create([
-                'name' => $siswa['name'],
-                'email' => $siswa['email'],
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-                'nis' => $siswa['nis'],
-                'is_active' => true,
-                'email_verified_at' => now(),
-            ]);
+            User::firstOrCreate(
+                ['email' => $siswa['email']],
+                [
+                    'name' => $siswa['name'],
+                    'password' => $defaultPassword,
+                    'role' => 'siswa',
+                    'nis' => $siswa['nis'],
+                    'is_active' => true,
+                    'force_password_change' => false,
+                    'email_verified_at' => now(),
+                ]
+            );
         }
     }
 }

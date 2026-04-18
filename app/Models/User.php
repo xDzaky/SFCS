@@ -22,9 +22,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'nip',
         'nis',
+        'kelas',
         'no_hp',
         'avatar',
         'is_active',
+        'force_password_change',
     ];
 
     /**
@@ -44,7 +46,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'force_password_change' => 'boolean',
         ];
+    }
+
+    /**
+     * Check whether user must change password before using the system.
+     */
+    public function mustChangePassword(): bool
+    {
+        return $this->force_password_change === true;
     }
 
     /**
@@ -101,6 +112,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isSiswa(): bool
     {
         return $this->role === 'siswa';
+    }
+
+    /**
+     * Check whether a login identifier should be treated as siswa identifier.
+     */
+    public static function isSiswaLoginIdentifier(string $identifier): bool
+    {
+        $identifier = trim($identifier);
+
+        return $identifier !== '' && filter_var($identifier, FILTER_VALIDATE_EMAIL) === false;
     }
 
     /**
@@ -210,6 +231,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
+    }
+
+    public function pinjamans(): HasMany
+    {
+        return $this->hasMany(Pinjaman::class);
+    }
+
+    public function pinjamanFeedbacks(): HasMany
+    {
+        return $this->hasMany(PinjamanFeedback::class);
     }
 
     /**

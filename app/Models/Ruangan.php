@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ruangan extends Model
@@ -15,6 +16,7 @@ class Ruangan extends Model
         'lantai',
         'nama',
         'kode',
+        'source_ref',
         'kapasitas',
         'is_active',
     ];
@@ -37,6 +39,13 @@ class Ruangan extends Model
     public function pengaduans(): HasMany
     {
         return $this->hasMany(Pengaduan::class);
+    }
+
+    public function jurusans(): BelongsToMany
+    {
+        return $this->belongsToMany(Jurusan::class, 'jurusan_ruangan')
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 
     /**

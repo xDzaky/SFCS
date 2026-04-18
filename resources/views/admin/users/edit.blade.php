@@ -79,9 +79,9 @@
                             @enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">NIS/NIP</label>
-                            <input type="text" name="nis_nip" class="form-control @error('nis_nip') is-invalid @enderror" value="{{ old('nis_nip', $user->nis_nip) }}">
-                            @error('nis_nip')
+                            <label class="form-label">NIS (Siswa)</label>
+                            <input type="text" name="nis" class="form-control @error('nis') is-invalid @enderror" value="{{ old('nis', $user->nis) }}">
+                            @error('nis')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -96,12 +96,22 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">No. Telepon</label>
-                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $user->phone) }}">
-                            @error('phone')
+                            <label class="form-label">NIP (Guru/Staf)</label>
+                            <input type="text" name="nip" class="form-control @error('nip') is-invalid @enderror" value="{{ old('nip', $user->nip) }}">
+                            @error('nip')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">No. HP</label>
+                            <input type="text" name="no_hp" class="form-control @error('no_hp') is-invalid @enderror" value="{{ old('no_hp', $user->no_hp) }}">
+                            @error('no_hp')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Avatar</label>
                             <input type="file" name="avatar" class="form-control @error('avatar') is-invalid @enderror" accept="image/*">

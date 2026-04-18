@@ -6,11 +6,17 @@ use App\Models\Pengaduan;
 use App\Models\User;
 use App\Models\Gedung;
 use App\Models\Kategori;
+use App\Models\Pinjaman;
+use App\Services\DispatchQueueService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly DispatchQueueService $dispatchQueueService)
+    {
+    }
+
     /**
      * Route to appropriate dashboard based on user role
      */
@@ -34,7 +40,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $pengaduans = Pengaduan::with(['kategori', 'ruangan.gedung', 'photos'])
+        $pengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'photos'])
             ->where('user_id', $user->id)
             ->latest()
             ->take(5)
@@ -58,14 +64,14 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // Pengaduan assigned to this teknisi
-        $assignedPengaduans = Pengaduan::with(['kategori', 'ruangan.gedung', 'user'])
+        $assignedPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user'])
             ->where('teknisi_id', $user->id)
             ->whereNotIn('status', ['selesai', 'ditolak'])
             ->latest()
             ->get();
 
         // Urgent pengaduans
-        $urgentPengaduans = Pengaduan::with(['kategori', 'ruangan.gedung', 'user'])
+        $urgentPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user'])
             ->where('teknisi_id', $user->id)
             ->whereIn('prioritas', ['urgent', 'tinggi'])
             ->whereNotIn('status', ['selesai', 'ditolak'])
@@ -88,6 +94,8 @@ class DashboardController extends Controller
      */
     private function adminDashboard()
     {
+        $overloadSummary = $this->dispatchQueueService->overloadSummary();
+
         // Overall stats
         $stats = [
             'total' => Pengaduan::count(),
@@ -100,10 +108,17 @@ class DashboardController extends Controller
                     WHEN "sedang" THEN 3 
                     ELSE 7 END')
                 ->count(),
+            'pinjaman_aktif' => Pinjaman::query()->aktif()->count(),
+            'pinjaman_terlambat' => Pinjaman::query()->where('status', Pinjaman::STATUS_TERLAMBAT)->count(),
+            'priority_review' => Pengaduan::query()->where('needs_priority_review', true)->whereNotIn('status', ['selesai', 'ditolak'])->count(),
+            'urgent_backlog_1h' => $overloadSummary['urgent_high_last_hour'],
+            'capacity_1h' => $overloadSummary['capacity_last_hour'],
+            'predicted_delay_minutes' => $overloadSummary['predicted_delay_minutes'],
+            'overload_active' => $overloadSummary['is_overload'],
         ];
 
         // Recent pengaduans
-        $recentPengaduans = Pengaduan::with(['kategori', 'ruangan.gedung', 'user', 'teknisi'])
+        $recentPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user', 'teknisi'])
             ->latest()
             ->take(10)
             ->get();
@@ -138,13 +153,27 @@ class DashboardController extends Controller
             ->orderBy('month')
             ->get();
 
-        // Teknisi list
+        // Teknisi list with utilization
+        $capacityPerHour = max(1, (int) \App\Models\Setting::getValue('teknisi_capacity_per_hour', 2));
         $teknisis = User::where('role', 'teknisi')
             ->where('is_active', true)
-            ->withCount(['assignedPengaduans' => function ($query) {
-                $query->whereNotIn('status', ['selesai', 'ditolak']);
-            }])
-            ->get();
+            ->withCount([
+                'assignedPengaduans as active_ticket_count' => function ($query) {
+                    $query->whereNotIn('status', ['selesai', 'ditolak']);
+                },
+                'assignedPengaduans as urgent_ticket_count' => function ($query) {
+                    $query->whereIn('prioritas', ['urgent', 'tinggi'])
+                        ->whereNotIn('status', ['selesai', 'ditolak']);
+                },
+            ])
+            ->get()
+            ->map(function (User $teknisi) use ($capacityPerHour) {
+                $teknisi->utilization_percent = min(100, (int) round(
+                    ($teknisi->active_ticket_count / $capacityPerHour) * 50
+                ));
+                $teknisi->capacity_per_hour = $capacityPerHour;
+                return $teknisi;
+            });
 
         return view('dashboard.admin', compact(
             'stats',
@@ -190,7 +219,7 @@ class DashboardController extends Controller
         })->sortByDesc('total');
 
         // Recent high priority issues
-        $highPriorityPengaduans = Pengaduan::with(['kategori', 'ruangan.gedung', 'user', 'assignedTo'])
+        $highPriorityPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user', 'assignedTo'])
             ->whereIn('prioritas', ['urgent', 'tinggi'])
             ->whereNotIn('status', ['selesai', 'ditolak'])
             ->latest()

@@ -109,7 +109,12 @@
                                 <i class="fas fa-building fa-lg text-primary me-3"></i>
                                 <div>
                                     <small class="text-muted d-block">Lokasi</small>
-                                    <strong>{{ $pengaduan->ruangan->gedung->nama ?? '-' }} - {{ $pengaduan->ruangan->nama ?? '-' }}</strong>
+                                    <strong>
+                                        {{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}
+                                        @if($pengaduan->ruangan)
+                                            - {{ $pengaduan->ruangan->nama }}
+                                        @endif
+                                    </strong>
                                 </div>
                             </div>
                         </div>

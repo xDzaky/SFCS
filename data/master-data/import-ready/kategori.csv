@@ -1,0 +1,10 @@
+nama,deskripsi,icon,is_active
+Kelistrikan,Masalah fasilitas listrik seperti lampu kelas stop kontak saklar kabel dan MCB,fa-bolt,1
+Plumbing,Masalah fasilitas air seperti keran air wastafel kloset pipa dan saluran air,fa-faucet,1
+Furniture,Masalah barang sekolah seperti meja kursi lemari papan tulis dan rak buku,fa-chair,1
+AC & Pendingin,Masalah pendingin ruangan seperti AC kipas dan ventilasi,fa-snowflake,1
+Bangunan,Masalah bangunan seperti atap plafon dinding lantai pintu dan jendela,fa-building,1
+IT & Multimedia,Masalah perangkat IT sekolah seperti LCD proyektor komputer WiFi printer dan speaker,fa-desktop,1
+Kebersihan,Masalah kebersihan fasilitas seperti toilet tempat sampah dan sanitasi,fa-broom,1
+Keamanan,Masalah keamanan fasilitas seperti kunci pagar CCTV lampu keamanan dan APAR,fa-shield-alt,1
+Lainnya,Masalah fasilitas lain yang tidak termasuk kategori di atas,fa-ellipsis-h,1

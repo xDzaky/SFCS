@@ -2,79 +2,137 @@
 
 @section('title', 'Kelola Pengaduan')
 
+@push('styles')
+<style>
+    /* Mobile cards for pengaduan list */
+    .pengaduan-card-mobile {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        background: #fff;
+        transition: box-shadow .15s ease, transform .1s ease;
+    }
+    .pengaduan-card-mobile:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,.1);
+        transform: translateY(-1px);
+    }
+    .pengaduan-card-mobile .kode {
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    .pengaduan-card-mobile .judul {
+        font-weight: 600;
+        font-size: .9375rem;
+        color: #111827;
+    }
+    .pengaduan-card-mobile .meta {
+        font-size: .8125rem;
+        color: #6b7280;
+    }
+    .filter-toggle-btn {
+        font-size: .8125rem;
+    }
+    /* Active filter indicator */
+    .has-filter { border-color: var(--primary-color) !important; }
+</style>
+@endpush
+
 @section('content')
-<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
     <div>
         <h1 class="page-title">Kelola Pengaduan</h1>
         <p class="page-subtitle">Manajemen semua pengaduan fasilitas</p>
     </div>
-    <a href="{{ route('admin.pengaduan.export', request()->query()) }}" class="btn btn-outline-success">
-        <i class="fas fa-download me-2"></i>Export CSV
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('admin.pengaduan.export', request()->query()) }}" class="btn btn-outline-success">
+            <i class="fas fa-download me-1"></i><span class="d-none d-sm-inline">Export CSV</span>
+        </a>
+    </div>
 </div>
 
 <!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form action="{{ route('admin.pengaduan.index') }}" method="GET">
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="">Semua Status</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="diverifikasi" {{ request('status') == 'diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
-                        <option value="diproses" {{ request('status') == 'diproses' ? 'selected' : '' }}>Diproses</option>
-                        <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                        <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                    </select>
+<div class="card mb-4 {{ request()->hasAny(['status','prioritas','kategori_id','teknisi_id','duplicate_state','search']) ? 'has-filter' : '' }}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2 px-3">
+        <span class="fw-semibold small"><i class="fas fa-filter me-2 text-muted"></i>Filter Pengaduan</span>
+        <button class="btn btn-sm btn-outline-secondary filter-toggle-btn d-md-none" 
+                type="button" data-bs-toggle="collapse" data-bs-target="#filterBody"
+                aria-expanded="{{ request()->hasAny(['status','prioritas','kategori_id','teknisi_id','duplicate_state','search']) ? 'true' : 'false' }}">
+            <i class="fas fa-chevron-down me-1"></i>Tampilkan
+        </button>
+    </div>
+    <div class="collapse{{ request()->hasAny(['status','prioritas','kategori_id','teknisi_id','duplicate_state','search']) ? ' show' : '' }} d-md-block" id="filterBody">
+        <div class="card-body pt-2">
+            <form action="{{ route('admin.pengaduan.index') }}" method="GET">
+                <div class="row g-2">
+                    <div class="col-6 col-sm-4 col-md-2">
+                        <label class="form-label small mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="diverifikasi" {{ request('status') == 'diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
+                            <option value="diproses" {{ request('status') == 'diproses' ? 'selected' : '' }}>Diproses</option>
+                            <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-2">
+                        <label class="form-label small mb-1">Urgensi</label>
+                        <select name="prioritas" class="form-select form-select-sm">
+                            <option value="">Semua Urgensi</option>
+                            <option value="rendah" {{ request('prioritas') == 'rendah' ? 'selected' : '' }}>Rendah</option>
+                            <option value="sedang" {{ request('prioritas') == 'sedang' ? 'selected' : '' }}>Sedang</option>
+                            <option value="tinggi" {{ request('prioritas') == 'tinggi' ? 'selected' : '' }}>Tinggi</option>
+                            <option value="urgent" {{ request('prioritas') == 'urgent' ? 'selected' : '' }}>Urgent</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-2">
+                        <label class="form-label small mb-1">Kategori</label>
+                        <select name="kategori_id" class="form-select form-select-sm">
+                            <option value="">Semua Kategori</option>
+                            @foreach($kategoris as $kategori)
+                                <option value="{{ $kategori->id }}" {{ request('kategori_id') == $kategori->id ? 'selected' : '' }}>
+                                    {{ $kategori->nama }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-2">
+                        <label class="form-label small mb-1">Teknisi</label>
+                        <select name="teknisi_id" class="form-select form-select-sm">
+                            <option value="">Semua Teknisi</option>
+                            @foreach($teknisis as $teknisi)
+                                <option value="{{ $teknisi->id }}" {{ request('teknisi_id') == $teknisi->id ? 'selected' : '' }}>
+                                    {{ $teknisi->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-4 col-md-2">
+                        <label class="form-label small mb-1">Duplikasi</label>
+                        <select name="duplicate_state" class="form-select form-select-sm">
+                            <option value="">Semua</option>
+                            <option value="potential" {{ request('duplicate_state') == 'potential' ? 'selected' : '' }}>Kemungkinan Duplikat</option>
+                            <option value="marked" {{ request('duplicate_state') == 'marked' ? 'selected' : '' }}>Sudah Ditandai</option>
+                            <option value="normal" {{ request('duplicate_state') == 'normal' ? 'selected' : '' }}>Normal</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-8 col-md-4 col-lg-3">
+                        <label class="form-label small mb-1">Cari</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="search" class="form-control"
+                                   placeholder="Kode, judul, pelapor..." value="{{ request('search') }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small">Urgensi</label>
-                    <select name="urgensi" class="form-select form-select-sm">
-                        <option value="">Semua Urgensi</option>
-                        <option value="rendah" {{ request('urgensi') == 'rendah' ? 'selected' : '' }}>Rendah</option>
-                        <option value="sedang" {{ request('urgensi') == 'sedang' ? 'selected' : '' }}>Sedang</option>
-                        <option value="tinggi" {{ request('urgensi') == 'tinggi' ? 'selected' : '' }}>Tinggi</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small">Kategori</label>
-                    <select name="kategori_id" class="form-select form-select-sm">
-                        <option value="">Semua Kategori</option>
-                        @foreach($kategoris as $kategori)
-                            <option value="{{ $kategori->id }}" {{ request('kategori_id') == $kategori->id ? 'selected' : '' }}>
-                                {{ $kategori->nama }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small">Teknisi</label>
-                    <select name="assigned_to" class="form-select form-select-sm">
-                        <option value="">Semua Teknisi</option>
-                        @foreach($teknisis as $teknisi)
-                            <option value="{{ $teknisi->id }}" {{ request('assigned_to') == $teknisi->id ? 'selected' : '' }}>
-                                {{ $teknisi->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small">Cari</label>
-                    <input type="text" name="search" class="form-control form-control-sm" 
-                           placeholder="Kode, judul, pelapor..." value="{{ request('search') }}">
-                </div>
-                <div class="col-md-1 d-flex align-items-end gap-1">
-                    <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="fas fa-search"></i>
-                    </button>
-                    <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="fas fa-times"></i>
-                    </a>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -82,6 +140,46 @@
 <div class="card">
     <div class="card-body p-0">
         @if($pengaduans->count() > 0)
+
+            {{-- ===== MOBILE CARD LIST (hidden on md+) ===== --}}
+            <div class="d-md-none p-3 d-flex flex-column gap-3">
+                @foreach($pengaduans as $pengaduan)
+                    <a href="{{ route('admin.pengaduan.show', $pengaduan) }}"
+                       class="pengaduan-card-mobile text-decoration-none {{ $pengaduan->prioritas === 'urgent' && !in_array($pengaduan->status, ['selesai','ditolak']) ? 'border-danger' : '' }}">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="kode">{{ $pengaduan->kode_pengaduan }}</span>
+                            <div class="d-flex gap-1">
+                                <span class="badge badge-status badge-{{ $pengaduan->prioritas }}">{{ ucfirst($pengaduan->prioritas) }}</span>
+                                <span class="badge badge-status badge-{{ $pengaduan->status }}">{{ ucfirst($pengaduan->status) }}</span>
+                            </div>
+                        </div>
+                        <div class="judul mb-1">{{ Str::limit($pengaduan->judul, 50) }}</div>
+                        <div class="d-flex flex-wrap gap-3 meta">
+                            <span><i class="fas fa-user me-1"></i>{{ $pengaduan->user->name ?? '-' }}</span>
+                            <span><i class="fas fa-tag me-1"></i>{{ $pengaduan->kategori->nama ?? '-' }}</span>
+                            @if($pengaduan->assignedTo)
+                                <span><i class="fas fa-hard-hat me-1"></i>{{ $pengaduan->assignedTo->name }}</span>
+                            @endif
+                            <span><i class="fas fa-calendar me-1"></i>{{ $pengaduan->created_at->format('d/m/Y') }}</span>
+                        </div>
+                        @if($pengaduan->is_marked_duplicate && $pengaduan->duplicateOf)
+                            <div class="mt-2">
+                                <span class="badge bg-danger-subtle text-danger border">Duplikat dari {{ $pengaduan->duplicateOf->kode_pengaduan }}</span>
+                                @if($pengaduan->is_auto_closed_duplicate)
+                                    <span class="badge bg-info-subtle text-info border">Auto-closed</span>
+                                @endif
+                            </div>
+                        @elseif($pengaduan->has_potential_duplicate)
+                            <div class="mt-2">
+                                <span class="badge bg-warning-subtle text-warning border">Kemungkinan Duplikat</span>
+                            </div>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+
+            {{-- ===== DESKTOP TABLE (hidden below md) ===== --}}
+            <div class="d-none d-md-block">
             <div class="table-responsive">
                 <table class="table table-modern table-hover mb-0">
                     <thead>
@@ -117,6 +215,25 @@
                                     @if($pengaduan->photos->count() > 0)
                                         <small class="text-muted"><i class="fas fa-image"></i> {{ $pengaduan->photos->count() }}</small>
                                     @endif
+                                    @if($pengaduan->is_marked_duplicate && $pengaduan->duplicateOf)
+                                        <div class="mt-1">
+                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge bg-danger-subtle text-danger border text-decoration-none">
+                                                Duplikat dari {{ $pengaduan->duplicateOf->kode_pengaduan }}
+                                            </a>
+                                            @if($pengaduan->is_auto_closed_duplicate)
+                                                <span class="badge bg-info-subtle text-info border">Auto-closed (Duplikat)</span>
+                                            @endif
+                                        </div>
+                                    @elseif($pengaduan->has_potential_duplicate)
+                                        <div class="mt-1 d-flex gap-1 flex-wrap">
+                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge bg-warning-subtle text-warning border text-decoration-none">
+                                                Kemungkinan Duplikat
+                                            </a>
+                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge bg-light text-dark border text-decoration-none">
+                                                Lihat kandidat
+                                            </a>
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     <small>{{ $pengaduan->user->name ?? '-' }}</small>
@@ -124,7 +241,7 @@
                                 <td><small>{{ $pengaduan->kategori->nama ?? '-' }}</small></td>
                                 <td>
                                     <small>
-                                        {{ $pengaduan->ruangan->gedung->nama ?? '' }}<br>
+                                        {{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '' }}<br>
                                         {{ $pengaduan->lokasi_detail ?? '' }}
                                     </small>
                                 </td>
@@ -152,6 +269,7 @@
                     </tbody>
                 </table>
             </div>
+            </div>{{-- /d-none d-md-block --}}
 
             <!-- Bulk Actions -->
             <div class="card-footer d-flex justify-content-between align-items-center">
@@ -188,6 +306,9 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="ids" id="bulkStatusIds">
+                    <div class="alert alert-warning small">
+                        <strong>Konfirmasi:</strong> aksi ini akan mengubah <span id="bulkStatusCount">0</span> tiket.
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Status Baru</label>
                         <select name="status" class="form-select" required>
@@ -197,6 +318,10 @@
                             <option value="selesai">Selesai</option>
                             <option value="ditolak">Ditolak</option>
                         </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Ketik <code>TERAPKAN</code> untuk konfirmasi</label>
+                        <input type="text" name="confirmation_text" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -220,14 +345,21 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="ids" id="bulkAssignIds">
+                    <div class="alert alert-warning small">
+                        <strong>Konfirmasi:</strong> aksi ini akan menugaskan <span id="bulkAssignCount">0</span> tiket.
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Teknisi</label>
-                        <select name="assigned_to" class="form-select" required>
+                        <select name="teknisi_id" class="form-select" required>
                             <option value="">Pilih Teknisi</option>
                             @foreach($teknisis as $teknisi)
                                 <option value="{{ $teknisi->id }}">{{ $teknisi->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Ketik <code>TERAPKAN</code> untuk konfirmasi</label>
+                        <input type="text" name="confirmation_text" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -262,9 +394,11 @@
 
         if (action === 'status') {
             document.getElementById('bulkStatusIds').value = JSON.stringify(ids);
+            document.getElementById('bulkStatusCount').textContent = ids.length;
             new bootstrap.Modal(document.getElementById('bulkStatusModal')).show();
         } else if (action === 'assign') {
             document.getElementById('bulkAssignIds').value = JSON.stringify(ids);
+            document.getElementById('bulkAssignCount').textContent = ids.length;
             new bootstrap.Modal(document.getElementById('bulkAssignModal')).show();
         }
     }

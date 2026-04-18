@@ -222,7 +222,7 @@
                                     <td>{{ Str::limit($pengaduan->judul, 35) }}</td>
                                     <td>{{ $pengaduan->kategori->nama ?? '-' }}</td>
                                     <td>
-                                        <small>{{ $pengaduan->ruangan->gedung->nama ?? '' }} - {{ $pengaduan->lokasi_detail ?? '' }}</small>
+                                        <small>{{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '' }} - {{ $pengaduan->lokasi_detail ?? '' }}</small>
                                     </td>
                                     <td>
                                         @php

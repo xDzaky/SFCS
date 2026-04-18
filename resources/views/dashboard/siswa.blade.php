@@ -145,7 +145,7 @@
                                                 <i class="fas fa-tag me-1"></i>{{ $pengaduan->kategori->nama ?? '-' }}
                                             </small>
                                             <small class="text-muted ms-2">
-                                                <i class="fas fa-map-marker-alt me-1"></i>{{ $pengaduan->ruangan->gedung->nama ?? '-' }}
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}
                                             </small>
                                         </div>
                                         
@@ -195,7 +195,7 @@
                                             </td>
                                             <td>
                                                 <small class="text-muted">
-                                                    {{ $pengaduan->ruangan->gedung->nama ?? '-' }}
+                                                    {{ $pengaduan->gedung->nama ?? $pengaduan->ruangan->gedung->nama ?? '-' }}
                                                 </small>
                                             </td>
                                             <td>

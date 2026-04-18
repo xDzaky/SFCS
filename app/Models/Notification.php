@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\StoreNotificationJob;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -30,6 +31,11 @@ class Notification extends Model
     const JENIS_ASSIGNED = 'assigned';
     const JENIS_FEEDBACK_REMINDER = 'feedback_reminder';
     const JENIS_OVERDUE = 'overdue';
+    const JENIS_PINJAMAN_CREATED = 'pinjaman_created';
+    const JENIS_PINJAMAN_STATUS = 'pinjaman_status';
+    const JENIS_PRIORITY_ADJUSTED = 'priority_adjusted';
+    const JENIS_RESCHEDULED = 'rescheduled';
+    const JENIS_OVERLOAD_ALERT = 'overload_alert';
 
     /**
      * Get user
@@ -68,6 +74,11 @@ class Notification extends Model
             self::JENIS_ASSIGNED => 'fa-user-tag text-warning',
             self::JENIS_FEEDBACK_REMINDER => 'fa-star text-success',
             self::JENIS_OVERDUE => 'fa-exclamation-triangle text-danger',
+            self::JENIS_PINJAMAN_CREATED => 'fa-box-open text-primary',
+            self::JENIS_PINJAMAN_STATUS => 'fa-arrow-right-arrow-left text-info',
+            self::JENIS_PRIORITY_ADJUSTED => 'fa-sliders text-warning',
+            self::JENIS_RESCHEDULED => 'fa-calendar-days text-warning',
+            self::JENIS_OVERLOAD_ALERT => 'fa-gauge-high text-danger',
             default => 'fa-bell text-secondary',
         };
     }
@@ -97,34 +108,47 @@ class Notification extends Model
         string $judul,
         string $pesan,
         ?string $link = null
-    ): self {
+    ): ?self {
         // Auto-adjust link based on user role if it's a pengaduan link
         if ($link && str_contains($link, 'pengaduan')) {
             $user = User::find($userId);
             if ($user) {
-                // If user is siswa/guru, use siswa route
                 if (in_array($user->role, ['siswa', 'guru'])) {
+                    // Siswa/guru: strip any admin/teknisi prefix, keep plain /pengaduan/
                     $link = str_replace('/admin/pengaduan', '/pengaduan', $link);
-                }
-                // If user is teknisi, use teknisi route
-                elseif ($user->role === 'teknisi') {
+                    $link = str_replace('/teknisi/pengaduan', '/pengaduan', $link);
+
+                } elseif ($user->role === 'teknisi') {
+                    // Teknisi: convert to /teknisi/pengaduan/
                     if (str_contains($link, '/admin/pengaduan')) {
                         $link = str_replace('/admin/pengaduan', '/teknisi/pengaduan', $link);
                     } elseif (!str_contains($link, '/teknisi/pengaduan') && str_contains($link, '/pengaduan')) {
-                        $link = str_replace('/pengaduan', '/teknisi/pengaduan', $link);
+                        $link = preg_replace('#/pengaduan/#', '/teknisi/pengaduan/', $link, 1);
+                    }
+
+                } elseif (in_array($user->role, ['admin', 'superadmin'])) {
+                    // Admin/superadmin: ensure link uses /admin/pengaduan/
+                    if (!str_contains($link, '/admin/pengaduan')) {
+                        // Convert plain /pengaduan/ or /teknisi/pengaduan/ to /admin/pengaduan/
+                        $link = preg_replace('#/(teknisi/)?pengaduan/#', '/admin/pengaduan/', $link, 1);
                     }
                 }
-                // Admin/superadmin keep admin route
             }
         }
-        
-        return self::create([
-            'user_id' => $userId,
-            'jenis' => $jenis,
-            'judul' => $judul,
-            'pesan' => $pesan,
-            'link' => $link,
-            'is_read' => false,
-        ]);
+
+        if (config('queue.default') === 'sync') {
+            return self::create([
+                'user_id' => $userId,
+                'jenis' => $jenis,
+                'judul' => $judul,
+                'pesan' => $pesan,
+                'link' => $link,
+                'is_read' => false,
+            ]);
+        }
+
+        StoreNotificationJob::dispatch($userId, $jenis, $judul, $pesan, $link)->afterCommit();
+
+        return null;
     }
 }
