@@ -57,6 +57,9 @@ SECURITY.md
 # Documentation for internal use only
 error-*.md
 *-debug.md
+plan*.md
+ide_*.md
+*-draft.md
 
 # Test Coverage
 /coverage
