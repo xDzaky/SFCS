@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\PinjamanController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\Admin\AdminPengaduanController;
 use App\Http\Controllers\Admin\AdminPinjamanController;
 use App\Http\Controllers\Admin\BarangController;
@@ -53,6 +54,11 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
     Route::get('/notifications/dropdown', [NotificationController::class, 'dropdown'])->name('notifications.dropdown');
 
     Route::get('/api/school-map/active', [SchoolMapController::class, 'activeMap'])->name('api.school-map.active');
+
+    // Chatbot AI
+    Route::post('/api/chatbot', [ChatbotController::class, 'chat'])
+        ->name('chatbot.chat')
+        ->middleware('throttle:30,1');
 
     /*
     |--------------------------------------------------------------------------

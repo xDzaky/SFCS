@@ -167,16 +167,16 @@
                                         {{ $pengaduan->kode_pengaduan }}
                                     </span>
                                     @php
-                                        $statusColors = [
-                                            'pending' => 'warning',
-                                            'diverifikasi' => 'info',
-                                            'diproses' => 'primary',
-                                            'selesai' => 'success',
-                                            'ditolak' => 'danger'
+                                        $statusMap = [
+                                            'pending'      => 'badge-status-pending',
+                                            'diverifikasi' => 'badge-status-diverifikasi',
+                                            'diproses'     => 'badge-status-diproses',
+                                            'selesai'      => 'badge-status-selesai',
+                                            'ditolak'      => 'badge-status-ditolak',
                                         ];
-                                        $sColor = $statusColors[$pengaduan->status] ?? 'secondary';
+                                        $sClass = $statusMap[$pengaduan->status] ?? 'badge-status-pending';
                                     @endphp
-                                    <span class="badge bg-{{ $sColor }} small">
+                                    <span class="badge {{ $sClass }} small">
                                         {{ ucfirst($pengaduan->status) }}
                                     </span>
                                 </div>
@@ -226,16 +226,16 @@
                                     </td>
                                     <td>
                                         @php
-                                            $statusColors = [
-                                                'pending' => 'warning',
-                                                'diverifikasi' => 'info',
-                                                'diproses' => 'primary',
-                                                'selesai' => 'success',
-                                                'ditolak' => 'danger'
+                                            $statusMap = [
+                                                'pending'      => 'badge-status-pending',
+                                                'diverifikasi' => 'badge-status-diverifikasi',
+                                                'diproses'     => 'badge-status-diproses',
+                                                'selesai'      => 'badge-status-selesai',
+                                                'ditolak'      => 'badge-status-ditolak',
                                             ];
-                                            $sColor = $statusColors[$pengaduan->status] ?? 'secondary';
+                                            $sClass = $statusMap[$pengaduan->status] ?? 'badge-status-pending';
                                         @endphp
-                                        <span class="badge bg-{{ $sColor }}">
+                                        <span class="badge {{ $sClass }}">
                                             {{ ucfirst($pengaduan->status) }}
                                         </span>
                                     </td>

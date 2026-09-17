@@ -10,6 +10,11 @@ use Illuminate\Support\Collection;
 
 class SchoolMapService
 {
+    public function hasActiveMap(): bool
+    {
+        return SchoolMap::query()->where('is_active', true)->exists();
+    }
+
     public function buildLayerBlueprints(string $absolutePath, string $fileType): array
     {
         return $fileType === 'pdf'
@@ -195,6 +200,8 @@ class SchoolMapService
         if (!$map) {
             return [
                 'available' => false,
+                'hide_picker' => true,
+                'reason_code' => 'no_active_map',
                 'message' => 'Belum ada denah aktif.',
             ];
         }
@@ -210,6 +217,8 @@ class SchoolMapService
 
         return [
             'available' => true,
+            'hide_picker' => false,
+            'reason_code' => $selectedLayer ? null : 'no_matching_layer',
             'map' => [
                 'id' => $map->id,
                 'nama' => $map->nama,

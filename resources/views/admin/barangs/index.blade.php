@@ -79,7 +79,7 @@
                     <label class="form-label small fw-semibold">Cari Barang</label>
                     <input type="text" name="search" class="form-control" placeholder="Nama, kode, kategori, lokasi" value="{{ request('search') }}">
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-2">
                     <label class="form-label small fw-semibold">Status</label>
                     <select name="status" class="form-select">
                         <option value="">Semua status</option>
@@ -88,9 +88,17 @@
                     </select>
                 </div>
                 <div class="col-lg-2">
+                    <label class="form-label small fw-semibold">Unit Sarpras</label>
+                    <select name="unit_sarpras" class="form-select">
+                        <option value="">Semua unit</option>
+                        <option value="atas"  {{ request('unit_sarpras') === 'atas'  ? 'selected' : '' }}>Sarpras Atas</option>
+                        <option value="bawah" {{ request('unit_sarpras') === 'bawah' ? 'selected' : '' }}>Sarpras Bawah</option>
+                    </select>
+                </div>
+                <div class="col-lg-1">
                     <label class="form-label small fw-semibold">Kategori</label>
                     <select name="kategori" class="form-select">
-                        <option value="">Semua kategori</option>
+                        <option value="">Semua</option>
                         @foreach($categories as $category)
                             <option value="{{ $category }}" {{ request('kategori') === $category ? 'selected' : '' }}>{{ $category }}</option>
                         @endforeach
@@ -160,7 +168,6 @@
                 </form>
             </div>
         </div>
-        @include('admin.barangs.partials.edit-modal', ['barang' => $barang])
     @empty
         <div class="card shadow-sm border-0">
             <div class="card-body text-center py-5">
@@ -182,6 +189,8 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="ps-4">Barang</th>
+                        <th>Unit Sarpras</th>
+                        <th>Tipe</th>
                         <th>Kategori</th>
                         <th>Lokasi</th>
                         <th class="text-center">Total</th>
@@ -199,8 +208,18 @@
                                 <div class="fw-semibold">{{ $barang->nama }}</div>
                                 <div class="small text-muted">{{ $barang->kode_barang }}</div>
                             </td>
+                            <td>
+                                <span class="badge {{ $barang->unit_sarpras === 'bawah' ? 'bg-success' : 'bg-primary' }} bg-opacity-75">
+                                    {{ $barang->unit_sarpras === 'bawah' ? 'Sarpras Bawah' : 'Sarpras Atas' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge {{ $barang->tipe_transaksi === 'minta' ? 'bg-warning text-dark' : 'bg-info text-dark' }}">
+                                    {{ $barang->tipe_transaksi === 'minta' ? 'Permintaan' : 'Pinjaman' }}
+                                </span>
+                            </td>
                             <td>{{ $barang->kategori ?: '-' }}</td>
-                            <td>{{ $barang->lokasi ?: '-' }}</td>
+                            <td><small class="text-muted">{{ $barang->lokasi ?: '-' }}</small></td>
                             <td class="text-center fw-semibold">{{ $barang->stok_total }}</td>
                             <td class="text-center text-info fw-semibold">{{ $barang->stok_tersedia }}</td>
                             <td class="text-center text-danger fw-semibold">{{ $barang->stok_rusak }}</td>
@@ -212,7 +231,8 @@
                             <td class="text-center small text-muted">{{ $barang->pinjamans_count }}x</td>
                             <td class="text-end pe-4">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editBarangModal{{ $barang->id }}">
+                                    <button type="button" class="btn btn-outline-primary btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#editBarangModal{{ $barang->id }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <form method="POST" action="{{ route('admin.barangs.toggle-status', $barang) }}">
@@ -221,7 +241,8 @@
                                             <i class="fas {{ $barang->is_active ? 'fa-eye-slash' : 'fa-eye' }}"></i>
                                         </button>
                                     </form>
-                                    <form method="POST" action="{{ route('admin.barangs.destroy', $barang) }}" onsubmit="return confirm('Hapus barang ini?')">
+                                    <form method="POST" action="{{ route('admin.barangs.destroy', $barang) }}"
+                                        onsubmit="return confirm('Hapus barang ini?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger btn-sm">
@@ -231,10 +252,9 @@
                                 </div>
                             </td>
                         </tr>
-                        @include('admin.barangs.partials.edit-modal', ['barang' => $barang])
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="11" class="text-center py-5">
                                 <i class="fas fa-box-open fa-3x text-muted mb-3 d-block"></i>
                                 <div class="fw-semibold">Belum ada barang</div>
                                 <div class="text-muted mb-3">Tambahkan barang pertama supaya siswa bisa mulai meminjam fasilitas sekolah.</div>
@@ -274,4 +294,10 @@
         </div>
     </div>
 </div>
+
+{{-- Edit Modals — HARUS di luar tabel agar DOM-nya valid --}}
+@foreach($barangs as $barang)
+    @include('admin.barangs.partials.edit-modal', ['barang' => $barang])
+@endforeach
+
 @endsection

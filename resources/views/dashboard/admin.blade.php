@@ -5,17 +5,17 @@
 @section('content')
 @php
     $statusColors = [
-        'pending'      => ['badge' => 'warning',  'label' => 'Pending'],
-        'diverifikasi' => ['badge' => 'info',      'label' => 'Diverifikasi'],
-        'diproses'     => ['badge' => 'primary',   'label' => 'Diproses'],
-        'selesai'      => ['badge' => 'success',   'label' => 'Selesai'],
-        'ditolak'      => ['badge' => 'danger',    'label' => 'Ditolak'],
+        'pending'      => ['class' => 'badge-status-pending',      'label' => 'Pending'],
+        'diverifikasi' => ['class' => 'badge-status-diverifikasi',  'label' => 'Diverifikasi'],
+        'diproses'     => ['class' => 'badge-status-diproses',      'label' => 'Diproses'],
+        'selesai'      => ['class' => 'badge-status-selesai',       'label' => 'Selesai'],
+        'ditolak'      => ['class' => 'badge-status-ditolak',       'label' => 'Ditolak'],
     ];
     $prioritasColors = [
-        'urgent' => ['badge' => 'danger',    'label' => 'Darurat'],
-        'tinggi' => ['badge' => 'warning',   'label' => 'Tinggi'],
-        'sedang' => ['badge' => 'info',      'label' => 'Sedang'],
-        'rendah' => ['badge' => 'secondary', 'label' => 'Rendah'],
+        'urgent' => ['class' => 'badge-prioritas-urgent', 'label' => 'Darurat'],
+        'tinggi' => ['class' => 'badge-prioritas-tinggi', 'label' => 'Tinggi'],
+        'sedang' => ['class' => 'badge-prioritas-sedang', 'label' => 'Sedang'],
+        'rendah' => ['class' => 'badge-prioritas-rendah', 'label' => 'Rendah'],
     ];
 @endphp
 
@@ -193,10 +193,19 @@
                             <span class="dash-badge-icon bg-primary-subtle text-primary">
                                 <i class="fas fa-list-check"></i>
                             </span>
-                            <h6 class="mb-0 fw-semibold">Pengaduan Terbaru</h6>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">Pengaduan Terbaru</h6>
+                                @if($totalPengaduans > 8)
+                                    <small class="text-muted" style="font-size:.72rem;">Menampilkan 8 dari {{ $totalPengaduans }} laporan</small>
+                                @endif
+                            </div>
                         </div>
                         <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size:.78rem;">
-                            Semua <i class="fas fa-arrow-right ms-1"></i>
+                            @if($totalPengaduans > 8)
+                                Lihat Semua ({{ $totalPengaduans }}) <i class="fas fa-arrow-right ms-1"></i>
+                            @else
+                                Semua <i class="fas fa-arrow-right ms-1"></i>
+                            @endif
                         </a>
                     </div>
 
@@ -223,12 +232,12 @@
                                     <td class="fw-medium">{{ Str::limit($p->judul, 35) }}</td>
                                     <td class="text-muted">{{ $p->user->name ?? '-' }}</td>
                                     <td>
-                                        @php $sc = $statusColors[$p->status] ?? ['badge'=>'secondary','label'=>ucfirst($p->status)]; @endphp
-                                        <span class="badge bg-{{ $sc['badge'] }}-subtle text-{{ $sc['badge'] }}-emphasis border border-{{ $sc['badge'] }}-subtle rounded-pill" style="font-size:.7rem;">{{ $sc['label'] }}</span>
+                                        @php $sc = $statusColors[$p->status] ?? ['class'=>'badge-status-pending','label'=>ucfirst($p->status)]; @endphp
+                                        <span class="badge {{ $sc['class'] }} rounded-pill" style="font-size:.7rem;">{{ $sc['label'] }}</span>
                                     </td>
                                     <td>
-                                        @php $pc = $prioritasColors[$p->prioritas] ?? ['badge'=>'secondary','label'=>ucfirst($p->prioritas)]; @endphp
-                                        <span class="badge bg-{{ $pc['badge'] }}-subtle text-{{ $pc['badge'] }}-emphasis border border-{{ $pc['badge'] }}-subtle rounded-pill" style="font-size:.7rem;">{{ $pc['label'] }}</span>
+                                        @php $pc = $prioritasColors[$p->prioritas] ?? ['class'=>'badge-prioritas-unknown','label'=>ucfirst($p->prioritas)]; @endphp
+                                        <span class="badge {{ $pc['class'] }} rounded-pill" style="font-size:.7rem;">{{ $pc['label'] }}</span>
                                     </td>
                                     <td class="text-center pe-3">
                                         <a href="{{ route('admin.pengaduan.show', $p) }}" class="btn btn-sm btn-outline-primary rounded-circle p-1" style="width:28px;height:28px;line-height:1;">
@@ -257,7 +266,7 @@
                                 <div class="min-w-0 flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-start gap-1">
                                         <span class="fw-semibold text-dark small" style="font-size:.83rem;">{{ Str::limit($p->judul, 38) }}</span>
-                                        <span class="badge bg-{{ $sc['badge'] }}" style="font-size:.65rem;white-space:nowrap;">{{ $sc['label'] }}</span>
+                                        <span class="badge {{ $sc['class'] }}" style="font-size:.65rem;white-space:nowrap;">{{ $sc['label'] }}</span>
                                     </div>
                                     <div class="text-muted" style="font-size:.7rem;">
                                         <span class="font-monospace">{{ $p->kode_pengaduan }}</span>

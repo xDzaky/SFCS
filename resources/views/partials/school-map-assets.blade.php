@@ -13,6 +13,14 @@
                 border-radius: 1rem;
                 overflow: hidden;
                 background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+                z-index: 1;
+                isolation: isolate;
+            }
+
+            .sfcs-map-frame .leaflet-container,
+            .leaflet-container {
+                z-index: 1 !important;
+                isolation: isolate !important;
             }
 
             .sfcs-map-stage {

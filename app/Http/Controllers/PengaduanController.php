@@ -83,8 +83,9 @@ class PengaduanController extends Controller
     {
         $kategoris = Kategori::with('subKategoris')->where('is_active', true)->get();
         $gedungs = Gedung::where('is_active', true)->get();
+        $mapPickerEnabled = $this->schoolMapService->hasActiveMap();
 
-        return view('pengaduan.create', compact('kategoris', 'gedungs'));
+        return view('pengaduan.create', compact('kategoris', 'gedungs', 'mapPickerEnabled'));
     }
 
     /**
@@ -300,8 +301,9 @@ class PengaduanController extends Controller
 
         $kategoris = Kategori::with('subKategoris')->where('is_active', true)->get();
         $gedungs = Gedung::where('is_active', true)->get();
+        $mapPickerEnabled = $this->schoolMapService->hasActiveMap();
 
-        return view('pengaduan.edit', compact('pengaduan', 'kategoris', 'gedungs'));
+        return view('pengaduan.edit', compact('pengaduan', 'kategoris', 'gedungs', 'mapPickerEnabled'));
     }
 
     /**

@@ -16,6 +16,7 @@ class Pinjaman extends Model
         'user_id',
         'barang_id',
         'qty',
+        'tipe',
         'tgl_pinjam',
         'tgl_jatuh_tempo',
         'tgl_kembali',
@@ -28,21 +29,36 @@ class Pinjaman extends Model
     ];
 
     protected $casts = [
-        'qty' => 'integer',
-        'tgl_pinjam' => 'datetime',
+        'qty'           => 'integer',
+        'tgl_pinjam'    => 'datetime',
         'tgl_jatuh_tempo' => 'datetime',
-        'tgl_kembali' => 'datetime',
-        'approved_at' => 'datetime',
+        'tgl_kembali'   => 'datetime',
+        'approved_at'   => 'datetime',
         'checked_out_at' => 'datetime',
         'marked_late_at' => 'datetime',
     ];
 
-    public const STATUS_PENDING = 'pending';
+    public const STATUS_PENDING   = 'pending';
     public const STATUS_DISETUJUI = 'disetujui';
-    public const STATUS_DIPINJAM = 'dipinjam';
+    public const STATUS_DIPINJAM  = 'dipinjam';
     public const STATUS_TERLAMBAT = 'terlambat';
-    public const STATUS_SELESAI = 'selesai';
-    public const STATUS_DITOLAK = 'ditolak';
+    public const STATUS_SELESAI   = 'selesai';
+    public const STATUS_DITOLAK   = 'ditolak';
+
+    public const TIPE_PINJAM = 'pinjam';
+    public const TIPE_MINTA  = 'minta';
+
+    /** Apakah ini transaksi permintaan (tidak dikembalikan)? */
+    public function isPermintaan(): bool
+    {
+        return $this->tipe === self::TIPE_MINTA;
+    }
+
+    /** Label tipe yang ramah tampilan */
+    public function getLabelTipeAttribute(): string
+    {
+        return $this->tipe === self::TIPE_MINTA ? 'Permintaan Barang' : 'Peminjaman Barang';
+    }
 
     public function getRouteKeyName(): string
     {
@@ -63,7 +79,7 @@ class Pinjaman extends Model
     public static function generateKode(): string
     {
         $tanggal = now()->format('Ymd');
-        $prefix = "PJM-{$tanggal}-";
+        $prefix  = "PJM-{$tanggal}-";
 
         $last = self::query()
             ->where('kode_pinjaman', 'like', $prefix.'%')

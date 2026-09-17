@@ -35,6 +35,20 @@
     }
     /* Active filter indicator */
     .has-filter { border-color: var(--primary-color) !important; }
+
+    /* ── Badge Prioritas & Status ─────────────────────────────────── */
+    .badge-status { font-size: .72rem; font-weight: 600; letter-spacing: .02em; }
+    /* Prioritas */
+    .badge-rendah  { background-color: #16a34a !important; color: #fff !important; }
+    .badge-sedang  { background-color: #d97706 !important; color: #fff !important; }
+    .badge-tinggi  { background-color: #ea580c !important; color: #fff !important; }
+    .badge-urgent  { background-color: #dc2626 !important; color: #fff !important; }
+    /* Status */
+    .badge-pending      { background-color: #6b7280 !important; color: #fff !important; }
+    .badge-diverifikasi { background-color: #0284c7 !important; color: #fff !important; }
+    .badge-diproses     { background-color: #d97706 !important; color: #fff !important; }
+    .badge-selesai      { background-color: #16a34a !important; color: #fff !important; }
+    .badge-ditolak      { background-color: #dc2626 !important; color: #fff !important; }
 </style>
 @endpush
 
@@ -164,14 +178,14 @@
                         </div>
                         @if($pengaduan->is_marked_duplicate && $pengaduan->duplicateOf)
                             <div class="mt-2">
-                                <span class="badge bg-danger-subtle text-danger border">Duplikat dari {{ $pengaduan->duplicateOf->kode_pengaduan }}</span>
+                                <span class="badge badge-ditolak border">Duplikat dari {{ $pengaduan->duplicateOf->kode_pengaduan }}</span>
                                 @if($pengaduan->is_auto_closed_duplicate)
-                                    <span class="badge bg-info-subtle text-info border">Auto-closed</span>
+                                    <span class="badge badge-diverifikasi border">Auto-closed</span>
                                 @endif
                             </div>
                         @elseif($pengaduan->has_potential_duplicate)
                             <div class="mt-2">
-                                <span class="badge bg-warning-subtle text-warning border">Kemungkinan Duplikat</span>
+                                <span class="badge badge-sedang border">Kemungkinan Duplikat</span>
                             </div>
                         @endif
                     </a>
@@ -217,19 +231,19 @@
                                     @endif
                                     @if($pengaduan->is_marked_duplicate && $pengaduan->duplicateOf)
                                         <div class="mt-1">
-                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge bg-danger-subtle text-danger border text-decoration-none">
+                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge badge-ditolak text-decoration-none">
                                                 Duplikat dari {{ $pengaduan->duplicateOf->kode_pengaduan }}
                                             </a>
                                             @if($pengaduan->is_auto_closed_duplicate)
-                                                <span class="badge bg-info-subtle text-info border">Auto-closed (Duplikat)</span>
+                                                <span class="badge badge-diverifikasi">Auto-closed (Duplikat)</span>
                                             @endif
                                         </div>
                                     @elseif($pengaduan->has_potential_duplicate)
                                         <div class="mt-1 d-flex gap-1 flex-wrap">
-                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge bg-warning-subtle text-warning border text-decoration-none">
+                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge badge-sedang text-decoration-none">
                                                 Kemungkinan Duplikat
                                             </a>
-                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge bg-light text-dark border text-decoration-none">
+                                            <a href="{{ route('admin.pengaduan.show', $pengaduan) }}#duplicate-panel" class="badge badge-pending text-decoration-none">
                                                 Lihat kandidat
                                             </a>
                                         </div>

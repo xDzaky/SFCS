@@ -47,10 +47,13 @@ storage/app/public/*
 .Trashes
 ehthumbs.db
 
-# Test & Development Files (removed for commercial sale)
-/tests
+# Test & Development Files
+/tests/**
+!/tests/
+!/tests/Feature/
+!/tests/Feature/PengaduanMapPickerVisibilityTest.php
 /screenshots
-phpunit.xml
+!phpunit.xml
 CONTRIBUTING.md
 SECURITY.md
 
