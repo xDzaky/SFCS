@@ -140,17 +140,19 @@
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        @include('partials.pengaduan-map-picker', [
-                            'pickerId' => 'edit-pengaduan-map-picker',
-                            'formId' => 'pengaduanEditForm',
-                            'selectedMapId' => old('school_map_id', $pengaduan->school_map_id),
-                            'selectedLayerId' => old('school_map_layer_id', $pengaduan->school_map_layer_id),
-                            'selectedPointX' => old('map_point_x', $pengaduan->map_point_x),
-                            'selectedPointY' => old('map_point_y', $pengaduan->map_point_y),
-                            'selectedZoom' => old('map_zoom', $pengaduan->map_zoom ?? 2),
-                        ])
-                    </div>
+                    @if($mapPickerEnabled ?? false)
+                        <div class="mb-4">
+                            @include('partials.pengaduan-map-picker', [
+                                'pickerId' => 'edit-pengaduan-map-picker',
+                                'formId' => 'pengaduanEditForm',
+                                'selectedMapId' => old('school_map_id', $pengaduan->school_map_id),
+                                'selectedLayerId' => old('school_map_layer_id', $pengaduan->school_map_layer_id),
+                                'selectedPointX' => old('map_point_x', $pengaduan->map_point_x),
+                                'selectedPointY' => old('map_point_y', $pengaduan->map_point_y),
+                                'selectedZoom' => old('map_zoom', $pengaduan->map_zoom ?? 2),
+                            ])
+                        </div>
+                    @endif
 
                     <!-- Tanggal Kejadian -->
                     <div class="mb-4">
@@ -251,17 +253,35 @@
                     <!-- Current Photos -->
                     @if($pengaduan->photos && $pengaduan->photos->count() > 0)
                         <div class="mb-4">
-                            <label class="form-label">Foto Saat Ini ({{ $pengaduan->photos->count() }})</label>
-                            <div class="row g-2">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="form-label mb-0 fw-semibold">
+                                    <i class="fas fa-images text-primary me-1"></i>Foto Saat Ini ({{ $pengaduan->photos->count() }})
+                                </label>
+                                <small class="text-muted">Klik foto untuk perbesar</small>
+                            </div>
+                            <div class="row g-3">
                                 @foreach($pengaduan->photos as $photo)
-                                    <div class="col-6 col-md-3">
-                                        <div class="position-relative">
-                                            <img src="{{ asset('storage/' . $photo->file_path) }}" class="img-fluid rounded" 
-                                                 style="width: 100%; height: 120px; object-fit: cover;">
-                                            <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 5px; right: 5px;"
-                                                    onclick="if(confirm('Hapus foto ini?')) document.getElementById('delete-photo-{{ $photo->id }}').submit()">
-                                                <i class="fas fa-times"></i>
+                                    <div class="col-6 col-md-4 col-lg-3">
+                                        <div class="card border border-light-subtle rounded-3 overflow-hidden shadow-none position-relative h-100">
+                                            <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="edit-gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}" class="d-block position-relative">
+                                                <img src="{{ asset('storage/' . $photo->file_path) }}" class="img-fluid w-100" 
+                                                     style="height: 130px; object-fit: cover;" alt="Bukti Foto">
+                                                <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white small" style="font-size:.65rem;">
+                                                    <i class="fas fa-search-plus me-1"></i>Perbesar
+                                                </span>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger position-absolute rounded-circle shadow-sm" 
+                                                    style="top: 6px; right: 6px; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 2;"
+                                                    title="Hapus foto ini"
+                                                    onclick="if(confirm('Hapus foto ini dari pengaduan?')) document.getElementById('delete-photo-{{ $photo->id }}').submit()">
+                                                <i class="fas fa-trash-alt" style="font-size:.75rem;"></i>
                                             </button>
+                                            <div class="p-1 text-center bg-light small text-muted" style="font-size:.7rem;">
+                                                {{ ucfirst($photo->tipe ?? 'Bukti') }}
+                                                @if($photo->file_size_human)
+                                                    • {{ $photo->file_size_human }}
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach

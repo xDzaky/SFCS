@@ -26,6 +26,10 @@ class PinjamanController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('tipe')) {
+            $query->where('tipe', $request->tipe);
+        }
+
         $pinjamans = $query->paginate(10);
 
         return view('pinjaman.index', compact('pinjamans'));
@@ -36,48 +40,63 @@ class PinjamanController extends Controller
         $barangs = Barang::query()
             ->active()
             ->where('stok_tersedia', '>', 0)
+            ->orderBy('unit_sarpras')
             ->orderBy('nama')
-            ->get();
+            ->get()
+            ->groupBy('unit_sarpras');
 
         return view('pinjaman.create', compact('barangs'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $barang = Barang::query()->findOrFail($request->input('barang_id'));
+        $isPermintaan = $barang->tipe_transaksi === 'minta';
+
+        $rules = [
             'barang_id' => 'required|exists:barangs,id',
-            'qty' => 'required|integer|min:1',
-            'durasi_hari' => 'required|integer|min:1|max:30',
-            'alasan' => 'required|string|min:10|max:1000',
-        ]);
+            'qty'       => 'required|integer|min:1',
+            'alasan'    => 'required|string|min:10|max:1000',
+        ];
+
+        // Durasi hanya diperlukan untuk pinjaman (bukan permintaan)
+        if (!$isPermintaan) {
+            $rules['durasi_hari'] = 'required|integer|min:1|max:30';
+        }
+
+        $validated = $request->validate($rules);
 
         $barang = Barang::query()->lockForUpdate()->findOrFail($validated['barang_id']);
 
         if (!$barang->is_active) {
-            return back()->with('error', 'Barang tidak aktif untuk dipinjam.')->withInput();
+            return back()->with('error', 'Barang tidak aktif.')->withInput();
         }
 
         if ($validated['qty'] > $barang->stok_tersedia) {
-            return back()->with('error', 'Jumlah pinjam melebihi stok tersedia.')->withInput();
+            return back()->with('error', 'Jumlah melebihi stok tersedia.')->withInput();
         }
 
-        DB::transaction(function () use ($validated): void {
+        DB::transaction(function () use ($validated, $barang, $isPermintaan): void {
             $now = now();
+
             $pinjaman = Pinjaman::create([
-                'user_id' => Auth::id(),
-                'barang_id' => $validated['barang_id'],
-                'qty' => $validated['qty'],
-                'tgl_pinjam' => $now,
-                'tgl_jatuh_tempo' => Carbon::parse($now)->addDays((int) $validated['durasi_hari']),
-                'status' => Pinjaman::STATUS_PENDING,
-                'alasan' => $validated['alasan'],
+                'user_id'        => Auth::id(),
+                'barang_id'      => $barang->id,
+                'qty'            => $validated['qty'],
+                'tipe'           => $barang->tipe_transaksi,
+                'tgl_pinjam'     => $now,
+                'tgl_jatuh_tempo' => $isPermintaan
+                    ? $now // permintaan: jatuh tempo = hari ini (tidak relevan)
+                    : Carbon::parse($now)->addDays((int) $validated['durasi_hari']),
+                'status'         => Pinjaman::STATUS_PENDING,
+                'alasan'         => $validated['alasan'],
             ]);
 
             PinjamanLog::createLog(
                 $pinjaman->id,
                 Auth::id(),
                 'create',
-                "Pengajuan pinjaman {$pinjaman->kode_pinjaman} dibuat"
+                ($isPermintaan ? "Pengajuan permintaan" : "Pengajuan pinjaman") . " {$pinjaman->kode_pinjaman} dibuat"
             );
 
             $admins = User::query()->whereIn('role', ['admin', 'superadmin'])->pluck('id');
@@ -85,14 +104,18 @@ class PinjamanController extends Controller
                 Notification::send(
                     $adminId,
                     Notification::JENIS_PINJAMAN_CREATED,
-                    'Pengajuan Pinjaman Baru',
-                    "Pengajuan {$pinjaman->kode_pinjaman} menunggu persetujuan admin.",
+                    $isPermintaan ? 'Permintaan Barang Baru' : 'Pengajuan Pinjaman Baru',
+                    "Pengajuan {$pinjaman->kode_pinjaman} menunggu persetujuan.",
                     route('admin.pinjaman.show', $pinjaman)
                 );
             }
         });
 
-        return redirect()->route('pinjaman.index')->with('success', 'Pengajuan pinjaman berhasil dikirim.');
+        $msg = $isPermintaan
+            ? 'Permintaan barang berhasil dikirim. Tunggu persetujuan admin.'
+            : 'Pengajuan pinjaman berhasil dikirim.';
+
+        return redirect()->route('pinjaman.index')->with('success', $msg);
     }
 
     public function show(Pinjaman $pinjaman)
@@ -113,13 +136,13 @@ class PinjamanController extends Controller
         }
 
         if ($pinjaman->status !== Pinjaman::STATUS_PENDING) {
-            return back()->with('error', 'Hanya pinjaman pending yang bisa dibatalkan.');
+            return back()->with('error', 'Hanya pengajuan pending yang bisa dibatalkan.');
         }
 
         $pinjaman->update(['status' => Pinjaman::STATUS_DITOLAK, 'catatan_admin' => 'Dibatalkan peminjam.']);
         PinjamanLog::createLog($pinjaman->id, Auth::id(), 'cancel', 'Pengajuan dibatalkan peminjam.');
 
-        return back()->with('success', 'Pengajuan pinjaman berhasil dibatalkan.');
+        return back()->with('success', 'Pengajuan berhasil dibatalkan.');
     }
 
     public function submitFeedback(Request $request, Pinjaman $pinjaman)
@@ -129,26 +152,26 @@ class PinjamanController extends Controller
         }
 
         if ($pinjaman->status !== Pinjaman::STATUS_SELESAI) {
-            return back()->with('error', 'Feedback hanya bisa diberikan setelah pinjaman selesai.');
+            return back()->with('error', 'Feedback hanya bisa diberikan setelah transaksi selesai.');
         }
 
         if ($pinjaman->feedback) {
-            return back()->with('error', 'Feedback untuk pinjaman ini sudah diberikan.');
+            return back()->with('error', 'Feedback sudah diberikan.');
         }
 
         $validated = $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
+            'rating'   => 'required|integer|min:1|max:5',
             'komentar' => 'nullable|string|max:1000',
         ]);
 
         PinjamanFeedback::create([
             'pinjaman_id' => $pinjaman->id,
-            'user_id' => Auth::id(),
-            'rating' => $validated['rating'],
-            'komentar' => $validated['komentar'] ?? null,
+            'user_id'     => Auth::id(),
+            'rating'      => $validated['rating'],
+            'komentar'    => $validated['komentar'] ?? null,
         ]);
 
-        PinjamanLog::createLog($pinjaman->id, Auth::id(), 'feedback', 'Feedback peminjaman diberikan.');
+        PinjamanLog::createLog($pinjaman->id, Auth::id(), 'feedback', 'Feedback diberikan.');
 
         return back()->with('success', 'Terima kasih, feedback Anda sudah tersimpan.');
     }

@@ -9,7 +9,7 @@
 
 @include('partials.school-map-assets')
 
-<div class="col-12">
+<div class="col-12" id="{{ $pickerId }}-wrapper">
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
@@ -66,6 +66,7 @@
     <script>
         (() => {
             const pickerId = @json($pickerId);
+            const wrapper = document.getElementById(`${pickerId}-wrapper`);
             const stage = document.getElementById(`${pickerId}-stage`);
             const frame = document.getElementById(`${pickerId}-frame`);
             const message = document.getElementById(`${pickerId}-message`);
@@ -139,6 +140,7 @@
                 const lantai = lantaiSelect?.value;
 
                 if (!gedungId) {
+                    showPickerWrapper();
                     applyEmptyState('Pilih gedung dulu. Setelah itu peta denah akan dimuat otomatis untuk membantu pilih titik kerusakan.', 'Menunggu gedung');
                     resetHiddenFields({ preserveOld: true });
                     return;
@@ -157,6 +159,15 @@
                     });
 
                     payload = await response.json();
+                    if (payload?.hide_picker) {
+                        hidePickerWrapper();
+                        resetHiddenFields();
+                        payload = { available: false, hide_picker: true };
+                        currentLayer = null;
+                        return;
+                    }
+
+                    showPickerWrapper();
                     if (!response.ok || !payload?.available) {
                         applyEmptyState(payload?.message || 'Belum ada denah aktif. Sistem akan memakai lokasi teks biasa.', 'Denah nonaktif');
                         resetHiddenFields();
@@ -228,6 +239,22 @@
                 stage.innerHTML = '';
                 frame.classList.add('d-none');
                 meta.innerHTML = '';
+            }
+
+            function hidePickerWrapper() {
+                wrapper?.classList.add('d-none');
+                if (skipMapCheckbox) {
+                    skipMapCheckbox.checked = true;
+                }
+                if (skipMapInput) {
+                    skipMapInput.value = '1';
+                }
+                clearMapPoint();
+                clearPickerError();
+            }
+
+            function showPickerWrapper() {
+                wrapper?.classList.remove('d-none');
             }
 
             function renderMeta(layer) {

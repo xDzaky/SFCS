@@ -60,7 +60,7 @@
             width: var(--sidebar-width);
             background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
             transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 1040;
             overflow-y: auto;
         }
 
@@ -161,7 +161,8 @@
             padding: 0 1.5rem;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1020;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
         }
 
         .header-left {
@@ -457,13 +458,19 @@
                 position: fixed;
                 inset: 0;
                 background: rgba(0,0,0,0.5);
-                z-index: 999;
+                z-index: 1035;
                 display: none;
             }
 
             .sidebar-overlay.show {
                 display: block;
             }
+        }
+
+        /* Map and widgets isolation to prevent overlapping sticky headers */
+        .sfcs-map-frame,
+        .leaflet-container {
+            isolation: isolate;
         }
 
         /* Rating Stars */
@@ -621,6 +628,33 @@
         .notif-toast-msg { font-size: .76rem; color: #6b7280; margin-top: 1px; line-height: 1.4; }
         .notif-toast-close { margin-left: auto; color: #9ca3af; background: none; border: none; padding: 0; cursor: pointer; font-size: .9rem; }
 
+    </style>
+
+    {{-- ── Global Badge: Prioritas & Status — high-contrast, visible di semua halaman ── --}}
+    <style>
+        /* ── Prioritas Badges ─────────────────────────────────────── */
+        .badge-prioritas-rendah  { background-color: #16a34a !important; color: #ffffff !important; }
+        .badge-prioritas-sedang  { background-color: #d97706 !important; color: #ffffff !important; }
+        .badge-prioritas-tinggi  { background-color: #ea580c !important; color: #ffffff !important; }
+        .badge-prioritas-urgent  { background-color: #dc2626 !important; color: #ffffff !important; }
+
+        /* ── Status Badges ────────────────────────────────────────── */
+        .badge-status-pending      { background-color: #6b7280 !important; color: #ffffff !important; }
+        .badge-status-diverifikasi { background-color: #0284c7 !important; color: #ffffff !important; }
+        .badge-status-diproses     { background-color: #d97706 !important; color: #ffffff !important; }
+        .badge-status-selesai      { background-color: #16a34a !important; color: #ffffff !important; }
+        .badge-status-ditolak      { background-color: #dc2626 !important; color: #ffffff !important; }
+
+        /* Null/empty/unknown prioritas */
+        .badge-prioritas-unknown { background-color: #9ca3af !important; color: #ffffff !important; }
+
+        /* ── Status Pinjaman Badges ────────────────────────────────── */
+        .badge-pinjaman-pending   { background-color: #d97706 !important; color: #ffffff !important; }
+        .badge-pinjaman-disetujui { background-color: #0284c7 !important; color: #ffffff !important; }
+        .badge-pinjaman-dipinjam  { background-color: #7c3aed !important; color: #ffffff !important; }
+        .badge-pinjaman-terlambat { background-color: #dc2626 !important; color: #ffffff !important; }
+        .badge-pinjaman-selesai   { background-color: #16a34a !important; color: #ffffff !important; }
+        .badge-pinjaman-ditolak   { background-color: #6b7280 !important; color: #ffffff !important; }
     </style>
 
     @stack('styles')</head>
@@ -847,6 +881,9 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- AI Chat Bubble -->
+    @include('components.ai-chat-bubble')
 
     <!-- In-page Toast Container -->
     <div id="notif-toast-container"></div>

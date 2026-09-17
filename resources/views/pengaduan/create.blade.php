@@ -178,10 +178,12 @@
                                 @enderror
                             </div>
 
-                            @include('partials.pengaduan-map-picker', [
-                                'pickerId' => 'create-pengaduan-map-picker',
-                                'formId' => 'pengaduanForm',
-                            ])
+                            @if($mapPickerEnabled ?? false)
+                                @include('partials.pengaduan-map-picker', [
+                                    'pickerId' => 'create-pengaduan-map-picker',
+                                    'formId' => 'pengaduanForm',
+                                ])
+                            @endif
                         </div>
                     </div>
 

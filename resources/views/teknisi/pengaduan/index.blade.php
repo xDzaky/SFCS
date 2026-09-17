@@ -120,10 +120,10 @@
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     @php
                         $prioritasBadges = [
-                            'rendah' => 'bg-success-subtle text-success',
-                            'sedang' => 'bg-warning-subtle text-warning-emphasis',
-                            'tinggi' => 'bg-orange-subtle text-orange-emphasis', // Assuming custom CSS or Bootstrap util
-                            'urgent' => 'bg-danger-subtle text-danger',
+                            'rendah' => 'badge-prioritas-rendah',
+                            'sedang' => 'badge-prioritas-sedang',
+                            'tinggi' => 'badge-prioritas-tinggi',
+                            'urgent' => 'badge-prioritas-urgent',
                         ];
                     @endphp
                     <span class="badge {{ $prioritasBadges[$pengaduan->prioritas] ?? 'bg-secondary' }} rounded-pill px-3 py-1 border border-light">
@@ -148,11 +148,11 @@
                 <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light position-relative" style="z-index: 2;">
                      @php
                         $statusBadges = [
-                            'pending' => 'bg-secondary-subtle text-secondary fw-bold',
-                            'diverifikasi' => 'bg-info-subtle text-info fw-bold',
-                            'diproses' => 'bg-warning-subtle text-warning-emphasis fw-bold',
-                            'selesai' => 'bg-success-subtle text-success fw-bold',
-                            'ditolak' => 'bg-danger-subtle text-danger fw-bold',
+                            'pending'      => 'badge-status-pending',
+                            'diverifikasi' => 'badge-status-diverifikasi',
+                            'diproses'     => 'badge-status-diproses',
+                            'selesai'      => 'badge-status-selesai',
+                            'ditolak'      => 'badge-status-ditolak',
                         ];
                     @endphp
                     <span class="badge rounded-pill {{ $statusBadges[$pengaduan->status] ?? 'bg-secondary' }} px-3 py-2 border border-light">

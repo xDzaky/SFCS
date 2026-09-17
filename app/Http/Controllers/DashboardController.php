@@ -77,9 +77,14 @@ class DashboardController extends Controller
             ->whereNotIn('status', ['selesai', 'ditolak'])
             ->count();
 
+        $unassigned = Pengaduan::whereNull('teknisi_id')
+            ->where('status', 'pending')
+            ->count();
+
         $stats = [
             'assigned' => $assignedPengaduans->count(),
             'urgent' => $urgentPengaduans,
+            'unassigned' => $unassigned,
             'selesai_bulan_ini' => Pengaduan::where('teknisi_id', $user->id)
                 ->where('status', 'selesai')
                 ->whereMonth('updated_at', now()->month)
@@ -117,11 +122,12 @@ class DashboardController extends Controller
             'overload_active' => $overloadSummary['is_overload'],
         ];
 
-        // Recent pengaduans
+        // Recent pengaduans — dibatasi 8, sisanya lihat di halaman Kelola Pengaduan
         $recentPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user', 'teknisi'])
             ->latest()
-            ->take(10)
+            ->take(8)
             ->get();
+        $totalPengaduans = Pengaduan::count();
 
         // Pengaduan by kategori for chart
         $byKategori = Kategori::withCount('pengaduans')
@@ -178,6 +184,7 @@ class DashboardController extends Controller
         return view('dashboard.admin', compact(
             'stats',
             'recentPengaduans',
+            'totalPengaduans',
             'byKategori',
             'byGedung',
             'monthlyTrend',

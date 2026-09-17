@@ -283,10 +283,10 @@
                     <small class="text-muted d-block mb-1"><i class="fas fa-exclamation-triangle me-1"></i>Prioritas</small>
                     @php
                         $prioritasBadges = [
-                            'rendah' => 'bg-success',
-                            'sedang' => 'bg-warning text-dark',
-                            'tinggi' => 'bg-orange',
-                            'urgent' => 'bg-danger',
+                            'rendah' => 'badge-prioritas-rendah',
+                            'sedang' => 'badge-prioritas-sedang',
+                            'tinggi' => 'badge-prioritas-tinggi',
+                            'urgent' => 'badge-prioritas-urgent',
                         ];
                     @endphp
                     <span class="badge {{ $prioritasBadges[$pengaduan->prioritas] ?? 'bg-secondary' }} fs-6">

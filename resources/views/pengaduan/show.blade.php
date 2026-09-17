@@ -12,17 +12,17 @@
 @section('content')
 @php
     $priorityColors = [
-        'rendah'  => ['bg' => 'bg-success-subtle', 'text' => 'text-success', 'border' => 'border-success-subtle', 'dot' => '#22c55e'],
-        'sedang'  => ['bg' => 'bg-warning-subtle', 'text' => 'text-warning-emphasis', 'border' => 'border-warning-subtle', 'dot' => '#eab308'],
-        'tinggi'  => ['bg' => 'bg-orange-subtle',  'text' => 'text-orange',  'border' => 'border-warning-subtle', 'dot' => '#f97316'],
-        'urgent'  => ['bg' => 'bg-danger-subtle',  'text' => 'text-danger',  'border' => 'border-danger-subtle', 'dot' => '#ef4444'],
+        'rendah'  => ['bg' => 'bg-success-subtle', 'text' => 'text-success-emphasis', 'border' => 'border-success-subtle', 'dot' => '#16a34a', 'solid' => 'badge-prioritas-rendah'],
+        'sedang'  => ['bg' => 'bg-warning-subtle', 'text' => 'text-warning-emphasis', 'border' => 'border-warning-subtle', 'dot' => '#d97706', 'solid' => 'badge-prioritas-sedang'],
+        'tinggi'  => ['bg' => 'bg-orange-subtle',  'text' => 'text-dark',             'border' => 'border-warning-subtle', 'dot' => '#ea580c', 'solid' => 'badge-prioritas-tinggi'],
+        'urgent'  => ['bg' => 'bg-danger-subtle',  'text' => 'text-danger-emphasis',  'border' => 'border-danger-subtle',  'dot' => '#dc2626', 'solid' => 'badge-prioritas-urgent'],
     ];
     $statusColors = [
-        'pending'       => ['bg' => 'bg-warning-subtle', 'text' => 'text-warning-emphasis', 'border' => 'border-warning-subtle'],
-        'diverifikasi'  => ['bg' => 'bg-info-subtle',    'text' => 'text-info-emphasis',    'border' => 'border-info-subtle'],
-        'diproses'      => ['bg' => 'bg-primary-subtle', 'text' => 'text-primary',          'border' => 'border-primary-subtle'],
-        'selesai'       => ['bg' => 'bg-success-subtle', 'text' => 'text-success',          'border' => 'border-success-subtle'],
-        'ditolak'       => ['bg' => 'bg-danger-subtle',  'text' => 'text-danger',           'border' => 'border-danger-subtle'],
+        'pending'       => ['bg' => 'bg-secondary-subtle', 'text' => 'text-secondary-emphasis', 'border' => 'border-secondary-subtle'],
+        'diverifikasi'  => ['bg' => 'bg-info-subtle',      'text' => 'text-info-emphasis',       'border' => 'border-info-subtle'],
+        'diproses'      => ['bg' => 'bg-primary-subtle',   'text' => 'text-primary-emphasis',    'border' => 'border-primary-subtle'],
+        'selesai'       => ['bg' => 'bg-success-subtle',   'text' => 'text-success-emphasis',    'border' => 'border-success-subtle'],
+        'ditolak'       => ['bg' => 'bg-danger-subtle',    'text' => 'text-danger-emphasis',     'border' => 'border-danger-subtle'],
     ];
     $statusLabels = [
         'pending'      => 'Menunggu Verifikasi',
@@ -262,18 +262,41 @@
         {{-- ── Foto Bukti ────────────────────────────────────── --}}
         @if($pengaduan->photos->count() > 0)
             <div class="card shadow-sm border-0 rounded-4 mb-3 overflow-hidden">
-                <div class="card-header bg-info text-white py-2 px-3">
-                    <h6 class="mb-0 fw-semibold"><i class="fas fa-images me-2"></i>Foto Bukti ({{ $pengaduan->photos->count() }})</h6>
+                <div class="card-header bg-white py-3 px-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary" style="width:28px;height:28px;font-size:.8rem;">
+                            <i class="fas fa-images"></i>
+                        </span>
+                        <span>Foto Bukti Kerusakan</span>
+                    </h6>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size:.72rem;">
+                        {{ $pengaduan->photos->count() }} Foto
+                    </span>
                 </div>
                 <div class="card-body p-3">
-                    <div class="row g-2">
+                    <div class="row g-3">
                         @foreach($pengaduan->photos as $photo)
-                            <div class="col-4 col-md-3">
-                                <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" class="sfcs-photo-thumb">
-                                    <img src="{{ asset('storage/' . $photo->file_path) }}" alt="{{ $photo->tipe ?? 'Bukti' }}" class="img-fluid rounded-3" style="width:100%;height:90px;object-fit:cover;">
-                                    <span class="sfcs-photo-zoom"><i class="fas fa-search-plus"></i></span>
-                                </a>
-                                <div class="text-muted text-center mt-1" style="font-size:.65rem;">{{ ucfirst($photo->tipe ?? 'Bukti') }}</div>
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="card border border-light-subtle rounded-3 overflow-hidden shadow-none h-100">
+                                    <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}" class="sfcs-photo-thumb d-block position-relative">
+                                        <img src="{{ asset('storage/' . $photo->file_path) }}" 
+                                             alt="{{ $photo->tipe ?? 'Bukti' }}" 
+                                             class="img-fluid w-100" 
+                                             style="height:120px;object-fit:cover;transition:transform .3s ease;"
+                                             loading="lazy">
+                                        <span class="sfcs-photo-zoom">
+                                            <i class="fas fa-search-plus"></i>
+                                        </span>
+                                    </a>
+                                    <div class="p-2 text-center bg-light-subtle border-top">
+                                        <span class="badge bg-secondary-subtle text-secondary small" style="font-size:.68rem;">
+                                            <i class="fas fa-camera me-1"></i>{{ ucfirst($photo->tipe ?? 'Bukti') }}
+                                        </span>
+                                        @if($photo->file_size_human)
+                                            <span class="text-muted small ms-1" style="font-size:.65rem;">({{ $photo->file_size_human }})</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         @endforeach
                     </div>

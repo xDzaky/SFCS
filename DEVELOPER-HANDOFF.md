@@ -1,122 +1,171 @@
 # SFCS Developer Handoff
 
-Fokus dokumen ini:
-- cara install project di Windows
-- dependency yang wajib ada
-- setup `.env`
-- command yang sering dipakai
-- struktur code yang penting
-- hal-hal yang perlu diketahui sebelum modifikasi fitur
+Dokumen ini ditulis untuk developer yang akan melanjutkan maintenance atau pengembangan `sfcs-app`.
+Fokusnya bukan onboarding user akhir, tetapi current state implementasi, boundary antar modul, workflow bisnis lintas role, dan titik rawan yang perlu dipahami sebelum mengubah code.
 
-Project utama untuk dokumentasi ini adalah root repo `sfcs-app`.
+Project ini saat ini adalah aplikasi Laravel multi-role untuk operasional sarpras sekolah, dengan 2 domain utama:
 
-## 1. Stack Project
+- `pengaduan fasilitas`: pelaporan kerusakan/masalah fasilitas sekolah dari guru/siswa ke admin dan teknisi
+- `pinjaman barang`: workflow peminjaman inventaris sekolah berbasis approval admin dan stok aktual
+
+Di atas 2 domain utama itu, ada modul pendukung yang cukup penting:
+
+- digital school map / denah interaktif
+- master data gedung, ruangan, kategori, subkategori, jurusan
+- user management + import siswa + promote kelas
+- reporting, activity log, health check, scheduler/commands
+
+## 1. Ringkasan Stack
 
 - Backend: Laravel 12
 - PHP: 8.2+
-- Database: MySQL / MariaDB
-- Frontend build: Vite
-- CSS/JS: Tailwind, Alpine, vanilla JS
-- Auth: Laravel Breeze-style auth + middleware role custom
+- Database utama: MySQL / MariaDB
+- Frontend asset build: Vite
+- UI layer: Blade + Tailwind + Alpine + vanilla JS
+- Auth: Laravel Breeze-style auth
+- Role model: custom middleware `role`
+- Queue: database queue supported, tetapi local setup default aman memakai `sync`
+- Notification: in-app notification via tabel `notifications`
+- PWA: basic manifest + service worker tersedia
 
-## 2. Rekomendasi Environment Windows
+## 2. Current State Fitur
 
-Yang paling aman untuk dev di Windows:
+### 2.1 Implemented dan aktif dipakai codebase
 
-1. `Git`
-2. `PHP 8.2+`
-3. `Composer`
-4. `Node.js 18+`
-5. `MySQL` atau `MariaDB`
-6. `npm`
+- Multi-role auth untuk `superadmin`, `admin`, `kepsek`, `teknisi`, `guru`, `siswa`
+- Login siswa via `NIS`, selain siswa via email
+- Dashboard per role dengan statistik berbeda
+- CRUD pengaduan untuk siswa/guru/admin/superadmin
+- Upload multi-foto bukti pengaduan
+- Public tracking pengaduan lewat `/track`
+- Duplicate detection saat submit pengaduan
+- Priority scoring dan auto-downgrade priority claim yang tidak match impact
+- Manual priority review flag untuk admin
+- SLA due date per prioritas
+- Assignment pengaduan ke teknisi
+- Status flow pengaduan `pending -> diverifikasi -> diproses -> selesai/ditolak`
+- Reschedule penanganan oleh teknisi dengan history schedule
+- Queue recompute / triage ranking per teknisi
+- Overload detection + overload board
+- Duplicate lifecycle management, termasuk auto-close tiket duplikat saat master selesai
+- Request reopen dari pelapor dan approval reopen oleh admin
+- Feedback pengaduan setelah selesai
+- Modul pinjaman barang end-to-end: request, approve/reject, check-out, check-in, force close
+- Stock reservation / release berbasis transaksi database
+- Reminder pinjaman mendekati jatuh tempo dan auto-mark `terlambat`
+- Master barang, kategori, gedung, ruangan, user
+- Master data import sekolah dengan preview lalu commit
+- Import siswa massal CSV
+- Promote kelas siswa aktif berbasis preview token lalu apply
+- Digital map: upload denah PDF/image, layer management, area mapping gedung/ruangan, active map viewer
+- Map picker pada pengaduan jika denah aktif tersedia
+- In-app notification dropdown, unread count, mark read
+- Activity log untuk event penting
+- Internal health endpoint admin
+- App doctor command untuk validasi setup
+- Backup command terjadwal
 
-Saran praktis:
-- Paling nyaman pakai `Laragon`, karena PHP, MySQL, dan virtual host biasanya lebih gampang.
-- Alternatif: `XAMPP` + install Composer + install Node.js manual.
-- Terminal yang nyaman: `PowerShell`, `Windows Terminal`, atau `Git Bash`.
+### 2.2 Implemented parsial / ada caveat operasional
 
-## 3. Software yang Harus Di-install di Windows
+- PWA sudah ada, tetapi belum bisa dianggap mobile app yang fully polished
+- Queue async supported, tetapi banyak local/dev flow masih diasumsikan jalan aman dengan `QUEUE_CONNECTION=sync`
+- Force password change middleware masih terpasang di route group, tetapi seed/default flow saat ini tidak memaksa reset password pertama kali
+- Digital map sudah terhubung ke pengaduan, tetapi fallback lokasi teks tetap bagian penting dari flow
+- Notification system hanya in-app/database; belum ada WA, email transactional, atau push notification production-grade
+- Reporting sudah cukup untuk operasional, tetapi belum masuk level BI / audit analytics yang mendalam
 
-### Wajib
+### 2.3 Belum implemented / masih roadmap
 
-- Git: https://git-scm.com/download/win
-- Composer: https://getcomposer.org/download/
-- Node.js LTS: https://nodejs.org/
-- Laragon: https://laragon.org/ atau XAMPP: https://www.apachefriends.org/
+- WhatsApp notification / WhatsApp reminder
+- Penggunaan nomor HP sebagai workflow wajib first-login
+- Search/filter katalog barang yang kaya untuk peminjam
+- CTA cepat seperti "pinjam barang ini sekarang" dari katalog siswa
+- Template pengaduan dinamis per kategori
+- Mobile UX audit menyeluruh lintas semua halaman
 
-### PHP Extensions yang harus aktif
+## 3. Struktur Arsitektur
 
-Kalau pakai Laragon/XAMPP, pastikan extension ini aktif:
+Secara implementasi, codebase dibagi cukup rapi:
 
-- `pdo_mysql`
-- `mbstring`
-- `openssl`
-- `fileinfo`
-- `ctype`
-- `json`
-- `tokenizer`
-- `xml`
-- `curl`
-- `zip`
-- `bcmath`
-- `gd`
-- `intl`
+- `app/Http/Controllers`
+  controller untuk HTTP entry point dan orchestration request
+- `app/Services`
+  business rules yang tidak sebaiknya ditaruh di controller
+- `app/Models`
+  Eloquent model + relationship + beberapa helper domain
+- `resources/views`
+  Blade view per role/modul
+- `routes/web.php`
+  seluruh route web utama per role
+- `routes/console.php`
+  scheduler command
+- `app/Console/Commands`
+  task operasional dan background maintenance
+- `database/migrations`
+  schema inti sistem
+- `database/seeders`
+  seed data awal, akun role, dan sample data
 
-Kalau ada error aneh saat `composer install` atau saat image/file upload, biasanya masalahnya ada di extension PHP yang belum aktif.
+Pattern yang dipakai sekarang:
 
-## 4. Clone dan Install Project
+- controller menangani validasi request, authorization, dan orchestration
+- service menangani rule seperti priority scoring, duplicate detection, triage queue, SLA, import, promotion
+- model menyimpan constants status/prioritas, cast, route key, relationship
+- notification dibuat lewat `Notification::send(...)`
+- audit event penting direkam ke `Log`
 
-Masuk ke folder kerja, lalu:
+## 4. Teknologi dan Dependency Penting
+
+`composer.json` dan `package.json` saat ini menunjukkan dependency inti berikut:
+
+- `laravel/framework:^12.0`
+- `laravel/breeze:^2.3`
+- `phpunit:^11.5`
+- `laravel/pint`
+- `laravel/pail`
+- `vite:^7`
+- `tailwindcss`
+- `alpinejs`
+- `axios`
+- `concurrently`
+
+Tidak ada SPA framework seperti React/Vue. Flow frontend tetap server-rendered Blade.
+
+## 5. Setup Local yang Disarankan
+
+### 5.1 Requirement minimum
+
+- PHP 8.2+
+- Composer
+- Node.js 18+ dan npm
+- MySQL/MariaDB
+- PHP extensions: `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`, `ctype`, `json`, `tokenizer`, `xml`, `curl`, `zip`, `bcmath`, `gd`, `intl`, `pdo_sqlite`, `sqlite3`
+
+`pdo_sqlite` dan `sqlite3` tetap berguna karena test/CLI tertentu bisa bergantung ke driver itu.
+
+### 5.2 Bootstrapping
 
 ```bash
 git clone https://github.com/xDzaky/SFCS.git
 cd SFCS/sfcs-app
 composer install
 npm install
-```
-
-Kalau dependency frontend/backend sudah selesai:
-
-```bash
-copy .env.example .env
-php artisan key:generate
-```
-
-Kalau pakai Git Bash:
-
-```bash
 cp .env.example .env
 php artisan key:generate
+php artisan migrate
+php artisan db:seed
+php artisan app:doctor
 ```
 
-## 5. Setup Database
-
-Buat database dulu di MySQL/MariaDB.
-
-Contoh:
-- database: `sfcs_db`
-- user: `sfcs_user`
-- password: `strong_password`
-
-Lalu isi `.env`.
-
-## 6. Isi `.env` Minimal untuk Local Development
-
-Contoh setup yang aman untuk local Windows:
+Untuk local yang paling aman:
 
 ```env
-APP_NAME="SFCS"
 APP_ENV=local
-APP_KEY=
 APP_DEBUG=true
 APP_URL=http://127.0.0.1:8000
 
-APP_LOCALE=id
-APP_FALLBACK_LOCALE=en
-APP_FAKER_LOCALE=id_ID
-
 DB_CONNECTION=mysql
-DB_HOST=localhost
+DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=sfcs_db
 DB_USERNAME=sfcs_user
@@ -126,1025 +175,674 @@ SESSION_DRIVER=file
 CACHE_STORE=file
 QUEUE_CONNECTION=sync
 FILESYSTEM_DISK=local
-
 MAIL_MAILER=log
-MAIL_FROM_ADDRESS="noreply@sfcs.local"
-MAIL_FROM_NAME="${APP_NAME}"
-
-VITE_APP_NAME="${APP_NAME}"
 ```
 
-Catatan penting:
-- `APP_URL` sebaiknya konsisten. Kalau local dibuka lewat `http://127.0.0.1:8000`, isi itu juga di `.env`.
-- Jangan campur `localhost` dan `127.0.0.1` sembarangan kalau ada fitur file/viewer yang sensitif ke origin.
-- Untuk setup awal, `QUEUE_CONNECTION=sync` paling aman. Kalau nanti mau queue async, baru pindah ke worker.
-- `MAIL_MAILER=log` cukup untuk local supaya email tidak benar-benar dikirim.
+### 5.3 Menjalankan app
 
-## 7. Migrasi dan Seeder
-
-Setelah `.env` siap:
-
-```bash
-php artisan migrate
-php artisan db:seed
-php artisan app:doctor
-```
-
-`app:doctor` penting karena command ini dipakai untuk cek:
-- koneksi database
-- tabel inti sudah ada atau belum
-- beberapa kolom penting
-- akun default hasil seed
-
-Kalau command ini gagal, jangan lanjut debug fitur dulu. Bereskan environment terlebih dahulu.
-
-## 8. Jalankan Project
-
-### Opsi paling gampang
-
-Jalankan backend:
+Cara aman:
 
 ```bash
 php artisan serve
-```
-
-Lalu di terminal lain jalankan Vite:
-
-```bash
 npm run dev
 ```
 
-### Opsi praktis dari Composer
-
-Project ini sudah punya script:
+Atau:
 
 ```bash
 composer run dev
 ```
 
-Script ini menjalankan:
-- Laravel server
+`composer run dev` akan menyalakan:
+
+- web server
 - queue listener
 - log watcher
-- Vite
+- vite dev server
 
-Kalau di Windows ada issue dengan `concurrently` atau multi-process, balik saja ke cara manual 2 terminal seperti di atas.
+## 6. Akun Default Seeder
 
-## 9. Login Default Setelah Seeder
+Password default semua akun seed: `password`
 
-Seeder user default ada di [`sfcs-app/database/seeders/UserSeeder.php`](./database/seeders/UserSeeder.php).
+Role utama yang tersedia dari seeder:
 
-Semua akun bawaan seeder menggunakan password awal:
+- `superadmin@sfcs.sch.id`
+- `admin@sfcs.sch.id`
+- `kepsek@sfcs.sch.id`
+- beberapa akun `teknisi`
+- beberapa akun `guru`
+- beberapa akun `siswa`
 
-```text
-password
-```
-
-Catatan penting:
-- login pertama tidak lagi dipaksa mengganti password default
-- jika ingin mengganti password, lakukan manual dari menu profil / setting akun
-- kalau login gagal, cek ulang seeder atau reset password via database
-
-### Daftar akun default per role
-
-| Role | Email | Catatan |
-|------|-------|---------|
-| Superadmin | `superadmin@sfcs.sch.id` | akses penuh sistem |
-| Admin | `admin@sfcs.sch.id` | admin sarpras / operasional |
-| Kepsek | `kepsek@sfcs.sch.id` | monitoring dan laporan |
-| Teknisi | `teknisi1@sfcs.sch.id` | akun teknisi contoh 1 |
-| Teknisi | `teknisi2@sfcs.sch.id` | akun teknisi contoh 2 |
-| Teknisi | `teknisi3@sfcs.sch.id` | akun teknisi contoh 3 |
-| Guru | `sri.wahyuni@sfcs.sch.id` | akun guru contoh 1 |
-| Guru | `joko.susilo@sfcs.sch.id` | akun guru contoh 2 |
-| Siswa | `andi@sfcs.sch.id` | akun siswa contoh 1 |
-| Siswa | `bela@sfcs.sch.id` | akun siswa contoh 2 |
-| Siswa | `citra@sfcs.sch.id` | akun siswa contoh 3 |
-| Siswa | `dani@sfcs.sch.id` | akun siswa contoh 4 |
-| Siswa | `eka@sfcs.sch.id` | akun siswa contoh 5 |
-
-### Akun yang dicek oleh `app:doctor`
-
-Command `php artisan app:doctor` saat ini mengecek minimal akun berikut:
+`app:doctor` saat ini minimal mengecek:
 
 - `superadmin@sfcs.sch.id`
 - `admin@sfcs.sch.id`
 - `kepsek@sfcs.sch.id`
 
-Kalau butuh memastikan teknisi, guru, dan siswa juga berhasil terseed:
-- cek tabel `users`
-- atau login manual memakai email di atas
+## 7. Model Domain Inti
 
-## 10. Struktur Folder yang Perlu Dipahami
+### 7.1 `User`
 
-### Folder inti
+Field penting:
 
-- [`sfcs-app/app/Http/Controllers`](./app/Http/Controllers): controller Laravel
-- [`sfcs-app/app/Models`](./app/Models): model Eloquent
-- [`sfcs-app/app/Services`](./app/Services): business logic yang dipisah dari controller
-- [`sfcs-app/resources/views`](./resources/views): Blade templates
-- [`sfcs-app/routes/web.php`](./routes/web.php): route web utama
-- [`sfcs-app/database/migrations`](./database/migrations): schema database
-- [`sfcs-app/database/seeders`](./database/seeders): seed data awal
-
-### Mapping cepat fitur
-
-- Pengaduan:
-  - `PengaduanController`
-  - `Admin/AdminPengaduanController`
-  - `Teknisi/TeknisiPengaduanController`
-
-- Pinjaman:
-  - `PinjamanController`
-  - `Admin/AdminPinjamanController`
-  - `Admin/BarangController`
-  - `PinjamanAvailabilityService`
-
-- Peta digital / denah:
-  - `Admin/SchoolMapController`
-  - `Teknisi/TeknisiSchoolMapController`
-  - `SchoolMapService`
-
-- User / role:
-  - `Admin/UserController`
-  - middleware role di `app/Http/Middleware`
-
-## 11. Route dan Role
-
-Role utama:
-- `siswa`
-- `guru`
-- `teknisi`
-- `admin`
-- `kepsek`
-- `superadmin`
-
-Route dibagi per role di [`sfcs-app/routes/web.php`](./routes/web.php):
-- route umum user login
-- prefix `teknisi`
-- prefix `admin`
-- route khusus kepala sekolah / superadmin
-
-Kalau nambah fitur baru, pastikan:
-- route masuk group role yang tepat
-- sidebar di [`resources/views/layouts/sfcs.blade.php`](./resources/views/layouts/sfcs.blade.php) ikut disesuaikan
-
-### Menu utama per role
-
-Ringkasan ini mengikuti route aktif dan sidebar yang sekarang dipakai aplikasi.
-
-| Role | Menu / Fitur utama |
-|------|---------------------|
-| Siswa | Dashboard, Pengaduan Saya, Buat Pengaduan, Pinjam Barang, Profil, Notifikasi |
-| Guru | Dashboard, Pengaduan Saya, Buat Pengaduan, Pinjam Barang, Profil, Notifikasi |
-| Teknisi | Dashboard, Pengaduan Ditugaskan, Peta Digital, Profil, Notifikasi |
-| Admin | Dashboard, Kelola Pengaduan, Kelola Pengguna, Kategori, Gedung & Ruangan, Laporan, Overload Board, Kelola Pinjaman, Master Barang, Peta Digital, Kelola Denah, Profil, Notifikasi |
-| Kepsek | Dashboard, Laporan, Profil, Notifikasi |
-| Superadmin | Semua akses admin + Master Data + Pengaturan + Log Aktivitas |
-
-### Dashboard per role
-
-Dashboard tidak sepenuhnya sama untuk semua role. `DashboardController` akan mengarahkan user ke tampilan yang sesuai dengan role masing-masing.
-
-View dashboard utama yang sekarang ada:
-- `resources/views/dashboard/siswa.blade.php`
-- `resources/views/dashboard/admin.blade.php`
-- `resources/views/dashboard/superadmin.blade.php`
-- `resources/views/dashboard/teknisi.blade.php`
-- `resources/views/dashboard/kepsek.blade.php`
-- `resources/views/dashboard/kepsek-reports.blade.php`
-
-Kalau ada perubahan KPI/card/statistik, biasanya titik awalnya ada di controller dashboard + blade dashboard role terkait.
-
-## 12. Modul Fitur yang Wajib Dipahami
-
-Bagian ini lebih penting daripada sekadar nama file. Tujuannya supaya developer baru cepat paham sistem dari sudut pandang fitur.
-
-### 12.1 Autentikasi, Profil, dan Notifikasi
-
-Modul ini mengurus:
-- login / logout / forgot password Laravel auth
-- edit profil user
-- ganti password manual
-- notifikasi in-app
-- unread counter dan dropdown notifikasi
-
-File penting:
-- `routes/auth.php`
-- `app/Http/Controllers/ProfileController.php`
-- `app/Http/Controllers/NotificationController.php`
-- `app/Models/Notification.php`
-- `app/Jobs/StoreNotificationJob.php`
+- `role`
+- `nis`
+- `nip`
+- `kelas`
+- `no_hp`
+- `is_active`
+- `force_password_change`
 
 Catatan:
-- notifikasi dipakai di banyak modul lain
-- jangan ubah format notifikasi sembarangan kalau tidak mengecek pemanggilnya
 
-### 12.2 Pengaduan
+- siswa bisa login pakai `nis`
+- user nonaktif akan langsung di-logout oleh middleware `active`
+- role helper tersedia di model, mis. `isAdmin()`, `isTeknisi()`, `isSiswa()`
 
-Ini modul inti project.
+### 7.2 `Pengaduan`
 
-Fitur yang ada:
-- buat pengaduan
-- track pengaduan publik tanpa login
-- upload foto pengaduan
-- feedback setelah selesai
+Route key memakai `kode_pengaduan`, bukan ID numerik.
+
+Field domain penting:
+
+- lokasi: `gedung_id`, `lantai`, `ruangan_id`, `lokasi_detail`
+- map: `school_map_id`, `school_map_layer_id`, `map_point_x`, `map_point_y`, `map_zoom`, `map_source`
+- priority: `prioritas`, `requested_prioritas`, `priority_score`, `needs_priority_review`
+- lifecycle: `verified_at`, `assigned_at`, `started_at`, `completed_at`
+- triage/load: `triage_score`, `queue_rank`, `triage_bucket`, `planned_start_at`, `planned_end_at`, `delay_minutes`, `is_overload_delayed`, `load_snapshot`
+- duplicate: `duplicate_of_id`, `duplicate_marked_by`, `auto_closed_by_duplicate`, `auto_closed_from_master_id`
+- reopen: `reopen_requested_at`, `reopen_requested_by`, `reopen_reason`, `reopen_count`
+- SLA: `sla_due_at`, `first_response_at`
+
+Status constant:
+
+- `pending`
+- `diverifikasi`
+- `diproses`
+- `selesai`
+- `ditolak`
+
+Prioritas constant:
+
+- `rendah`
+- `sedang`
+- `tinggi`
+- `urgent`
+
+### 7.3 `Pinjaman`
+
+Route key memakai `kode_pinjaman`.
+
+Status utama:
+
+- `pending`
+- `disetujui`
+- `dipinjam`
+- `terlambat`
+- `selesai`
+- `ditolak`
+
+Field penting:
+
+- `qty`
+- `tgl_pinjam`
+- `tgl_jatuh_tempo`
+- `tgl_kembali`
+- `approved_at`
+- `checked_out_at`
+- `marked_late_at`
+
+### 7.4 `Notification`
+
+Semua notifikasi aplikasi masuk ke tabel `notifications`.
+
+Jenis penting yang saat ini dipakai:
+
+- `pengaduan_created`
+- `status_changed`
+- `assigned`
+- `feedback_reminder`
+- `overdue`
+- `pinjaman_created`
+- `pinjaman_status`
+- `priority_adjusted`
+- `rescheduled`
+- `overload_alert`
+
+`Notification::send()` juga mengoreksi link notifikasi sesuai role target supaya link admin/teknisi/siswa tidak saling tertukar.
+
+## 8. Service Layer yang Paling Menentukan Behaviour
+
+### 8.1 `PriorityScoringService`
+
+Dipakai saat submit pengaduan.
+
+Input utama:
+
+- safety risk
+- pembelajaran terhambat
+- exam related
+- scope area
+- utilitas terdampak
+
+Output:
+
+- score numerik
+- prioritas computed
+- prioritas final
+- flag `needs_priority_review`
+
+Rule penting:
+
+- user boleh meminta prioritas tinggi/urgent
+- sistem bisa menurunkan prioritas berdasarkan score impact aktual
+- jika request awal lebih tinggi dari hasil sistem, tiket bisa di-flag untuk review admin
+
+### 8.2 `PengaduanDuplicateDetector`
+
+Mendeteksi kandidat tiket aktif yang kemungkinan duplikat berdasarkan:
+
+- kategori
+- subkategori
+- gedung
+- lantai
+- ruangan
+- `lokasi_detail` yang sudah dinormalisasi
+
+Deteksi ini dipakai di:
+
+- submit pengaduan baru
+- panel admin untuk kandidat duplicate
+
+### 8.3 `DuplicateLifecycleService`
+
+Jika tiket master selesai, service ini bisa auto-close child tickets yang ditandai sebagai duplicate.
+
+Efek samping:
+
+- status duplicate child menjadi `selesai`
+- teknisi dilepas
+- admin note ditambah alasan auto-close
+- log dan notification dibuat
+
+### 8.4 `TicketStatusTransitionService`
+
+Semua transisi status pengaduan sebaiknya mengikuti service ini, supaya timestamp lifecycle konsisten.
+
+Rule transisi default:
+
+- `pending -> diverifikasi | ditolak`
+- `diverifikasi -> diproses | ditolak | pending`
+- `diproses -> selesai | ditolak | diverifikasi`
+
+### 8.5 `SlaService`
+
+Menghitung `sla_due_at` berdasarkan prioritas:
+
+- `urgent` dalam menit
+- `tinggi`, `sedang`, `rendah` dalam jam
+
+Threshold dibaca dari tabel `settings`.
+
+### 8.6 `TriageScoringService` dan `DispatchQueueService`
+
+Dipakai untuk workload teknisi.
+
+`TriageScoringService` menghitung score dari:
+
+- prioritas
+- impact flags
+- umur tiket
+- status aktif
+
+`DispatchQueueService` lalu:
+
+- sort tiket aktif milik teknisi
+- assign `queue_rank`
+- hitung `planned_start_at` / `planned_end_at`
+- hitung `delay_minutes`
+- tandai `is_overload_delayed`
+- simpan `load_snapshot`
+
+Ini inti logic overload board dan estimasi delay.
+
+### 8.7 `SchoolMapService`
+
+Service ini menjadi jembatan antara denah sekolah dan domain pengaduan.
+
+Dipakai untuk:
+
+- cek apakah ada denah aktif
+- generate layer blueprint dari PDF/image
+- resolve layer berdasarkan `gedung + lantai`
+- build payload viewer peta
+- build payload map untuk detail pengaduan
+- build active map API payload untuk map picker
+
+### 8.8 `PinjamanAvailabilityService`
+
+Dipakai admin pinjaman untuk reserve/release stock saat check-out dan check-in.
+Ini bagian penting agar perubahan stok tetap transactional.
+
+### 8.9 `StudentBulkImportService`
+
+Import siswa CSV dengan mode:
+
+- `replace_siswa`
+- `upsert_only`
+
+Behaviour penting:
+
+- maksimal 5000 baris per upload
+- role import dibatasi ke `siswa`
+- jika email kosong, akan digenerate dari NIS
+- default password fallback: `password`
+- pada mode `replace_siswa`, siswa lama yang tidak ikut file dapat dinonaktifkan
+
+### 8.10 `StudentClassPromotionService`
+
+Mekanisme promote kelas 2 tahap:
+
+1. preview menghasilkan token sementara
+2. apply memakai token itu
+
+Rule kelas yang saat ini diasumsikan valid:
+
+- `X RPL 1`
+- `XI MP 2`
+- `XII AK 3`
+
+Jurusan yang di-allow hardcoded:
+
+- `RPL`
+- `MP`
+- `AK`
+- `BD`
+- `LP`
+
+Jika format kelas tidak sesuai pola ini, siswa akan masuk list `skipped`.
+
+## 9. Route dan Boundary per Role
+
+Seluruh route utama ada di `routes/web.php`.
+
+### 9.1 Public
+
+- `/` redirect ke login
+- `/track` untuk tracking pengaduan tanpa login
+
+### 9.2 Authenticated shared routes
+
+- `/dashboard`
+- `/profile`
+- `/notifications/*`
+- `/api/school-map/active`
+
+Middleware umum:
+
+- `auth`
+- `active`
+- `force.password.change`
+
+### 9.3 Siswa / Guru / Admin / Superadmin
+
+Route pengaduan user-facing dan pinjaman berada di group role:
+
+- `siswa`
+- `guru`
+- `admin`
+- `superadmin`
+
+Artinya admin/superadmin juga bisa membuka flow user-facing jika perlu.
+
+### 9.4 Teknisi
+
+Prefix `teknisi`:
+
+- daftar tiket assigned
+- detail tiket
+- update status ke `diproses`
+- complete tiket
+- reschedule tiket
+- recompute queue
+- peta digital teknisi
+
+### 9.5 Admin
+
+Prefix `admin`:
+
+- pengelolaan pengaduan
+- pengelolaan pinjaman dan stok barang
+- user management
+- kategori, gedung, ruangan
+- denah sekolah
+- reports
+- master data import
+- internal health
+
+### 9.6 Kepsek
+
+Prefix `kepsek`:
+
+- dashboard redirect ke dashboard role
+- halaman reports untuk monitoring
+
+### 9.7 Superadmin
+
+Prefix `superadmin`:
+
+- settings
+- log aktivitas
+
+Secara permission nyata, ada juga beberapa aksi yang di-controller dibatasi lebih keras untuk `superadmin`, misalnya:
+
+- import siswa massal
+- promote kelas
+- master data import
+
+## 10. Workflow End-to-End
+
+### 10.1 Pengaduan: siswa/guru -> admin -> teknisi -> selesai
+
+1. Pelapor membuat pengaduan.
+2. Sistem validasi field lokasi, impact, foto, dan optional map point.
+3. Sistem cek duplicate aktif.
+4. Sistem hitung `priority_score`, prioritas final, dan `sla_due_at`.
+5. Tiket dibuat dengan status `pending`.
+6. Admin melihat tiket masuk, bisa:
+   - assign teknisi
+   - ubah status
+   - reject
+   - mark duplicate
+   - ubah prioritas
+7. Saat assign teknisi dari tiket `pending`, status bisa otomatis bergerak ke `diverifikasi`.
+8. Teknisi membuka tiket assigned, lalu:
+   - set `diproses`
+   - reschedule bila perlu
+   - mark `selesai`
+9. Saat tiket selesai:
+   - pelapor mendapat notification
+   - reminder feedback dikirim
+   - duplicate child dapat auto-close jika tiket ini adalah master
+10. Pelapor bisa kirim feedback.
+11. Jika perlu, pelapor bisa request reopen dan admin bisa approve reopen.
+
+### 10.2 Duplicate handling
+
+Ada 2 lapisan duplicate handling:
+
+- pre-submit duplicate detection saat user membuat tiket
+- manual duplicate marking oleh admin terhadap tiket existing
+
+Jika tiket master selesai, duplicate child aktif bisa ikut ditutup otomatis.
+
+### 10.3 Pinjaman barang
+
+1. Siswa/guru membuka form pinjaman.
+2. Barang yang tampil hanya barang aktif dengan `stok_tersedia > 0`.
+3. User submit request `pending`.
+4. Admin memutuskan:
+   - approve
+   - reject
+5. Saat approve, status menjadi `disetujui`.
+6. Saat barang fisik diserahkan, admin melakukan check-out:
+   - stok di-reserve / dikurangi via service
+   - status menjadi `dipinjam`
+7. Saat barang dikembalikan, admin check-in:
+   - stok dilepas / dikembalikan
+   - status menjadi `selesai`
+8. Jika melewati due date, scheduler menandai pinjaman sebagai `terlambat`.
+9. User dapat memberi feedback setelah pinjaman selesai.
+
+### 10.4 Denah sekolah / digital map
+
+1. Admin upload file denah PDF atau image.
+2. Sistem membuat `school_map`.
+3. Sistem membentuk layer blueprint:
+   - PDF: per halaman
+   - image: single layer
+4. Admin mengedit layer metadata:
+   - `general`
+   - `gedung_lantai`
+5. Admin menggambar area yang menghubungkan denah dengan gedung/ruangan.
+6. Salah satu denah ditandai aktif.
+7. Saat user membuka form pengaduan:
+   - jika ada denah aktif, frontend bisa load active map API
+   - layer dicoba di-resolve dari `gedung + lantai`
+   - user bisa menaruh titik manual
+8. Detail tiket admin/teknisi/pelapor dapat memakai payload map yang sama untuk visualisasi konteks lokasi.
+
+### 10.5 Master data sekolah
+
+1. Superadmin upload ZIP/XLSX/CSV master data.
+2. Sistem membuat preview batch.
+3. Error/warning dikumpulkan.
+4. Jika preview valid, superadmin commit batch.
+5. Data kategori, gedung, ruangan, jurusan, dan mapping di-apply ke sistem.
+
+Ini penting karena modul pengaduan dan denah sangat bergantung ke kualitas master data.
+
+## 11. Fitur per Role
+
+### 11.1 Siswa
+
+- login via NIS
+- dashboard personal
+- buat, edit, lihat, track pengaduan milik sendiri
+- upload foto bukti
+- optional pilih titik di denah jika tersedia
+- kirim feedback pengaduan
 - request reopen
-- cek duplicate via endpoint AJAX
-- pemilihan gedung/ruangan
+- ajukan pinjaman barang
+- batalkan pinjaman yang masih pending
+- beri feedback pinjaman selesai
+- lihat notifikasi dan profil
 
-File penting:
-- `app/Http/Controllers/PengaduanController.php`
-- `app/Models/Pengaduan.php`
-- `app/Models/PengaduanPhoto.php`
-- `app/Models/HistoryPengaduan.php`
-- `resources/views/pengaduan/*`
+### 11.2 Guru
 
-Behavior penting:
-- kode pengaduan dibentuk otomatis
-- status pengaduan dipakai lintas role
-- banyak dashboard dan laporan bergantung pada data modul ini
+Flow hampir sama dengan siswa, tetapi login via email dan tidak punya `nis`.
 
-### 12.3 Pengaduan Admin
+### 11.3 Teknisi
 
-Admin punya modul lanjutan untuk operasi pengaduan:
-- verifikasi / reject
+- dashboard tiket assigned
+- list tiket assigned dengan sorting urgensi
+- detail tiket + map context
+- update status ke `diproses`
+- complete tiket
+- reschedule penanganan
+- recompute queue
+- akses peta digital untuk melihat context ruang/gedung
+
+### 11.4 Admin
+
+- dashboard operasional
+- kelola seluruh pengaduan
 - assign teknisi
-- bulk status / bulk assign
-- mark duplicate
+- ubah status, reject, set prioritas, mark duplicate
 - approve reopen
-- update prioritas
-- force priority
-- export data
+- export pengaduan
 - overload board
+- CRUD master barang
+- manage approval pinjaman
+- adjust stok
+- manage user
+- manage kategori dan subkategori
+- manage gedung dan ruangan
+- upload dan edit denah
+- report pengaduan dan performance
+- internal health endpoint
 
-File penting:
+### 11.5 Kepsek
+
+- dashboard monitoring
+- melihat agregasi performa
+- overload alert notification
+- halaman report ringkas
+
+Kepsek tidak menjadi operator workflow harian, lebih ke monitoring dan oversight.
+
+### 11.6 Superadmin
+
+- seluruh kemampuan admin
+- settings
+- log aktivitas
+- import siswa
+- promote kelas
+- master data import
+
+## 12. Dashboard Behaviour
+
+`DashboardController` melakukan dispatch berdasarkan role:
+
+- `superadmin`
+- `admin`
+- `kepsek`
+- `teknisi`
+- default: `siswa/guru`
+
+Beberapa dashboard yang sudah memiliki logic berbeda:
+
+- siswa/guru: statistik personal dan tiket terakhir
+- teknisi: assigned ticket, urgent count, selesai bulan ini
+- admin: operasional harian, backlog, pinjaman, overload, teknisi utilization
+- kepsek: KPI high-level, performance teknisi, rating, tren
+- superadmin: overview sistem dan aktivitas
+
+## 13. AJAX / API Touchpoints Penting
+
+Endpoint ini perlu diingat karena sering jadi coupling antara Blade dan backend:
+
+- `/api/kategori/{kategori}/sub-kategoris`
+  dependent dropdown kategori -> subkategori
+- `/api/gedung/{gedung}/ruangans`
+  dependent dropdown gedung -> ruangan
+- `/api/pengaduan/check-duplicate`
+  duplicate pre-check saat create pengaduan
+- `/api/school-map/active`
+  payload active map dan layer yang cocok untuk map picker
+- `/notifications/unread-count`
+- `/notifications/latest`
+- `/notifications/dropdown`
+
+## 14. Scheduler dan Command Operasional
+
+Scheduler aktif di `routes/console.php`:
+
+- `tickets:check-sla` tiap 15 menit
+- `tickets:recompute-queue` tiap 5 menit
+- `tickets:detect-overload` tiap 5 menit
+- `backup:run` harian
+- `pinjaman:mark-overdue` harian
+
+Command penting:
+
+- `php artisan app:doctor`
+  health check setup aplikasi
+- `php artisan tickets:check-sla`
+  kirim warning/overdue notification
+- `php artisan tickets:recompute-queue`
+  hitung ulang antrean teknisi
+- `php artisan tickets:detect-overload`
+  kirim alert overload
+- `php artisan pinjaman:mark-overdue`
+  reminder dan auto-mark terlambat
+- `php artisan students:promote --preview`
+- `php artisan students:promote --apply --token=...`
+- `php artisan master-data:import-school-layout ...`
+- `php artisan backup:run`
+
+## 15. File dan Modul yang Paling Sering Perlu Dibuka
+
+### Pengaduan
+
+- `app/Http/Controllers/PengaduanController.php`
 - `app/Http/Controllers/Admin/AdminPengaduanController.php`
-- `app/Services/TicketStatusTransitionService.php`
+- `app/Http/Controllers/Teknisi/TeknisiPengaduanController.php`
 - `app/Services/PriorityScoringService.php`
-- `app/Services/TriageScoringService.php`
+- `app/Services/PengaduanDuplicateDetector.php`
+- `app/Services/DuplicateLifecycleService.php`
+- `app/Services/TicketStatusTransitionService.php`
 - `app/Services/SlaService.php`
 - `app/Services/DispatchQueueService.php`
-- `resources/views/admin/pengaduan/*`
+- `app/Services/SchoolMapService.php`
 
-Kalau ada bug status atau prioritas, cek service dulu sebelum mengubah controller.
+### Pinjaman
 
-### 12.4 Pengaduan Teknisi
-
-Teknisi tidak melihat semua pengaduan, hanya yang relevan dengan alur teknisi:
-- daftar pengaduan yang ditugaskan
-- update status
-- reschedule
-- complete
-- recompute queue
-
-File penting:
-- `app/Http/Controllers/Teknisi/TeknisiPengaduanController.php`
-- `resources/views/teknisi/pengaduan/*`
-
-### 12.5 Pinjaman Barang
-
-Modul ini dipakai siswa/guru untuk mengajukan pinjaman barang.
-
-Fitur:
-- lihat daftar pinjaman saya
-- ajukan pinjaman
-- batal pinjaman pending
-- feedback setelah selesai
-
-File penting:
 - `app/Http/Controllers/PinjamanController.php`
-- `app/Models/Pinjaman.php`
-- `app/Models/PinjamanFeedback.php`
-- `app/Models/PinjamanLog.php`
-- `resources/views/pinjaman/*`
-
-Behavior penting:
-- user hanya bisa pilih barang aktif
-- hanya barang dengan `stok_tersedia > 0` yang muncul
-
-### 12.6 Manajemen Pinjaman Admin
-
-Ini area operasional admin untuk modul pinjaman:
-- approve / reject
-- check-out
-- check-in
-- force close
-- export pinjaman
-- adjust stock barang terkait transaksi
-
-File penting:
 - `app/Http/Controllers/Admin/AdminPinjamanController.php`
-- `resources/views/admin/pinjaman/*`
-
-Behavior penting:
-- stok tersedia berkurang saat `check-out`
-- stok tersedia bertambah lagi saat `check-in`
-- jangan ubah alur ini tanpa cek service stok
-
-### 12.7 Master Barang
-
-Ini modul inventaris barang untuk admin/superadmin.
-
-Fitur:
-- lihat daftar semua barang
-- tambah barang
-- edit data barang
-- ubah status aktif/nonaktif
-- hapus barang jika belum punya histori pinjaman
-
-File penting:
 - `app/Http/Controllers/Admin/BarangController.php`
-- `app/Models/Barang.php`
-- `resources/views/admin/barangs/*`
+- `app/Services/PinjamanAvailabilityService.php`
+- `app/Console/Commands/MarkOverduePinjamanCommand.php`
 
-Modul ini sekarang adalah sumber data utama untuk fitur pinjaman.
+### User / master data
 
-### 12.8 Kategori
+- `app/Http/Controllers/Admin/UserController.php`
+- `app/Services/StudentBulkImportService.php`
+- `app/Services/StudentClassPromotionService.php`
+- `app/Http/Controllers/Admin/MasterDataController.php`
+- `app/Services/SchoolMasterDataImportService.php`
 
-Modul ini mengelola kategori dan subkategori pengaduan.
+### Denah
 
-Fitur:
-- CRUD kategori
-- CRUD subkategori per kategori
-- endpoint dependent dropdown kategori -> subkategori
-
-File penting:
-- `app/Http/Controllers/Admin/KategoriController.php`
-- `app/Models/Kategori.php`
-- `app/Models/SubKategori.php`
-- `resources/views/admin/kategoris/*`
-
-### 12.9 Gedung & Ruangan
-
-Modul ini mengelola lokasi fisik sekolah yang dipakai oleh pengaduan dan denah.
-
-Fitur:
-- CRUD gedung
-- CRUD ruangan per gedung
-- endpoint dependent dropdown gedung -> ruangan
-
-File penting:
-- `app/Http/Controllers/Admin/GedungController.php`
-- `app/Models/Gedung.php`
-- `app/Models/Ruangan.php`
-- `resources/views/admin/gedungs/*`
-
-Kalau data ruangan salah, biasanya efeknya terasa ke:
-- form pengaduan
-- laporan
-- peta digital / denah
-
-### 12.10 Laporan
-
-Modul ini dipakai admin dan kepsek untuk rekap data.
-
-Fitur:
-- halaman laporan index
-- laporan pengaduan
-- laporan performa
-- export report
-
-File penting:
-- `app/Http/Controllers/Admin/ReportController.php`
-- `app/Http/Controllers/Kepsek/KepsekDashboardController.php`
-- `resources/views/admin/reports/*`
-- `resources/views/dashboard/kepsek-reports.blade.php`
-
-### 12.11 Overload Board
-
-Modul ini adalah papan monitoring pengaduan overload untuk admin.
-
-File penting:
-- `app/Http/Controllers/Admin/AdminPengaduanController.php`
-- `resources/views/admin/pengaduan/overload-board.blade.php`
-- command terkait overload dan SLA di `app/Console/Commands`
-
-### 12.12 Peta Digital dan Denah
-
-Ada dua hal yang perlu dibedakan:
-
-- `Peta Digital`
-  - viewer denah aktif untuk admin/teknisi
-  - dipakai untuk melihat layer dan area yang sudah dipetakan
-
-- `Kelola Denah`
-  - CRUD denah
-  - upload file PDF/gambar
-  - edit layer
-  - gambar area
-  - aktivasi denah
-
-File penting:
 - `app/Http/Controllers/Admin/SchoolMapController.php`
 - `app/Http/Controllers/Teknisi/TeknisiSchoolMapController.php`
 - `app/Services/SchoolMapService.php`
-- `resources/views/admin/denah/*`
-- `resources/views/teknisi/peta-digital/index.blade.php`
+- `resources/views/partials/pengaduan-map-picker.blade.php`
 - `resources/views/partials/school-map-viewer.blade.php`
 
-Catatan:
-- modul ini sudah punya logic file streaming sendiri
-- jangan asumsi file denah cukup dibuka lewat `/storage/...`
+## 16. Known Constraints dan Hal yang Mudah Menjebak
 
-### 12.13 Master Data
+- Sistem masih sangat bergantung pada kualitas master data gedung/ruangan. Jika data ini berantakan, duplicate detection, report, dan map layer resolution ikut menurun kualitasnya.
+- `ruangan_id` di flow pengaduan belum selalu menjadi input utama; beberapa logic duplicate masih fallback ke `lokasi_detail`.
+- Map picker bukan source of truth tunggal. Pengaduan tetap harus aman walau tanpa titik denah.
+- Banyak route menyediakan redirect compatibility untuk legacy notification link yang masih berbasis numeric ID.
+- Notification link sudah banyak di-hardening per role, tetapi jika generate link baru secara custom tetap cek hasil akhirnya.
+- Queue logic dan schedule logic mengandalkan kolom schema tertentu. `app:doctor` harus lolos dulu sebelum debug behaviour bisnis.
+- `StudentClassPromotionService` mengasumsikan format kelas SMK yang cukup ketat. Data kelas yang tidak standar akan di-skip.
+- `InternalHealthController` menghitung queue health dengan membaca tabel `jobs` dan `failed_jobs`; jangan asumsikan sehat jika migration queue belum lengkap.
+- `RunBackupCommand` memakai `mariadb-dump` atau `mysqldump`; environment tanpa binary itu akan gagal backup.
 
-Modul ini khusus superadmin untuk import data sekolah.
+## 17. Testing dan Verifikasi Minimal Setelah Mengubah Fitur
 
-Fitur:
-- preview import
-- commit import
-- download template
-- error report
-- validasi master data
+Sebelum merge perubahan yang menyentuh domain inti, minimal verifikasi:
 
-File penting:
-- `app/Http/Controllers/Admin/MasterDataController.php`
-- `app/Services/SchoolMasterDataImportService.php`
-- `app/Services/StudentBulkImportService.php`
-- `resources/views/admin/master-data/*`
+- login tiap role yang terdampak
+- create pengaduan baru
+- assign teknisi dan ubah status sampai selesai
+- feedback pengaduan
+- create pinjaman, approve, check-out, check-in
+- notification dropdown masih berjalan
+- denah aktif masih bisa dibuka jika Anda menyentuh map-related code
+- `php artisan app:doctor`
 
-### 12.14 Pengaturan dan Log Aktivitas
+Jika menyentuh scheduler/service domain:
 
-Khusus superadmin.
-
-Fitur:
-- ubah setting aplikasi
-- upload logo
-- lihat log aktivitas
-- export log
-
-File penting:
-- `app/Http/Controllers/Admin/SettingController.php`
-- `app/Http/Controllers/Admin/LogController.php`
-- `app/Models/Setting.php`
-- `app/Models/Log.php`
-- `resources/views/admin/settings/*`
-- `resources/views/admin/logs/*`
-
-## 13. File yang Paling Sering Disentuh Saat Nambah Fitur
-
-Kalau develop fitur baru, biasanya file yang disentuh kombinasi dari:
-
-- `routes/web.php`
-- `app/Http/Controllers/...`
-- `app/Services/...`
-- `app/Models/...`
-- `resources/views/...`
-- migration baru di `database/migrations`
-
-Rule of thumb project ini:
-- validasi request umumnya di controller
-- logic yang lumayan kompleks dipindah ke `Services`
-- tampilan masih dominan Blade, bukan SPA
-
-### Pola kerja codebase yang perlu diingat
-
-- route hampir semuanya ada di `routes/web.php`
-- middleware role adalah gate utama untuk hak akses
-- kalau fitur menyentuh status workflow, biasanya ada service yang sebaiknya dipakai daripada menulis update mentah di controller
-- banyak halaman memakai AJAX endpoint kecil untuk dependent dropdown atau widget UI
-- notifikasi dan dashboard sering mengambil data dari banyak modul, jadi perubahan schema/model bisa berdampak ke area lain
-
-## 14. Command yang Sering Dipakai
-
-### Clear cache Laravel
-
-```bash
-php artisan optimize:clear
-```
-
-### Cek environment
-
-```bash
-php artisan app:doctor
-```
-
-### Jalankan test
-
-```bash
-composer test
-```
-
-### Rebuild frontend production
-
-```bash
-npm run build
-```
-
-### Lihat route
-
-```bash
-php artisan route:list
-```
-
-### Queue dan scheduler
-
-Untuk dev lokal biasanya aman pakai `QUEUE_CONNECTION=sync`, tapi project ini punya command/scheduler yang penting.
-
-Command yang relevan:
-- `php artisan queue:work`
-- `php artisan schedule:run`
-- `php artisan backup:run`
+- `php artisan test`
+- `php artisan tickets:recompute-queue`
 - `php artisan tickets:check-sla`
-- `php artisan tickets:detect-overload`
-- `php artisan pengaduan:recompute-queue`
-- `php artisan master-data:import-school-layout ...`
-
-Kalau ada fitur yang terasa “tidak jalan otomatis”, cek apakah command/scheduler terkait memang sedang berjalan.
-
-## 15. Fitur Pinjaman: Hal yang Wajib Dipahami
-
-Karena fitur ini gampang rusak kalau tidak paham alurnya:
-
-- Master barang dikelola admin lewat `BarangController`
-- Siswa hanya bisa meminjam barang yang:
-  - `is_active = true`
-  - `stok_tersedia > 0`
-- Stok `tidak` berkurang saat pengajuan dibuat
-- Stok `baru berkurang` saat admin melakukan `check-out`
-- Stok `bertambah lagi` saat `check-in`
-
-Logic stok ada di:
-- [`PinjamanAvailabilityService.php`](./app/Services/PinjamanAvailabilityService.php)
-
-Jadi kalau ada bug stok, cek service ini lebih dulu.
-
-## 16. Fitur Denah / Peta Digital: Hal yang Wajib Dipahami
-
-Fitur ini menyimpan file denah dan area mapping untuk gedung/ruangan.
-
-Yang perlu diingat:
-- denah dikelola oleh `SchoolMapController`
-- viewer aktif dihasilkan oleh `SchoolMapService`
-- file denah sekarang diakses lewat route aplikasi, bukan bergantung penuh ke `public/storage`
-
-Kalau ada masalah file denah tidak muncul:
-1. cek data `school_maps`
-2. cek route file denah
-3. cek file benar-benar ada di storage
-
-## 17. Error yang Paling Sering Terjadi Saat Setup
-
-### `Access denied for user ...`
-
-Biasanya:
-- kredensial DB di `.env` salah
-- user database belum dibuat
-- masih pakai root dengan auth_socket
-
-Solusi:
-- buat user DB khusus aplikasi
-- update `.env`
-- jalankan `php artisan optimize:clear`
-
-### `Base table or view not found`
-
-Artinya migrasi belum jalan.
-
-Solusi:
-
-```bash
-php artisan migrate
-php artisan db:seed
-php artisan app:doctor
-```
-
-### Asset CSS/JS tidak muncul
-
-Biasanya `npm install` atau `npm run dev` / `npm run build` belum dijalankan.
-
-### Vite tidak jalan di Windows
-
-Solusi paling aman:
-- pakai Node.js LTS
-- hapus `node_modules` lalu install ulang
-- jalankan `npm install`
-- jalankan `npm run dev`
-
-## 18. Checklist Sebelum Commit Perubahan
-
-Minimal lakukan ini:
-
-```bash
-php artisan optimize:clear
-php artisan app:doctor
-composer test
-```
-
-Kalau ada perubahan frontend:
-
-```bash
-npm run build
-```
-
-Kalau tidak sempat test semua, tulis jelas di commit atau handoff apa yang belum diverifikasi.
-
-## 19. Saran Workflow Buat Penerus Project
-
-- jangan edit langsung di `main`
-- selalu buat branch fitur/fix
-- baca route + controller + view terkait dulu sebelum ubah logic
-- kalau ubah DB, selalu pakai migration baru
-- jangan mengubah data seed default tanpa alasan yang jelas
-- kalau ubah `.env.example`, pastikan perubahan itu memang layak untuk semua developer berikutnya
-
-## 20. Catatan Handoff Terakhir
-
-Beberapa hal yang sudah pernah jadi sumber kebingungan di project ini:
-
-- local setup lebih stabil dengan `SESSION_DRIVER=file`, `CACHE_STORE=file`, `QUEUE_CONNECTION=sync`
-- fitur chatbot lama sudah dihapus dari project, jadi kalau mau ditambahkan lagi sebaiknya dibuat sebagai modul/endpoint terpisah dengan scope yang jelas
-- master barang sekarang punya halaman admin sendiri, jadi tidak perlu input barang manual ke database untuk kebutuhan normal
-
-## 21. Rancangan Endpoint Sumber Informasi untuk Chatbot
-
-Bagian ini sengaja disiapkan untuk programmer yang akan mengerjakan chatbot agar tidak perlu menebak data apa saja yang boleh diambil dari sistem utama.
-
-Prinsipnya:
-- chatbot `jangan` query database sembarangan dari semua tabel
-- chatbot sebaiknya membaca data dari endpoint yang memang disiapkan sebagai `context source`
-- setiap endpoint harus sudah difilter sesuai role user yang login
-- chatbot hanya mengonsumsi data, bukan menjadi tempat business logic utama
-
-### Tujuan endpoint ini
-
-Endpoint sumber informasi dipakai untuk:
-- menampilkan barang apa saja yang tersedia dan stoknya berapa
-- memberi tahu status pinjaman user
-- memberi tahu status pengaduan user
-- menjelaskan cara memakai fitur sistem
-- memberi konteks sesuai role: siswa, guru, admin, teknisi, kepsek
-
-### Namespace yang disarankan
-
-Supaya rapi, gunakan prefix:
-
-```text
-/api/chatbot/context/*
-```
-
-Kalau nanti anggota tim membuat service chatbot terpisah, service itu tinggal consume endpoint di bawah ini.
-
-### Endpoint yang disarankan
-
-#### 1. Profil user login
-
-```http
-GET /api/chatbot/context/me
-```
-
-Fungsi:
-- memberi tahu chatbot siapa user yang sedang login
-- menentukan role dan hak akses jawaban
-
-Contoh response:
-
-```json
-{
-  "user": {
-    "id": 12,
-    "name": "Andi Pratama",
-    "email": "andi@sfcs.sch.id",
-    "role": "siswa",
-    "kelas": "XI RPL 1"
-  }
-}
-```
-
-#### 2. FAQ / bantuan sistem
-
-```http
-GET /api/chatbot/context/help
-```
-
-Fungsi:
-- sumber jawaban statis seperti cara pakai sistem
-- cocok untuk pertanyaan seperti:
-  - "cara lapor kerusakan gimana?"
-  - "cara pinjam barang gimana?"
-  - "admin ngapain saja?"
-
-Contoh response:
-
-```json
-{
-  "pinjam_barang": [
-    "Buka menu Pinjam Barang",
-    "Pilih barang yang tersedia",
-    "Isi jumlah dan alasan pinjam",
-    "Kirim pengajuan dan tunggu approval admin"
-  ],
-  "buat_pengaduan": [
-    "Buka menu Pengaduan",
-    "Isi judul dan deskripsi kerusakan",
-    "Pilih kategori dan lokasi",
-    "Upload foto bila ada lalu kirim"
-  ],
-  "role_summary": {
-    "siswa": "Bisa membuat pengaduan dan pinjaman",
-    "guru": "Bisa membuat pengaduan dan pinjaman",
-    "admin": "Bisa memverifikasi pengaduan dan mengelola pinjaman",
-    "teknisi": "Bisa menangani pengaduan yang di-assign"
-  }
-}
-```
-
-#### 3. Daftar barang aktif dan stok
-
-```http
-GET /api/chatbot/context/barangs
-```
-
-Fungsi:
-- menjawab pertanyaan seperti:
-  - "barang apa yang tersedia?"
-  - "stok kertas folio berapa?"
-  - "barang ATK apa saja yang bisa dipinjam?"
-
-Contoh response:
-
-```json
-{
-  "items": [
-    {
-      "id": 4,
-      "kode_barang": "BRG-ATK-001",
-      "nama": "Kertas Folio",
-      "kategori": "ATK",
-      "lokasi": "Gudang ATK",
-      "stok_total": 100,
-      "stok_tersedia": 100,
-      "stok_rusak": 0,
-      "is_active": true
-    }
-  ]
-}
-```
-
-Catatan:
-- untuk chatbot siswa/guru, biasanya cukup tampilkan barang `aktif`
-- kalau ingin lebih ringan, endpoint ini bisa hanya mengirim barang dengan `stok_tersedia > 0`
-
-#### 4. Detail satu barang
-
-```http
-GET /api/chatbot/context/barangs/{id}
-```
-
-Fungsi:
-- menjawab pertanyaan spesifik tentang satu barang
-- berguna kalau chatbot sudah melakukan matching item tertentu
-
-Contoh response:
-
-```json
-{
-  "item": {
-    "id": 4,
-    "kode_barang": "BRG-ATK-001",
-    "nama": "Kertas Folio",
-    "kategori": "ATK",
-    "lokasi": "Gudang ATK",
-    "stok_total": 100,
-    "stok_tersedia": 100,
-    "stok_rusak": 0,
-    "is_active": true
-  }
-}
-```
-
-#### 5. Pinjaman milik user login
-
-```http
-GET /api/chatbot/context/my-pinjamans
-```
-
-Fungsi:
-- untuk siswa/guru
-- menjawab:
-  - "pinjaman saya apa saja?"
-  - "status pinjaman saya sekarang apa?"
-
-Contoh response:
-
-```json
-{
-  "items": [
-    {
-      "id": 33,
-      "kode_pinjaman": "PJM-20260418-001",
-      "barang": "Kertas Folio",
-      "qty": 2,
-      "status": "disetujui",
-      "tgl_pinjam": "2026-04-18 09:30:00",
-      "tgl_jatuh_tempo": "2026-04-20 09:30:00",
-      "tgl_kembali": null
-    }
-  ]
-}
-```
-
-#### 6. Pengaduan milik user login
-
-```http
-GET /api/chatbot/context/my-pengaduans
-```
-
-Fungsi:
-- untuk siswa/guru
-- menjawab:
-  - "pengaduan saya statusnya apa?"
-  - "laporan saya yang masih aktif apa saja?"
-
-Contoh response:
-
-```json
-{
-  "items": [
-    {
-      "id": 15,
-      "kode_pengaduan": "ADU-20260418-004",
-      "judul": "Lampu kelas mati",
-      "status": "diproses",
-      "prioritas": "sedang",
-      "gedung": "Gedung A",
-      "ruangan": "Ruang XI RPL 1",
-      "created_at": "2026-04-18 08:10:00"
-    }
-  ]
-}
-```
-
-#### 7. Ringkasan pengaduan global
-
-```http
-GET /api/chatbot/context/pengaduan-summary
-```
-
-Fungsi:
-- hanya untuk role tertentu seperti admin, teknisi, kepsek
-- menjawab:
-  - "berapa pengaduan aktif?"
-  - "berapa yang pending?"
-  - "berapa yang urgent?"
-
-Contoh response:
-
-```json
-{
-  "total_aktif": 12,
-  "pending": 4,
-  "diverifikasi": 3,
-  "diproses": 5,
-  "urgent": 2
-}
-```
-
-#### 8. Ringkasan pinjaman global
-
-```http
-GET /api/chatbot/context/pinjaman-summary
-```
-
-Fungsi:
-- untuk admin/superadmin
-- menjawab:
-  - "ada berapa pinjaman aktif?"
-  - "pinjaman yang terlambat ada berapa?"
-
-Contoh response:
-
-```json
-{
-  "pending": 2,
-  "disetujui": 3,
-  "dipinjam": 6,
-  "terlambat": 1,
-  "selesai": 18
-}
-```
-
-#### 9. Daftar menu/fitur per role
-
-```http
-GET /api/chatbot/context/feature-map
-```
-
-Fungsi:
-- chatbot bisa menjelaskan menu yang tersedia untuk role tertentu
-- cocok untuk pertanyaan seperti:
-  - "saya bisa akses apa saja?"
-  - "menu admin apa saja?"
-
-Contoh response:
-
-```json
-{
-  "siswa": [
-    "Dashboard",
-    "Pengaduan Saya",
-    "Buat Pengaduan",
-    "Pinjam Barang"
-  ],
-  "admin": [
-    "Kelola Pengaduan",
-    "Kelola Pengguna",
-    "Kelola Pinjaman",
-    "Master Barang",
-    "Peta Digital"
-  ]
-}
-```
-
-### Endpoint minimal yang paling penting
-
-Kalau mau mulai dari versi paling kecil dulu, minimal siapkan ini:
-
-```text
-GET /api/chatbot/context/me
-GET /api/chatbot/context/help
-GET /api/chatbot/context/barangs
-GET /api/chatbot/context/my-pinjamans
-GET /api/chatbot/context/my-pengaduans
-```
-
-Dengan 5 endpoint itu saja chatbot sudah bisa menjawab cukup banyak pertanyaan umum.
-
-### Aturan access control
-
-Ini penting. Jangan sampai chatbot bocor data.
-
-Saran pembatasan:
-- `siswa`
-  - hanya boleh akses data dirinya sendiri
-  - boleh akses FAQ umum dan daftar barang aktif
-- `guru`
-  - sama seperti siswa, kecuali memang ada policy tambahan
-- `teknisi`
-  - boleh akses ringkasan pengaduan yang relevan dengan pekerjaannya
-- `admin`
-  - boleh akses ringkasan global pengaduan dan pinjaman
-- `kepsek`
-  - boleh akses summary/dashboard level
-- `superadmin`
-  - boleh akses semua endpoint context yang bersifat administratif
-
-### Bentuk implementasi yang disarankan
-
-Kalau nanti endpoint ini benar-benar dibuat, saran struktur code:
-
-- controller:
-  - `App\Http\Controllers\Api\ChatbotContextController`
-- route:
-  - dikelompokkan di `routes/web.php` atau dipisah ke `routes/api.php`
-- service:
-  - `App\Services\ChatbotContextService`
-
-Kalau mau cepat dan tetap rapi:
-- controller memanggil service
-- service membentuk payload JSON sesuai role user
-
-### Catatan penting untuk programmer chatbot
-
-- chatbot sebaiknya tidak langsung membaca semua model
-- lebih aman consume endpoint context yang sudah stabil
-- jangan taruh prompt besar atau logic AI di controller utama aplikasi
-- pisahkan jelas:
-  - aplikasi inti SFCS
-  - endpoint sumber data
-  - engine chatbot
-
-### Kontrak kerja yang direkomendasikan antar anggota tim
-
-Supaya kolaborasi enak:
-- maintainer SFCS menyediakan endpoint context
-- developer chatbot consume endpoint tersebut
-- format JSON harus dijaga stabil
-- kalau ada field baru, tambahkan tanpa merusak struktur lama
-
-Dengan model ini, backend utama dan chatbot bisa berkembang masing-masing tanpa saling mengacaukan.
-
-## 22. Quick Start Singkat
-
-Kalau kamu cuma butuh project jalan cepat di mesin baru:
-
-```bash
-cd sfcs-app
-composer install
-npm install
-copy .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan db:seed
-php artisan app:doctor
-php artisan serve
-```
-
-Lalu di terminal lain:
-
-```bash
-npm run dev
-```
-
-Selesai. Kalau ada error, debug dari `.env`, koneksi database, lalu hasil `app:doctor`.
+- `php artisan pinjaman:mark-overdue`
+
+Saat ini test otomatis yang terlihat di repo masih sangat sedikit, jadi regresi fungsional tetap perlu dicek manual.
+
+## 18. Rekomendasi Cara Kerja untuk Maintainer Berikutnya
+
+- Jangan treat project ini sebagai CRUD Laravel biasa. Behaviour utamanya ada di service layer.
+- Kalau mengubah status flow pengaduan, selalu cek efek ke:
+  - SLA
+  - queue rank
+  - duplicate auto-close
+  - notifikasi
+  - report/dashboard
+- Kalau mengubah pinjaman, cek efek ke stok dan scheduler overdue.
+- Kalau mengubah denah, cek juga form pengaduan, viewer admin, viewer teknisi, dan detail tiket.
+- Kalau mengubah import/promotion siswa, cek konsekuensinya ke auth login via NIS dan status aktif user.
+
+## 19. Ringkasan untuk Developer Baru
+
+Kalau hanya punya waktu singkat untuk orientasi, pahami 5 hal ini dulu:
+
+1. `Pengaduan` adalah domain paling kompleks karena terhubung ke duplicate detection, priority scoring, SLA, assignment teknisi, queue ranking, overload, feedback, reopen, dan denah.
+2. `Pinjaman` punya lifecycle terpisah yang lebih sederhana, tetapi stok harus dijaga transactional.
+3. `SchoolMapService` adalah integrasi lokasi visual, bukan pengganti total lokasi tekstual.
+4. `superadmin` bukan sekadar admin tambahan; ada capability khusus untuk import siswa, promote kelas, master data, dan setting sistem.
+5. Bila behaviour terasa aneh, cek dulu `settings`, scheduler command, dan schema readiness sebelum menyimpulkan bug ada di view/controller.

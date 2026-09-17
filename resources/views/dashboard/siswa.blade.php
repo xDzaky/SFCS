@@ -15,7 +15,7 @@
                         </div>
                         <div>
                             <h5 class="mb-1 fs-6 fs-md-5">Halo, {{ Auth::user()->name }}!</h5>
-                            <p class="mb-0 opacity-90 small">Kelola pengaduan fasilitas sekolah</p>
+                            <p class="mb-0 opacity-90 small">Kelola pengaduan & pinjaman barang sekolah</p>
                         </div>
                     </div>
                 </div>
@@ -76,22 +76,34 @@
 
     <!-- Quick Action Buttons - Large Touch-Friendly -->
     <div class="row g-2 mb-3">
-        <div class="col-12">
+        <div class="col-6">
             <a href="{{ route('pengaduan.create') }}" class="btn btn-primary btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
-                <i class="fas fa-plus-circle fs-4 me-2"></i>
-                <span class="fs-5 fw-bold">BUAT PENGADUAN BARU</span>
+                <i class="fas fa-plus-circle fs-4 d-block mb-1"></i>
+                <span class="fw-bold small">BUAT PENGADUAN</span>
             </a>
         </div>
         <div class="col-6">
+            <a href="{{ route('pinjaman.create') }}" class="btn btn-success btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
+                <i class="fas fa-hand-holding fs-4 d-block mb-1"></i>
+                <span class="fw-bold small">PINJAM BARANG</span>
+            </a>
+        </div>
+        <div class="col-4">
             <a href="{{ route('pengaduan.index') }}" class="btn btn-outline-primary w-100 py-3" style="border-radius: 12px;">
-                <i class="fas fa-list d-block fs-3 mb-1"></i>
-                <small class="d-block">Lihat Semua</small>
+                <i class="fas fa-list d-block fs-4 mb-1"></i>
+                <small class="d-block">Pengaduan</small>
             </a>
         </div>
-        <div class="col-6">
+        <div class="col-4">
+            <a href="{{ route('pinjaman.index') }}" class="btn btn-outline-success w-100 py-3" style="border-radius: 12px;">
+                <i class="fas fa-box d-block fs-4 mb-1"></i>
+                <small class="d-block">Pinjaman</small>
+            </a>
+        </div>
+        <div class="col-4">
             <a href="{{ route('pengaduan.track') }}" class="btn btn-outline-secondary w-100 py-3" style="border-radius: 12px;">
-                <i class="fas fa-search d-block fs-3 mb-1"></i>
-                <small class="d-block">Lacak Pengaduan</small>
+                <i class="fas fa-search d-block fs-4 mb-1"></i>
+                <small class="d-block">Lacak</small>
             </a>
         </div>
     </div>
@@ -124,16 +136,16 @@
                                                 {{ $pengaduan->kode_pengaduan }}
                                             </span>
                                             @php
-                                                $statusColors = [
-                                                    'pending' => 'warning',
-                                                    'diverifikasi' => 'info',
-                                                    'diproses' => 'primary',
-                                                    'selesai' => 'success',
-                                                    'ditolak' => 'danger'
+                                                $statusMap = [
+                                                    'pending'      => 'badge-status-pending',
+                                                    'diverifikasi' => 'badge-status-diverifikasi',
+                                                    'diproses'     => 'badge-status-diproses',
+                                                    'selesai'      => 'badge-status-selesai',
+                                                    'ditolak'      => 'badge-status-ditolak',
                                                 ];
-                                                $color = $statusColors[$pengaduan->status] ?? 'secondary';
+                                                $color = $statusMap[$pengaduan->status] ?? 'badge-status-pending';
                                             @endphp
-                                            <span class="badge bg-{{ $color }} small">
+                                            <span class="badge {{ $color }} small">
                                                 {{ ucfirst($pengaduan->status) }}
                                             </span>
                                         </div>
@@ -200,16 +212,16 @@
                                             </td>
                                             <td>
                                                 @php
-                                                    $statusColors = [
-                                                        'pending' => 'warning',
-                                                        'diverifikasi' => 'info',
-                                                        'diproses' => 'primary',
-                                                        'selesai' => 'success',
-                                                        'ditolak' => 'danger'
+                                                    $statusMap = [
+                                                        'pending'      => 'badge-status-pending',
+                                                        'diverifikasi' => 'badge-status-diverifikasi',
+                                                        'diproses'     => 'badge-status-diproses',
+                                                        'selesai'      => 'badge-status-selesai',
+                                                        'ditolak'      => 'badge-status-ditolak',
                                                     ];
-                                                    $color = $statusColors[$pengaduan->status] ?? 'secondary';
+                                                    $color = $statusMap[$pengaduan->status] ?? 'badge-status-pending';
                                                 @endphp
-                                                <span class="badge bg-{{ $color }}">
+                                                <span class="badge {{ $color }}">
                                                     {{ ucfirst($pengaduan->status) }}
                                                 </span>
                                             </td>
