@@ -235,23 +235,39 @@
                                 <div class="text-dark small fw-medium">{{ $pengaduan->assigned_at ? $pengaduan->assigned_at->format('d/m/Y') : '' }}</div>
                                 <div class="text-muted x-small">{{ $pengaduan->assigned_at ? $pengaduan->assigned_at->diffForHumans() : '' }}</div>
                             </td>
-                            <td class="pe-4 text-end">
-                                <div class="btn-group">
-                                    <a href="{{ route('teknisi.pengaduan.show', $pengaduan) }}" class="btn btn-light btn-sm rounded-circle shadow-sm me-2" title="Lihat" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-eye text-primary"></i>
+                            <td class="pe-4">
+                                <div class="d-flex align-items-center justify-content-end gap-1">
+                                    {{-- View --}}
+                                    <a href="{{ route('teknisi.pengaduan.show', $pengaduan) }}"
+                                       class="btn btn-light btn-sm shadow-sm"
+                                       title="Lihat"
+                                       style="width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">
+                                        <i class="fas fa-eye text-primary" style="font-size:.8rem;"></i>
                                     </a>
+
+                                    {{-- Mulai Kerjakan (diverifikasi → diproses) --}}
                                     @if($pengaduan->status === 'diverifikasi')
-                                        <form action="{{ route('teknisi.pengaduan.update-status', $pengaduan) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('teknisi.pengaduan.update-status', $pengaduan) }}" method="POST" style="line-height:0;">
                                             @csrf @method('POST')
                                             <input type="hidden" name="status" value="diproses">
-                                            <button type="submit" class="btn btn-warning btn-sm rounded-circle shadow-sm text-dark me-2" title="Mulai Kerjakan" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
-                                                <i class="fas fa-play"></i>
+                                            <button type="submit"
+                                                    class="btn btn-warning btn-sm shadow-sm"
+                                                    title="Mulai Kerjakan"
+                                                    style="width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">
+                                                <i class="fas fa-play text-dark" style="font-size:.75rem;"></i>
                                             </button>
                                         </form>
                                     @endif
+
+                                    {{-- Selesaikan (diproses) --}}
                                     @if($pengaduan->status === 'diproses')
-                                        <button type="button" class="btn btn-success btn-sm rounded-circle shadow-sm text-white" title="Selesaikan" data-bs-toggle="modal" data-bs-target="#completeModal{{ $pengaduan->id }}" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-check"></i>
+                                        <button type="button"
+                                                class="btn btn-success btn-sm shadow-sm"
+                                                title="Selesaikan"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#completeModal{{ $pengaduan->id }}"
+                                                style="width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">
+                                            <i class="fas fa-check text-white" style="font-size:.8rem;"></i>
                                         </button>
                                     @endif
                                 </div>
