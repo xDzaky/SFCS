@@ -26,24 +26,6 @@ use Illuminate\Support\Facades\Route;
 */
 Route::redirect('/', '/login')->name('home');
 
-// Temporary one-time database seed route for cloud deployment
-Route::get('/seed-production-db-now', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        return response()->json([
-            'status' => 'success',
-            'output' => \Illuminate\Support\Facades\Artisan::output(),
-            'users_count' => \App\Models\User::count(),
-            'pengaduan_count' => \App\Models\Pengaduan::count(),
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage(),
-        ], 500);
-    }
-});
-
 // Public Track Pengaduan (tanpa login)
 Route::get('/track', [PengaduanController::class, 'track'])->name('pengaduan.track');
 
