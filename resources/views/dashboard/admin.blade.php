@@ -53,85 +53,210 @@
     </div>
 </div>
 
-{{-- ══ STATS ROWS ════════════════════════════════════════════════════════════ --}}
-{{-- Row 1: Pengaduan stats --}}
-<div class="row g-3 mb-3">
-    <div class="col-6 col-sm-3">
-        <div class="stat-card stat-card--total">
-            <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
-            <div class="stat-value">{{ $stats['total'] }}</div>
-            <div class="stat-label">Total Laporan</div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-3">
-        <div class="stat-card stat-card--warning">
-            <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
-            <div class="stat-value text-warning">{{ $stats['pending'] }}</div>
-            <div class="stat-label">Pending</div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-3">
-        <div class="stat-card stat-card--info">
-            <div class="stat-icon"><i class="fas fa-screwdriver-wrench"></i></div>
-            <div class="stat-value text-info">{{ $stats['proses'] }}</div>
-            <div class="stat-label">Sedang Diproses</div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-3">
-        <div class="stat-card stat-card--danger">
-            <div class="stat-icon"><i class="fas fa-fire"></i></div>
-            <div class="stat-value text-danger">{{ $stats['overdue'] ?? 0 }}</div>
-            <div class="stat-label">Overdue</div>
+{{-- ══ STATS SUMMARY (Clean, Compact, Minimalist Slate Theme) ═══════════════ --}}
+<div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden bg-white">
+    <div class="card-body p-3 p-md-4">
+        <div class="row g-2 g-md-3">
+            {{-- Total Laporan --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle text-primary"><i class="fas fa-clipboard-list"></i></span>
+                        <span class="stat-title text-muted">Total Laporan</span>
+                    </div>
+                    <div class="stat-number text-dark">{{ $stats['total'] }}</div>
+                </div>
+            </div>
+
+            {{-- Pending --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle text-secondary"><i class="fas fa-hourglass-half"></i></span>
+                        <span class="stat-title text-muted">Pending</span>
+                    </div>
+                    <div class="stat-number text-dark">{{ $stats['pending'] }}</div>
+                </div>
+            </div>
+
+            {{-- Sedang Diproses --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle text-secondary"><i class="fas fa-screwdriver-wrench"></i></span>
+                        <span class="stat-title text-muted">Diproses</span>
+                    </div>
+                    <div class="stat-number text-dark">{{ $stats['proses'] }}</div>
+                </div>
+            </div>
+
+            {{-- Overdue --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle {{ ($stats['overdue'] ?? 0) > 0 ? 'text-danger' : 'text-secondary' }}"><i class="fas fa-fire"></i></span>
+                        <span class="stat-title text-muted">Overdue</span>
+                    </div>
+                    <div class="stat-number {{ ($stats['overdue'] ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ $stats['overdue'] ?? 0 }}</div>
+                </div>
+            </div>
+
+            {{-- Pinjaman Aktif --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle text-secondary"><i class="fas fa-box-open"></i></span>
+                        <span class="stat-title text-muted">Pinjaman Aktif</span>
+                    </div>
+                    <div class="stat-number text-dark">{{ $stats['pinjaman_aktif'] ?? 0 }}</div>
+                </div>
+            </div>
+
+            {{-- Pinjaman Terlambat --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle {{ ($stats['pinjaman_terlambat'] ?? 0) > 0 ? 'text-danger' : 'text-secondary' }}"><i class="fas fa-clock-rotate-left"></i></span>
+                        <span class="stat-title text-muted">Pinjaman Terlambat</span>
+                    </div>
+                    <div class="stat-number {{ ($stats['pinjaman_terlambat'] ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ $stats['pinjaman_terlambat'] ?? 0 }}</div>
+                </div>
+            </div>
+
+            {{-- Review Urgensi --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle text-secondary"><i class="fas fa-triangle-exclamation"></i></span>
+                        <span class="stat-title text-muted">Review Urgensi</span>
+                    </div>
+                    <div class="stat-number text-dark">{{ $stats['priority_review'] ?? 0 }}</div>
+                </div>
+            </div>
+
+            {{-- Prediksi Delay --}}
+            <div class="col-6 col-md-3 col-lg">
+                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="stat-icon-subtle text-secondary"><i class="fas fa-stopwatch"></i></span>
+                        <span class="stat-title text-muted">Prediksi Delay</span>
+                    </div>
+                    <div class="stat-number text-dark">{{ $stats['predicted_delay_minutes'] ?? 0 }}<span class="stat-unit">mnt</span></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-{{-- Row 2: Pinjaman + urgensi stats --}}
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="stat-card stat-card--primary">
-            <div class="stat-icon"><i class="fas fa-box-open"></i></div>
-            <div class="stat-value text-primary">{{ $stats['pinjaman_aktif'] ?? 0 }}</div>
-            <div class="stat-label">Pinjaman Aktif</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="stat-card stat-card--danger">
-            <div class="stat-icon"><i class="fas fa-clock-rotate-left"></i></div>
-            <div class="stat-value text-danger">{{ $stats['pinjaman_terlambat'] ?? 0 }}</div>
-            <div class="stat-label">Pinjaman Terlambat</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="stat-card stat-card--warning">
-            <div class="stat-icon"><i class="fas fa-triangle-exclamation"></i></div>
-            <div class="stat-value text-warning">{{ $stats['priority_review'] ?? 0 }}</div>
-            <div class="stat-label">Review Urgensi</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="stat-card stat-card--danger">
-            <div class="stat-icon"><i class="fas fa-stopwatch"></i></div>
-            <div class="stat-value text-danger">{{ $stats['predicted_delay_minutes'] ?? 0 }}<span class="stat-unit">mnt</span></div>
-            <div class="stat-label">Prediksi Delay</div>
-        </div>
-    </div>
-</div>
-
-{{-- ══ MAIN CONTENT — 3-column desktop layout ══════════════════════════════ --}}
+{{-- ══ MAIN CONTENT (Wide Table First, Followed by Category/Gedung & Teknisi) ══════════════ --}}
 <div class="row g-3">
 
-    {{-- ── LEFT: Charts ─────────────────────────────────────  col-lg-4 ── --}}
-    <div class="col-12 col-lg-4">
-
-        {{-- Per Kategori --}}
-        <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
-            <div class="card-header bg-white border-0 pt-3 pb-0 px-3">
+    {{-- 1. Pengaduan Terbaru (Full Width untuk kelegaan tabel) ────────────────── --}}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom border-light-subtle px-3 py-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="dash-badge-icon bg-primary-subtle text-primary">
+                    <span class="dash-badge-icon bg-light text-dark border">
+                        <i class="fas fa-list-check"></i>
+                    </span>
+                    <div>
+                        <h6 class="mb-0 fw-semibold text-dark">Pengaduan Terbaru</h6>
+                        @if($totalPengaduans > 8)
+                            <small class="text-muted" style="font-size:.75rem;">Menampilkan 8 dari {{ $totalPengaduans }} laporan</small>
+                        @endif
+                    </div>
+                </div>
+                <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size:.78rem;">
+                    @if($totalPengaduans > 8)
+                        Lihat Semua ({{ $totalPengaduans }}) <i class="fas fa-arrow-right ms-1"></i>
+                    @else
+                        Semua <i class="fas fa-arrow-right ms-1"></i>
+                    @endif
+                </a>
+            </div>
+
+            {{-- Desktop / Tablet table --}}
+            <div class="d-none d-sm-block table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size:.84rem;">
+                    <thead style="background:#f8fafc;">
+                        <tr>
+                            <th class="ps-3 text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">KODE</th>
+                            <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">JUDUL</th>
+                            <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">PELAPOR</th>
+                            <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">STATUS</th>
+                            <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">URGENSI</th>
+                            <th class="text-center text-muted fw-semibold pe-3" style="font-size:.7rem;letter-spacing:.05em;">AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentPengaduans as $p)
+                        <tr class="dash-table-row"
+                            onclick="if(!event.target.closest('a')&&!getSelection().toString()) window.location='{{ route('admin.pengaduan.show', $p) }}'">
+                            <td class="ps-3">
+                                <span class="badge bg-light text-dark border font-monospace" style="font-size:.72rem;">{{ $p->kode_pengaduan }}</span>
+                            </td>
+                            <td class="fw-medium text-dark">{{ Str::limit($p->judul, 45) }}</td>
+                            <td class="text-muted">{{ $p->user->name ?? '-' }}</td>
+                            <td>
+                                @php $sc = $statusColors[$p->status] ?? ['class'=>'badge-status-pending','label'=>ucfirst($p->status)]; @endphp
+                                <span class="badge {{ $sc['class'] }} rounded-pill" style="font-size:.7rem;">{{ $sc['label'] }}</span>
+                            </td>
+                            <td>
+                                @php $pc = $prioritasColors[$p->prioritas] ?? ['class'=>'badge-prioritas-unknown','label'=>ucfirst($p->prioritas)]; @endphp
+                                <span class="badge {{ $pc['class'] }} rounded-pill" style="font-size:.7rem;">{{ $pc['label'] }}</span>
+                            </td>
+                            <td class="text-center pe-3">
+                                <a href="{{ route('admin.pengaduan.show', $p) }}" class="btn btn-sm btn-outline-secondary rounded-circle p-1" style="width:28px;height:28px;line-height:1;">
+                                    <i class="fas fa-eye" style="font-size:.65rem;"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">Belum ada pengaduan</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Mobile card list --}}
+            <div class="d-block d-sm-none p-2">
+                @forelse($recentPengaduans as $p)
+                @php $sc = $statusColors[$p->status] ?? ['badge'=>'secondary','label'=>ucfirst($p->status)]; @endphp
+                <a href="{{ route('admin.pengaduan.show', $p) }}" class="text-decoration-none">
+                    <div class="d-flex align-items-start gap-2 p-2 mb-1 rounded-3 hover-bg">
+                        <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center bg-light text-secondary border" style="width:36px;height:36px;font-size:.75rem;">
+                            <i class="fas fa-file-lines"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start gap-1">
+                                <span class="fw-semibold text-dark small" style="font-size:.83rem;">{{ Str::limit($p->judul, 38) }}</span>
+                                <span class="badge {{ $sc['class'] }}" style="font-size:.65rem;white-space:nowrap;">{{ $sc['label'] }}</span>
+                            </div>
+                            <div class="text-muted" style="font-size:.7rem;">
+                                <span class="font-monospace">{{ $p->kode_pengaduan }}</span>
+                                &middot; {{ $p->user->name ?? '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                @empty
+                <p class="text-muted text-center small py-3 mb-0">Belum ada pengaduan</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    {{-- 2. Per Kategori (Di Bawah Pengaduan Terbaru) ────────────────────────── --}}
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+            <div class="card-header bg-white border-bottom border-light-subtle px-3 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="dash-badge-icon bg-light text-dark border">
                         <i class="fas fa-chart-pie"></i>
                     </span>
-                    <h6 class="mb-0 fw-semibold">Per Kategori</h6>
+                    <h6 class="mb-0 fw-semibold text-dark">Per Kategori</h6>
                 </div>
             </div>
             <div class="card-body p-3">
@@ -140,10 +265,10 @@
                     <div class="mb-2">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small fw-medium text-dark">{{ $kategori->nama }}</span>
-                            <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle" style="font-size:.7rem;">{{ $kategori->pengaduans_count }}</span>
+                            <span class="badge rounded-pill bg-light text-dark border" style="font-size:.7rem;">{{ $kategori->pengaduans_count }}</span>
                         </div>
-                        <div class="progress rounded-pill" style="height:7px;">
-                            <div class="progress-bar bg-primary rounded-pill" style="width:{{ $pct }}%"></div>
+                        <div class="progress rounded-pill bg-light" style="height:6px;">
+                            <div class="progress-bar bg-dark-subtle rounded-pill" style="width:{{ $pct }}%; background-color:#6366f1 !important;"></div>
                         </div>
                     </div>
                 @empty
@@ -151,15 +276,17 @@
                 @endforelse
             </div>
         </div>
+    </div>
 
-        {{-- Per Gedung --}}
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white border-0 pt-3 pb-0 px-3">
+    {{-- 3. Per Gedung (Di Bawah Pengaduan Terbaru) ─────────────────────────── --}}
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+            <div class="card-header bg-white border-bottom border-light-subtle px-3 py-3">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="dash-badge-icon bg-success-subtle text-success">
+                    <span class="dash-badge-icon bg-light text-dark border">
                         <i class="fas fa-building"></i>
                     </span>
-                    <h6 class="mb-0 fw-semibold">Per Gedung</h6>
+                    <h6 class="mb-0 fw-semibold text-dark">Per Gedung</h6>
                 </div>
             </div>
             <div class="card-body p-3">
@@ -167,11 +294,11 @@
                     @php $pct = $stats['total'] > 0 ? round(($gedung['total'] / $stats['total']) * 100) : 0; @endphp
                     <div class="mb-2">
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="small fw-medium text-dark text-truncate me-2" style="max-width:160px;">{{ $gedung['nama'] }}</span>
-                            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem;">{{ $gedung['total'] }}</span>
+                            <span class="small fw-medium text-dark text-truncate me-2" style="max-width:180px;">{{ $gedung['nama'] }}</span>
+                            <span class="badge rounded-pill bg-light text-dark border" style="font-size:.7rem;">{{ $gedung['total'] }}</span>
                         </div>
-                        <div class="progress rounded-pill" style="height:7px;">
-                            <div class="progress-bar bg-success rounded-pill" style="width:{{ $pct }}%"></div>
+                        <div class="progress rounded-pill bg-light" style="height:6px;">
+                            <div class="progress-bar rounded-pill" style="width:{{ $pct }}%; background-color:#475569 !important;"></div>
                         </div>
                     </div>
                 @empty
@@ -181,168 +308,60 @@
         </div>
     </div>
 
-    {{-- ── CENTER+RIGHT: Table + Teknisi ────────────────────  col-lg-8 ── --}}
-    <div class="col-12 col-lg-8">
-        <div class="row g-3 h-100">
-
-            {{-- Pengaduan Terbaru ──────────────────────────────────────── --}}
-            <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div class="card-header bg-white border-bottom border-light-subtle px-3 py-3 d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="dash-badge-icon bg-primary-subtle text-primary">
-                                <i class="fas fa-list-check"></i>
-                            </span>
-                            <div>
-                                <h6 class="mb-0 fw-semibold">Pengaduan Terbaru</h6>
-                                @if($totalPengaduans > 8)
-                                    <small class="text-muted" style="font-size:.72rem;">Menampilkan 8 dari {{ $totalPengaduans }} laporan</small>
-                                @endif
-                            </div>
-                        </div>
-                        <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size:.78rem;">
-                            @if($totalPengaduans > 8)
-                                Lihat Semua ({{ $totalPengaduans }}) <i class="fas fa-arrow-right ms-1"></i>
-                            @else
-                                Semua <i class="fas fa-arrow-right ms-1"></i>
-                            @endif
-                        </a>
-                    </div>
-
-                    {{-- Desktop / Tablet table --}}
-                    <div class="d-none d-sm-block table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size:.83rem;">
-                            <thead style="background:#f8fafc;">
-                                <tr>
-                                    <th class="ps-3 text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">KODE</th>
-                                    <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">JUDUL</th>
-                                    <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">PELAPOR</th>
-                                    <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">STATUS</th>
-                                    <th class="text-muted fw-semibold" style="font-size:.7rem;letter-spacing:.05em;">URGENSI</th>
-                                    <th class="text-center text-muted fw-semibold pe-3" style="font-size:.7rem;letter-spacing:.05em;">AKSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentPengaduans as $p)
-                                <tr class="dash-table-row"
-                                    onclick="if(!event.target.closest('a')&&!getSelection().toString()) window.location='{{ route('admin.pengaduan.show', $p) }}'">
-                                    <td class="ps-3">
-                                        <span class="badge bg-light text-dark border font-monospace" style="font-size:.7rem;">{{ $p->kode_pengaduan }}</span>
-                                    </td>
-                                    <td class="fw-medium">{{ Str::limit($p->judul, 35) }}</td>
-                                    <td class="text-muted">{{ $p->user->name ?? '-' }}</td>
-                                    <td>
-                                        @php $sc = $statusColors[$p->status] ?? ['class'=>'badge-status-pending','label'=>ucfirst($p->status)]; @endphp
-                                        <span class="badge {{ $sc['class'] }} rounded-pill" style="font-size:.7rem;">{{ $sc['label'] }}</span>
-                                    </td>
-                                    <td>
-                                        @php $pc = $prioritasColors[$p->prioritas] ?? ['class'=>'badge-prioritas-unknown','label'=>ucfirst($p->prioritas)]; @endphp
-                                        <span class="badge {{ $pc['class'] }} rounded-pill" style="font-size:.7rem;">{{ $pc['label'] }}</span>
-                                    </td>
-                                    <td class="text-center pe-3">
-                                        <a href="{{ route('admin.pengaduan.show', $p) }}" class="btn btn-sm btn-outline-primary rounded-circle p-1" style="width:28px;height:28px;line-height:1;">
-                                            <i class="fas fa-eye" style="font-size:.65rem;"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted small">Belum ada pengaduan</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {{-- Mobile card list --}}
-                    <div class="d-block d-sm-none p-2">
-                        @forelse($recentPengaduans as $p)
-                        @php $sc = $statusColors[$p->status] ?? ['badge'=>'secondary','label'=>ucfirst($p->status)]; @endphp
-                        <a href="{{ route('admin.pengaduan.show', $p) }}" class="text-decoration-none">
-                            <div class="d-flex align-items-start gap-2 p-2 mb-1 rounded-3 hover-bg">
-                                <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center bg-primary-subtle text-primary" style="width:36px;height:36px;font-size:.7rem;">
-                                    <i class="fas fa-file-lines"></i>
-                                </div>
-                                <div class="min-w-0 flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start gap-1">
-                                        <span class="fw-semibold text-dark small" style="font-size:.83rem;">{{ Str::limit($p->judul, 38) }}</span>
-                                        <span class="badge {{ $sc['class'] }}" style="font-size:.65rem;white-space:nowrap;">{{ $sc['label'] }}</span>
-                                    </div>
-                                    <div class="text-muted" style="font-size:.7rem;">
-                                        <span class="font-monospace">{{ $p->kode_pengaduan }}</span>
-                                        &middot; {{ $p->user->name ?? '-' }}
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        @empty
-                        <p class="text-muted text-center small py-3 mb-0">Belum ada pengaduan</p>
-                        @endforelse
-                    </div>
+    {{-- 4. Teknisi Utilization (Di Samping Kategori & Gedung) ───────────────── --}}
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+            <div class="card-header bg-white border-bottom border-light-subtle px-3 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="dash-badge-icon bg-light text-dark border">
+                        <i class="fas fa-users-cog"></i>
+                    </span>
+                    <h6 class="mb-0 fw-semibold text-dark">Teknisi Utilization</h6>
                 </div>
+                <a href="{{ route('admin.overload-board') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size:.75rem;">
+                    <i class="fas fa-gauge-high me-1"></i>Board
+                </a>
             </div>
-
-            {{-- Teknisi Utilization ───────────────────────────────────── --}}
-            <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                    <div class="card-header bg-white border-bottom border-light-subtle px-3 py-3 d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="dash-badge-icon bg-info-subtle text-info">
-                                <i class="fas fa-users-cog"></i>
-                            </span>
-                            <h6 class="mb-0 fw-semibold">Teknisi Utilization</h6>
-                        </div>
-                        <a href="{{ route('admin.overload-board') }}" class="btn btn-sm btn-outline-info rounded-pill px-3" style="font-size:.78rem;">
-                            <i class="fas fa-gauge-high me-1"></i>Board
-                        </a>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="row g-2">
-                            @forelse($teknisis as $teknisi)
-                            @php
-                                $pct      = $teknisi->utilization_percent ?? 0;
-                                $barColor = $pct >= 80 ? 'danger' : ($pct >= 50 ? 'warning' : 'success');
-                                $initial  = strtoupper(substr($teknisi->name, 0, 1));
-                            @endphp
-                            <div class="col-12 col-md-6">
-                                <div class="dash-teknisi-card">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <div class="dash-teknisi-avatar bg-{{ $barColor }}-subtle text-{{ $barColor }}">{{ $initial }}</div>
-                                        <div class="min-w-0 flex-grow-1">
-                                            <div class="fw-semibold small text-dark">{{ Str::limit($teknisi->name, 20) }}</div>
-                                            <div class="text-muted" style="font-size:.69rem;">
-                                                {{ $teknisi->active_ticket_count ?? 0 }} tiket aktif
-                                                @if(($teknisi->urgent_ticket_count ?? 0) > 0)
-                                                    &middot; <span class="text-danger fw-semibold">{{ $teknisi->urgent_ticket_count }} urgent</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <span class="badge bg-{{ $barColor }}-subtle text-{{ $barColor }} border border-{{ $barColor }}-subtle rounded-pill flex-shrink-0" style="font-size:.7rem;">{{ $pct }}%</span>
-                                    </div>
-                                    <div class="progress rounded-pill" style="height:6px;">
-                                        <div class="progress-bar bg-{{ $barColor }} rounded-pill" style="width:{{ min($pct,100) }}%"></div>
-                                    </div>
+            <div class="card-body p-3">
+                <div class="d-flex flex-column gap-2">
+                    @forelse($teknisis as $teknisi)
+                    @php
+                        $pct      = $teknisi->utilization_percent ?? 0;
+                        $barColor = $pct >= 80 ? 'danger' : ($pct >= 50 ? 'warning' : 'success');
+                        $initial  = strtoupper(substr($teknisi->name, 0, 1));
+                    @endphp
+                    <div class="dash-teknisi-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="dash-teknisi-avatar bg-light text-dark border">{{ $initial }}</div>
+                            <div class="min-w-0 flex-grow-1">
+                                <div class="fw-semibold small text-dark">{{ Str::limit($teknisi->name, 22) }}</div>
+                                <div class="text-muted" style="font-size:.69rem;">
+                                    {{ $teknisi->active_ticket_count ?? 0 }} tiket aktif
+                                    @if(($teknisi->urgent_ticket_count ?? 0) > 0)
+                                        &middot; <span class="text-danger fw-semibold">{{ $teknisi->urgent_ticket_count }} urgent</span>
+                                    @endif
                                 </div>
                             </div>
-                            @empty
-                            <div class="col-12">
-                                <p class="text-muted text-center small py-2 mb-0">Belum ada teknisi aktif</p>
-                            </div>
-                            @endforelse
+                            <span class="badge bg-light text-dark border rounded-pill flex-shrink-0" style="font-size:.7rem;">{{ $pct }}%</span>
                         </div>
-                        @if($teknisis->isNotEmpty())
-                            <div class="border-top pt-2 mt-2">
-                                <small class="text-muted" style="font-size:.7rem;">
-                                    <i class="fas fa-circle-info me-1"></i>
-                                    Kapasitas default {{ $teknisis->first()->capacity_per_hour ?? 2 }} tiket/jam/teknisi
-                                </small>
-                            </div>
-                        @endif
+                        <div class="progress rounded-pill bg-light" style="height:5px;">
+                            <div class="progress-bar bg-{{ $barColor }} rounded-pill" style="width:{{ min($pct,100) }}%"></div>
+                        </div>
                     </div>
+                    @empty
+                    <p class="text-muted text-center small py-2 mb-0">Belum ada teknisi aktif</p>
+                    @endforelse
                 </div>
+                @if($teknisis->isNotEmpty())
+                    <div class="border-top pt-2 mt-2">
+                        <small class="text-muted" style="font-size:.69rem;">
+                            <i class="fas fa-circle-info me-1"></i>
+                            Kapasitas default {{ $teknisis->first()->capacity_per_hour ?? 2 }} tiket/jam/teknisi
+                        </small>
+                    </div>
+                @endif
             </div>
-
-        </div>{{-- /inner row --}}
+        </div>
     </div>
 
 </div>{{-- /main row --}}
@@ -363,56 +382,37 @@
         flex-shrink: 0;
     }
 
-    /* Stat cards */
-    .stat-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 1rem 1.1rem;
-        box-shadow: 0 1px 6px rgba(0,0,0,.06);
-        transition: transform .2s, box-shadow .2s;
-        position: relative;
-        overflow: hidden;
+    /* Clean Minimalist Stat items */
+    .stat-item {
+        background: #f8fafc;
+        border: 1px solid #edf2f7;
+        transition: background .2s, border-color .2s;
     }
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,.09);
+    .stat-item:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
     }
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-        border-radius: 16px 16px 0 0;
-    }
-    .stat-card--total::before   { background: #6366f1; }
-    .stat-card--warning::before { background: #f59e0b; }
-    .stat-card--info::before    { background: #06b6d4; }
-    .stat-card--danger::before  { background: #ef4444; }
-    .stat-card--primary::before { background: #4f46e5; }
-    .stat-card--success::before { background: #22c55e; }
-
-    .stat-icon {
+    .stat-icon-subtle {
         font-size: .85rem;
-        color: #94a3b8;
-        margin-bottom: .3rem;
+        opacity: .85;
     }
-    .stat-value {
-        font-size: 1.6rem;
-        font-weight: 800;
-        line-height: 1;
-        color: #1e293b;
-        margin-bottom: .2rem;
+    .stat-title {
+        font-size: .73rem;
+        font-weight: 500;
+        letter-spacing: .01em;
+        white-space: nowrap;
+    }
+    .stat-number {
+        font-size: 1.45rem;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -.02em;
     }
     .stat-unit {
-        font-size: .9rem;
-        font-weight: 600;
-        opacity: .7;
-    }
-    .stat-label {
-        font-size: .72rem;
-        color: #94a3b8;
+        font-size: .8rem;
         font-weight: 500;
-        line-height: 1.2;
+        margin-left: 2px;
+        opacity: .7;
     }
 
     /* Badge icon in card headers */
@@ -456,20 +456,19 @@
 
     /* ═══ DESKTOP (lg+) tweaks ═════════════════════════════════════════════ */
     @media (min-width: 992px) {
-        .stat-value { font-size: 1.9rem; }
-        .stat-card { padding: 1.1rem 1.4rem; }
+        .stat-number { font-size: 1.55rem; }
         .dash-avatar { width: 60px; height: 60px; font-size: 1.6rem; }
     }
 
     /* ═══ TABLET (md) ══════════════════════════════════════════════════════ */
     @media (min-width: 768px) and (max-width: 991.98px) {
-        .stat-value { font-size: 1.7rem; }
+        .stat-number { font-size: 1.4rem; }
     }
 
     /* ═══ MOBILE (< 576px) ════════════════════════════════════════════════ */
     @media (max-width: 575.98px) {
-        .stat-value { font-size: 1.4rem; }
-        .stat-card { padding: .75rem .9rem; border-radius: 12px; }
+        .stat-number { font-size: 1.25rem; }
+        .stat-item { padding: .55rem .75rem !important; border-radius: 10px; }
         .dash-header { border-radius: 14px !important; }
         .dash-avatar { width: 44px; height: 44px; font-size: 1.1rem; border-radius: 11px; }
     }
