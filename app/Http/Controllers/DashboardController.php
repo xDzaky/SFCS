@@ -18,7 +18,38 @@ class DashboardController extends Controller
     }
 
     /**
-     * Route to appropriate dashboard based on user role
+     * Public dashboard – dapat diakses tanpa login.
+     * - Jika belum login  → tampilkan dashboard siswa versi publik (tanpa data personal)
+     * - Jika sudah login  → redirect ke dashboard sesuai role masing-masing
+     */
+    public function publicDashboard()
+    {
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // Jika login sebagai siswa/guru, tampilkan dashboard siswa normal
+            if (in_array($user->role, ['siswa', 'guru'])) {
+                return $this->siswaDashboard();
+            }
+
+            // Role lain langsung ke dashboard masing-masing
+            return $this->index();
+        }
+
+        // Guest mode: tampilkan dashboard siswa dengan layout SFCS asli (mode guest / belum login)
+        $pengaduans = collect();
+        $stats = [
+            'total'   => 0,
+            'pending' => 0,
+            'proses'  => 0,
+            'selesai' => 0,
+        ];
+
+        return view('dashboard.siswa', compact('pengaduans', 'stats'));
+    }
+
+    /**
+     * Route ke dashboard sesuai role (hanya untuk user yang sudah login).
      */
     public function index()
     {
@@ -26,10 +57,10 @@ class DashboardController extends Controller
 
         return match ($user->role) {
             'superadmin' => $this->superadminDashboard(),
-            'admin' => $this->adminDashboard(),
-            'kepsek' => $this->kepsekDashboard(),
-            'teknisi' => $this->teknisiDashboard(),
-            default => $this->siswaDashboard(),
+            'admin'      => $this->adminDashboard(),
+            'kepsek'     => $this->kepsekDashboard(),
+            'teknisi'    => $this->teknisiDashboard(),
+            default      => $this->siswaDashboard(),
         };
     }
 

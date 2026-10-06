@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\InternalHealthController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\SchoolMapController;
+use App\Http\Controllers\Api\AiContextController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,10 +25,20 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
-Route::redirect('/', '/login')->name('home');
+// Public Home → Dashboard Siswa (mode guest, tanpa login)
+Route::get('/', [DashboardController::class, 'publicDashboard'])->name('home');
+Route::get('/dashboard', [DashboardController::class, 'publicDashboard'])->name('dashboard');
 
 // Public Track Pengaduan (tanpa login)
 Route::get('/track', [PengaduanController::class, 'track'])->name('pengaduan.track');
+
+// AI Integration Endpoints (For external AI developer & model)
+Route::prefix('api/v1/ai')->name('api.ai.')->group(function () {
+    Route::get('/health', [AiContextController::class, 'health'])->name('health');
+    Route::get('/roles', [AiContextController::class, 'roles'])->name('roles');
+    Route::get('/context', [AiContextController::class, 'getContext'])->name('context');
+    Route::post('/query', [AiContextController::class, 'query'])->name('query');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -35,9 +46,10 @@ Route::get('/track', [PengaduanController::class, 'track'])->name('pengaduan.tra
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'active', 'force.password.change'])->group(function () {
-    
-    // Dashboard - routes to appropriate dashboard based on role
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Dashboard (untuk user yang sudah login → redirect ke dashboard per role)
+    Route::get('/dashboard/me', [DashboardController::class, 'index'])->name('dashboard.me');
+
     Route::get('/school-map-files/{map}', [SchoolMapController::class, 'file'])->name('school-map.file');
 
     // Profile

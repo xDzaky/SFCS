@@ -14,8 +14,13 @@
                             <i class="fas fa-user fs-4 fs-md-3"></i>
                         </div>
                         <div>
-                            <h5 class="mb-1 fs-6 fs-md-5">Halo, {{ Auth::user()->name }}!</h5>
-                            <p class="mb-0 opacity-90 small">Kelola pengaduan & pinjaman barang sekolah</p>
+                            @auth
+                                <h5 class="mb-1 fs-6 fs-md-5">Halo, {{ Auth::user()->name }}!</h5>
+                                <p class="mb-0 opacity-90 small">Kelola pengaduan & pinjaman barang sekolah</p>
+                            @else
+                                <h5 class="mb-1 fs-6 fs-md-5">Selamat Datang di SFCS! 👋</h5>
+                                <p class="mb-0 opacity-90 small">Kelola pengaduan & pinjaman fasilitas sekolah</p>
+                            @endauth
                         </div>
                     </div>
                 </div>
@@ -77,25 +82,25 @@
     <!-- Quick Action Buttons - Large Touch-Friendly -->
     <div class="row g-2 mb-3">
         <div class="col-6">
-            <a href="{{ route('pengaduan.create') }}" class="btn btn-primary btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
+            <a href="{{ auth()->check() ? route('pengaduan.create') : route('login').'?intended=pengaduan' }}" class="btn btn-primary btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
                 <i class="fas fa-plus-circle fs-4 d-block mb-1"></i>
                 <span class="fw-bold small">BUAT PENGADUAN</span>
             </a>
         </div>
         <div class="col-6">
-            <a href="{{ route('pinjaman.create') }}" class="btn btn-success btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
+            <a href="{{ auth()->check() ? route('pinjaman.create') : route('login').'?intended=pinjaman' }}" class="btn btn-success btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
                 <i class="fas fa-hand-holding fs-4 d-block mb-1"></i>
                 <span class="fw-bold small">PINJAM BARANG</span>
             </a>
         </div>
         <div class="col-4">
-            <a href="{{ route('pengaduan.index') }}" class="btn btn-outline-primary w-100 py-3" style="border-radius: 12px;">
+            <a href="{{ auth()->check() ? route('pengaduan.index') : route('login').'?intended=pengaduan' }}" class="btn btn-outline-primary w-100 py-3" style="border-radius: 12px;">
                 <i class="fas fa-list d-block fs-4 mb-1"></i>
                 <small class="d-block">Pengaduan</small>
             </a>
         </div>
         <div class="col-4">
-            <a href="{{ route('pinjaman.index') }}" class="btn btn-outline-success w-100 py-3" style="border-radius: 12px;">
+            <a href="{{ auth()->check() ? route('pinjaman.index') : route('login').'?intended=pinjaman' }}" class="btn btn-outline-success w-100 py-3" style="border-radius: 12px;">
                 <i class="fas fa-box d-block fs-4 mb-1"></i>
                 <small class="d-block">Pinjaman</small>
             </a>
@@ -117,7 +122,7 @@
                         <h5 class="mb-0 fs-6 fs-md-5">
                             <i class="fas fa-history text-primary"></i> Pengaduan Terbaru
                         </h5>
-                        <a href="{{ route('pengaduan.index') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ auth()->check() ? route('pengaduan.index') : route('login').'?intended=pengaduan' }}" class="btn btn-sm btn-outline-primary">
                             Semua <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -245,7 +250,7 @@
                         <div class="text-center py-5">
                             <i class="fas fa-inbox display-1 text-muted opacity-25"></i>
                             <p class="text-muted mt-3 mb-3">Belum ada pengaduan</p>
-                            <a href="{{ route('pengaduan.create') }}" class="btn btn-primary">
+                            <a href="{{ auth()->check() ? route('pengaduan.create') : route('login').'?intended=pengaduan' }}" class="btn btn-primary">
                                 <i class="fas fa-plus-circle"></i> Buat Pengaduan Pertama
                             </a>
                         </div>
