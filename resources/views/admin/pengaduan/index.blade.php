@@ -131,7 +131,7 @@
                             <option value="normal" {{ request('duplicate_state') == 'normal' ? 'selected' : '' }}>Normal</option>
                         </select>
                     </div>
-                    <div class="col-12 col-sm-8 col-md-4 col-lg-3">
+                    <div class="col-12 col-md">
                         <label class="form-label small mb-1">Cari</label>
                         <div class="input-group input-group-sm">
                             <input type="text" name="search" class="form-control"

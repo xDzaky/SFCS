@@ -41,79 +41,86 @@ class ReportController extends Controller
      */
     public function pengaduan(Request $request)
     {
-        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $startDate = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $endDate   = $request->get('date_to',   now()->format('Y-m-d'));
+        $statusFilter   = $request->get('status');
+        $kategoriFilter = $request->get('kategori_id');
+        $gedungFilter   = $request->get('gedung_id');
 
-        // Stats for period
-        $periodStats = Pengaduan::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('
-                COUNT(*) as total,
-                SUM(CASE WHEN status = "selesai" THEN 1 ELSE 0 END) as selesai,
-                SUM(CASE WHEN status = "ditolak" THEN 1 ELSE 0 END) as ditolak,
-                SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN status = "diverifikasi" THEN 1 ELSE 0 END) as diverifikasi,
-                SUM(CASE WHEN status = "diproses" THEN 1 ELSE 0 END) as diproses
-            ')
-            ->first();
+        // ── Dropdown data ──────────────────────────────────────────────────────
+        $kategoris = Kategori::orderBy('nama')->get();
+        $gedungs   = Gedung::orderBy('nama')->get();
 
-        // By status
-        $byStatus = Pengaduan::whereBetween('created_at', [$startDate, $endDate])
-            ->select('status', DB::raw('COUNT(*) as total'))
-            ->groupBy('status')
-            ->get();
+        // ── Query base ────────────────────────────────────────────────────────
+        $baseQuery = Pengaduan::with(['kategori', 'gedung', 'user', 'teknisi'])
+            ->whereBetween('created_at', [
+                $startDate . ' 00:00:00',
+                $endDate   . ' 23:59:59',
+            ]);
 
-        // By prioritas
-        $byPrioritas = Pengaduan::whereBetween('created_at', [$startDate, $endDate])
-            ->select('prioritas', DB::raw('COUNT(*) as total'))
-            ->groupBy('prioritas')
-            ->get();
+        if ($statusFilter)   $baseQuery->where('status',      $statusFilter);
+        if ($kategoriFilter) $baseQuery->where('kategori_id', $kategoriFilter);
+        if ($gedungFilter)   $baseQuery->where('gedung_id',   $gedungFilter);
 
-        // By kategori
-        $byKategori = Kategori::withCount(['pengaduans' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        }])->orderByDesc('pengaduans_count')->get();
+        // ── Summary stats ─────────────────────────────────────────────────────
+        $allInPeriod = (clone $baseQuery)->get();
 
-        // By gedung
-        $byGedung = Gedung::withCount(['pengaduans' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        }])->get()->map(function ($gedung) {
-            return [
-                'id' => $gedung->id,
-                'nama' => $gedung->nama,
-                'total' => $gedung->pengaduans_count ?? 0,
-            ];
-        })->sortByDesc('total');
+        $summary = [
+            'total'       => $allInPeriod->count(),
+            'menunggu'    => $allInPeriod->whereIn('status', ['pending', 'diverifikasi'])->count(),
+            'ditugaskan'  => $allInPeriod->where('status', 'diverifikasi')->count(),
+            'dikerjakan'  => $allInPeriod->where('status', 'diproses')->count(),
+            'selesai'     => $allInPeriod->where('status', 'selesai')->count(),
+            'ditolak'     => $allInPeriod->where('status', 'ditolak')->count(),
+        ];
 
-        // Daily trend
-        $dailyTrend = Pengaduan::whereBetween('created_at', [$startDate, $endDate])
-            ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('COUNT(*) as total')
-            )
+        // ── By status / prioritas ─────────────────────────────────────────────
+        $byStatus = $allInPeriod->groupBy('status')->map(fn($g, $k) => ['status' => $k, 'total' => $g->count()]);
+
+        $byPrioritas = $allInPeriod->groupBy('prioritas')->map(fn($g, $k) => ['prioritas' => $k, 'total' => $g->count()]);
+
+        // ── By kategori (chart-friendly: nama + total) ────────────────────────
+        $byKategori = Kategori::withCount(['pengaduans' => function ($q) use ($startDate, $endDate, $statusFilter, $gedungFilter) {
+            $q->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            if ($statusFilter) $q->where('status', $statusFilter);
+            if ($gedungFilter) $q->where('gedung_id', $gedungFilter);
+        }])->orderByDesc('pengaduans_count')->get()
+          ->map(fn($k) => ['nama' => $k->nama, 'total' => $k->pengaduans_count]);
+
+        // ── By gedung ─────────────────────────────────────────────────────────
+        $byGedung = Gedung::withCount(['pengaduans' => function ($q) use ($startDate, $endDate, $statusFilter, $kategoriFilter) {
+            $q->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            if ($statusFilter)   $q->where('status',      $statusFilter);
+            if ($kategoriFilter) $q->where('kategori_id', $kategoriFilter);
+        }])->orderByDesc('pengaduans_count')->get()
+          ->map(fn($g) => ['nama' => $g->nama, 'total' => $g->pengaduans_count]);
+
+        // ── Daily trend ───────────────────────────────────────────────────────
+        $trend = (clone $baseQuery)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // Average resolution time by prioritas
+        // ── Average resolution time ───────────────────────────────────────────
         $avgResolutionTime = Pengaduan::where('status', 'selesai')
-            ->whereBetween('updated_at', [$startDate, $endDate])
-            ->select(
-                'prioritas',
-                DB::raw('AVG(DATEDIFF(updated_at, created_at)) as avg_days')
-            )
+            ->whereBetween('updated_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->select('prioritas', DB::raw('AVG(DATEDIFF(updated_at, created_at)) as avg_days'))
             ->groupBy('prioritas')
             ->get();
 
+        // ── Detail table (paginated) ──────────────────────────────────────────
+        $pengaduans = (clone $baseQuery)->latest()->paginate(25)->withQueryString();
+
         return view('admin.reports.pengaduan', compact(
-            'startDate',
-            'endDate',
-            'periodStats',
-            'byStatus',
-            'byPrioritas',
-            'byKategori',
-            'byGedung',
-            'dailyTrend',
-            'avgResolutionTime'
+            'startDate', 'endDate',
+            'summary',
+            'byStatus', 'byPrioritas',
+            'byKategori', 'byGedung',
+            'trend',
+            'avgResolutionTime',
+            'pengaduans',
+            'kategoris', 'gedungs'
         ));
     }
 

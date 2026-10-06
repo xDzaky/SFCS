@@ -23,29 +23,29 @@
 <div class="card mb-4">
     <div class="card-body">
         <form action="{{ route('admin.reports.pengaduan') }}" method="GET">
-            <div class="row g-3">
-                <div class="col-md-2">
-                    <label class="form-label">Dari Tanggal</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1">Dari Tanggal</label>
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}">
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Sampai Tanggal</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to', now()->format('Y-m-d')) }}">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1">Sampai Tanggal</label>
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to', now()->format('Y-m-d')) }}">
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
                         <option value="">Semua Status</option>
-                        <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
-                        <option value="ditugaskan" {{ request('status') == 'ditugaskan' ? 'selected' : '' }}>Ditugaskan</option>
-                        <option value="dikerjakan" {{ request('status') == 'dikerjakan' ? 'selected' : '' }}>Dikerjakan</option>
-                        <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                        <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                        <option value="pending"      {{ request('status') == 'pending'      ? 'selected' : '' }}>Pending</option>
+                        <option value="diverifikasi" {{ request('status') == 'diverifikasi' ? 'selected' : '' }}>Diverifikasi</option>
+                        <option value="diproses"     {{ request('status') == 'diproses'     ? 'selected' : '' }}>Diproses</option>
+                        <option value="selesai"      {{ request('status') == 'selesai'      ? 'selected' : '' }}>Selesai</option>
+                        <option value="ditolak"      {{ request('status') == 'ditolak'      ? 'selected' : '' }}>Ditolak</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Kategori</label>
-                    <select name="kategori_id" class="form-select">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1">Kategori</label>
+                    <select name="kategori_id" class="form-select form-select-sm">
                         <option value="">Semua Kategori</option>
                         @foreach($kategoris ?? [] as $kategori)
                             <option value="{{ $kategori->id }}" {{ request('kategori_id') == $kategori->id ? 'selected' : '' }}>
@@ -54,9 +54,9 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Gedung</label>
-                    <select name="gedung_id" class="form-select">
+                <div class="col-6 col-md-2">
+                    <label class="form-label small mb-1">Gedung</label>
+                    <select name="gedung_id" class="form-select form-select-sm">
                         <option value="">Semua Gedung</option>
                         @foreach($gedungs ?? [] as $gedung)
                             <option value="{{ $gedung->id }}" {{ request('gedung_id') == $gedung->id ? 'selected' : '' }}>
@@ -65,10 +65,13 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
+                <div class="col-6 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                         <i class="fas fa-filter me-1"></i> Filter
                     </button>
+                    <a href="{{ route('admin.reports.pengaduan') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times"></i>
+                    </a>
                 </div>
             </div>
         </form>
