@@ -41,7 +41,10 @@ class ReportController extends Controller
      */
     public function pengaduan(Request $request)
     {
-        $startDate = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $minDate = Pengaduan::min('created_at');
+        $defaultStart = $minDate ? \Carbon\Carbon::parse($minDate)->startOfMonth()->format('Y-m-d') : now()->subMonths(3)->startOfMonth()->format('Y-m-d');
+
+        $startDate = $request->get('date_from', $defaultStart);
         $endDate   = $request->get('date_to',   now()->format('Y-m-d'));
         $statusFilter   = $request->get('status');
         $kategoriFilter = $request->get('kategori_id');
@@ -67,7 +70,7 @@ class ReportController extends Controller
 
         $summary = [
             'total'       => $allInPeriod->count(),
-            'menunggu'    => $allInPeriod->whereIn('status', ['pending', 'diverifikasi'])->count(),
+            'menunggu'    => $allInPeriod->where('status', 'pending')->count(),
             'ditugaskan'  => $allInPeriod->where('status', 'diverifikasi')->count(),
             'dikerjakan'  => $allInPeriod->where('status', 'diproses')->count(),
             'selesai'     => $allInPeriod->where('status', 'selesai')->count(),
@@ -129,7 +132,10 @@ class ReportController extends Controller
      */
     public function performance(Request $request)
     {
-        $startDate = $request->get('date_from', now()->startOfMonth()->format('Y-m-d'));
+        $minDate = Pengaduan::min('created_at');
+        $defaultStart = $minDate ? \Carbon\Carbon::parse($minDate)->startOfMonth()->format('Y-m-d') : now()->subMonths(3)->startOfMonth()->format('Y-m-d');
+
+        $startDate = $request->get('date_from', $defaultStart);
         $endDate = $request->get('date_to', now()->format('Y-m-d'));
         $teknisiId = $request->get('teknisi_id');
 
@@ -287,8 +293,11 @@ class ReportController extends Controller
      */
     public function export(Request $request, $type)
     {
-        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $minDate = Pengaduan::min('created_at');
+        $defaultStart = $minDate ? \Carbon\Carbon::parse($minDate)->startOfMonth()->format('Y-m-d') : now()->subMonths(3)->startOfMonth()->format('Y-m-d');
+
+        $startDate = $request->get('date_from', $request->get('start_date', $defaultStart));
+        $endDate   = $request->get('date_to',   $request->get('end_date',   now()->format('Y-m-d')));
 
 
         $filename = "laporan-{$type}-{$startDate}-{$endDate}.csv";

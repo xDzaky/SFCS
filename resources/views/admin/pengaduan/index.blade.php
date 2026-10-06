@@ -79,7 +79,7 @@
         <div class="card-body pt-2">
             <form action="{{ route('admin.pengaduan.index') }}" method="GET">
                 <div class="row g-2">
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-md-3">
                         <label class="form-label small mb-1">Status</label>
                         <select name="status" class="form-select form-select-sm">
                             <option value="">Semua Status</option>
@@ -90,7 +90,7 @@
                             <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                         </select>
                     </div>
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-md-3">
                         <label class="form-label small mb-1">Urgensi</label>
                         <select name="prioritas" class="form-select form-select-sm">
                             <option value="">Semua Urgensi</option>
@@ -100,7 +100,7 @@
                             <option value="urgent" {{ request('prioritas') == 'urgent' ? 'selected' : '' }}>Urgent</option>
                         </select>
                     </div>
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-md-3">
                         <label class="form-label small mb-1">Kategori</label>
                         <select name="kategori_id" class="form-select form-select-sm">
                             <option value="">Semua Kategori</option>
@@ -111,7 +111,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-6 col-sm-4 col-md-2">
+                    <div class="col-6 col-md-3">
                         <label class="form-label small mb-1">Teknisi</label>
                         <select name="teknisi_id" class="form-select form-select-sm">
                             <option value="">Semua Teknisi</option>
@@ -122,7 +122,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-6 col-sm-4 col-md-2">
+
+                    <div class="col-12 col-md-4">
                         <label class="form-label small mb-1">Duplikasi</label>
                         <select name="duplicate_state" class="form-select form-select-sm">
                             <option value="">Semua</option>
@@ -131,16 +132,16 @@
                             <option value="normal" {{ request('duplicate_state') == 'normal' ? 'selected' : '' }}>Normal</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md">
+                    <div class="col-12 col-md-8">
                         <label class="form-label small mb-1">Cari</label>
                         <div class="input-group input-group-sm">
                             <input type="text" name="search" class="form-control"
-                                   placeholder="Kode, judul, pelapor..." value="{{ request('search') }}">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i>
+                                   placeholder="Kode pengaduan, judul, pelapor, atau lokasi..." value="{{ request('search') }}">
+                            <button type="submit" class="btn btn-primary px-3">
+                                <i class="fas fa-search me-1"></i> Cari
                             </button>
-                            <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i>
+                            <a href="{{ route('admin.pengaduan.index') }}" class="btn btn-outline-secondary" title="Reset filter">
+                                <i class="fas fa-times me-1"></i> Reset
                             </a>
                         </div>
                     </div>

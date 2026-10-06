@@ -26,11 +26,11 @@
             <div class="row g-3 align-items-end">
                 <div class="col-6 col-md-2">
                     <label class="form-label small mb-1">Dari Tanggal</label>
-                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}">
+                    <input type="date" name="date_from" class="form-control form-control-sm" value="{{ $startDate ?? request('date_from') }}">
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label small mb-1">Sampai Tanggal</label>
-                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ request('date_to', now()->format('Y-m-d')) }}">
+                    <input type="date" name="date_to" class="form-control form-control-sm" value="{{ $endDate ?? request('date_to') }}">
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label small mb-1">Status</label>
@@ -199,8 +199,11 @@
                             <td>
                                 @php
                                     $statusBadges = [
+                                        'pending' => 'bg-secondary',
                                         'menunggu' => 'bg-secondary',
+                                        'diverifikasi' => 'bg-info',
                                         'ditugaskan' => 'bg-info',
+                                        'diproses' => 'bg-warning text-dark',
                                         'dikerjakan' => 'bg-warning text-dark',
                                         'selesai' => 'bg-success',
                                         'ditolak' => 'bg-danger',
@@ -252,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(document.getElementById('statusChart'), {
         type: 'doughnut',
         data: {
-            labels: ['Menunggu', 'Ditugaskan', 'Dikerjakan', 'Selesai', 'Ditolak'],
+            labels: ['Pending', 'Diverifikasi', 'Diproses', 'Selesai', 'Ditolak'],
             datasets: [{
                 data: [
                     {{ $summary['menunggu'] ?? 0 }},
