@@ -55,93 +55,93 @@
 
 {{-- ══ STATS SUMMARY (Clean, Compact, Minimalist Slate Theme) ═══════════════ --}}
 <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden bg-white">
-    <div class="card-body p-3 p-md-4">
-        <div class="row g-2 g-md-3">
+    <div class="card-body p-2 p-md-3">
+        <div class="row g-2">
             {{-- Total Laporan --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Total Laporan</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle text-primary"><i class="fas fa-clipboard-list"></i></span>
-                        <span class="stat-title text-muted">Total Laporan</span>
+                        <div class="stat-number text-dark">{{ $stats['total'] }}</div>
                     </div>
-                    <div class="stat-number text-dark">{{ $stats['total'] }}</div>
                 </div>
             </div>
 
             {{-- Pending --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Pending</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle text-secondary"><i class="fas fa-hourglass-half"></i></span>
-                        <span class="stat-title text-muted">Pending</span>
+                        <div class="stat-number text-dark">{{ $stats['pending'] }}</div>
                     </div>
-                    <div class="stat-number text-dark">{{ $stats['pending'] }}</div>
                 </div>
             </div>
 
             {{-- Sedang Diproses --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Diproses</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle text-secondary"><i class="fas fa-screwdriver-wrench"></i></span>
-                        <span class="stat-title text-muted">Diproses</span>
+                        <div class="stat-number text-dark">{{ $stats['proses'] }}</div>
                     </div>
-                    <div class="stat-number text-dark">{{ $stats['proses'] }}</div>
                 </div>
             </div>
 
             {{-- Overdue --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Overdue</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle {{ ($stats['overdue'] ?? 0) > 0 ? 'text-danger' : 'text-secondary' }}"><i class="fas fa-fire"></i></span>
-                        <span class="stat-title text-muted">Overdue</span>
+                        <div class="stat-number {{ ($stats['overdue'] ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ $stats['overdue'] ?? 0 }}</div>
                     </div>
-                    <div class="stat-number {{ ($stats['overdue'] ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ $stats['overdue'] ?? 0 }}</div>
                 </div>
             </div>
 
             {{-- Pinjaman Aktif --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Pinjaman Aktif</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle text-secondary"><i class="fas fa-box-open"></i></span>
-                        <span class="stat-title text-muted">Pinjaman Aktif</span>
+                        <div class="stat-number text-dark">{{ $stats['pinjaman_aktif'] ?? 0 }}</div>
                     </div>
-                    <div class="stat-number text-dark">{{ $stats['pinjaman_aktif'] ?? 0 }}</div>
                 </div>
             </div>
 
             {{-- Pinjaman Terlambat --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Pinjaman Terlambat</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle {{ ($stats['pinjaman_terlambat'] ?? 0) > 0 ? 'text-danger' : 'text-secondary' }}"><i class="fas fa-clock-rotate-left"></i></span>
-                        <span class="stat-title text-muted">Pinjaman Terlambat</span>
+                        <div class="stat-number {{ ($stats['pinjaman_terlambat'] ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ $stats['pinjaman_terlambat'] ?? 0 }}</div>
                     </div>
-                    <div class="stat-number {{ ($stats['pinjaman_terlambat'] ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ $stats['pinjaman_terlambat'] ?? 0 }}</div>
                 </div>
             </div>
 
             {{-- Review Urgensi --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Review Urgensi</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle text-secondary"><i class="fas fa-triangle-exclamation"></i></span>
-                        <span class="stat-title text-muted">Review Urgensi</span>
+                        <div class="stat-number text-dark">{{ $stats['priority_review'] ?? 0 }}</div>
                     </div>
-                    <div class="stat-number text-dark">{{ $stats['priority_review'] ?? 0 }}</div>
                 </div>
             </div>
 
             {{-- Prediksi Delay --}}
-            <div class="col-6 col-md-3 col-lg">
-                <div class="stat-item p-2 p-md-3 rounded-3 h-100">
-                    <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="col-6 col-md-3 col-xl">
+                <div class="stat-item px-3 py-2 rounded-3 h-100">
+                    <div class="stat-title text-muted mb-1">Prediksi Delay</div>
+                    <div class="d-flex align-items-center gap-2">
                         <span class="stat-icon-subtle text-secondary"><i class="fas fa-stopwatch"></i></span>
-                        <span class="stat-title text-muted">Prediksi Delay</span>
+                        <div class="stat-number text-dark">{{ $stats['predicted_delay_minutes'] ?? 0 }}<span class="stat-unit">mnt</span></div>
                     </div>
-                    <div class="stat-number text-dark">{{ $stats['predicted_delay_minutes'] ?? 0 }}<span class="stat-unit">mnt</span></div>
                 </div>
             </div>
         </div>
