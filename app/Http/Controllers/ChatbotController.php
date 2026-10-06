@@ -77,24 +77,11 @@ class ChatbotController extends Controller
             }
         }
 
-        // Response default saat dalam tahap integrasi & data lama dinonaktifkan
-        $roleDisplay = ucfirst($role);
-        $reply = "Halo **{$userName}**! 👋\n\n"
-            . "Data chatbot lama SFCS telah dibersihkan dan dinonaktifkan.\n\n"
-            . "Saat ini sistem asisten virtual SFCS sedang dalam tahap pengembangan & integrasi model AI baru oleh Tim AI kami agar jawaban lebih cerdas, kontekstual, dan tidak melenceng.\n\n"
-            . "🔗 **Status Integrasi:**\n"
-            . "• Role kamu saat ini: **{$roleDisplay}**\n"
-            . "• Endpoint API database per role sudah aktif & siap dihubungkan ke backend AI temanmu.\n"
-            . "• Endpoint Context: `/api/v1/ai/context`\n\n"
-            . "Segera setelah temanmu mengaktifkan server AI dan mengatur `AI_SERVICE_URL`, asisten ini akan langsung otomatis aktif melayanimu!";
-
+        // Jika developer AI belum memasang AI_SERVICE_URL di .env, jangan berikan jawaban data apa pun
         return response()->json([
-            'reply'   => $reply,
+            'reply'   => 'Layanan AI belum diaktifkan oleh pengembang. Chatbot akan dapat menjawab setelah server AI terhubung.',
             'type'    => 'text',
-            'actions' => [
-                ['label' => '📝 Buat Pengaduan', 'url' => route('pengaduan.create')],
-                ['label' => '📦 Pinjam Barang',   'url' => route('pinjaman.create')],
-            ],
+            'actions' => [],
         ]);
     }
 }
