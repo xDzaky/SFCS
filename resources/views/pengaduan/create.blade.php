@@ -119,17 +119,8 @@
                                 @enderror
                             </div>
 
-                            <!-- Sub Kategori (Hidden initially) -->
-                            <div class="col-12" id="subKategoriWrapper" style="display: none;">
-                                <label for="sub_kategori_id" class="form-label small text-muted">Detail Fasilitas/Barang <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-lg @error('sub_kategori_id') is-invalid @enderror" 
-                                        id="sub_kategori_id" name="sub_kategori_id" required>
-                                    <option value="">-- Pilih detail fasilitas/barang --</option>
-                                </select>
-                                @error('sub_kategori_id')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <!-- Sub Kategori removed: judul already captures specific facility info -->
+                            <input type="hidden" id="sub_kategori_id" name="sub_kategori_id" value="">
 
                             <!-- Gedung -->
                             <div class="col-12 col-md-6">
@@ -469,36 +460,8 @@
     let activeDuplicate = null;
     let duplicateCheckTimer = null;
     
-    // Load sub kategoris when kategori changes
+    // Trigger progress and duplicate check when kategori changes
     document.getElementById('kategori_id').addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        const subKategoriSelect = document.getElementById('sub_kategori_id');
-        const subKategoriWrapper = document.getElementById('subKategoriWrapper');
-        
-        subKategoriSelect.innerHTML = '<option value="">-- Pilih detail fasilitas/barang --</option>';
-        
-        if (this.value && selected.dataset.subKategoris) {
-            try {
-                const subKategoris = JSON.parse(selected.dataset.subKategoris);
-                if (subKategoris.length > 0) {
-                    subKategoris.forEach(item => {
-                        if (item.is_active) {
-                            subKategoriSelect.innerHTML += `<option value="${item.id}">${item.nama}</option>`;
-                        }
-                    });
-                    subKategoriWrapper.style.display = 'block';
-                } else {
-                    subKategoriSelect.innerHTML = '<option value="">-- Tidak ada detail untuk kategori ini --</option>';
-                    subKategoriWrapper.style.display = 'none';
-                }
-            } catch(e) {
-                console.error('Error parsing sub kategoris:', e);
-                subKategoriWrapper.style.display = 'none';
-            }
-        } else {
-            subKategoriWrapper.style.display = 'none';
-        }
-
         updateProgress();
         scheduleDuplicateCheck();
     });
@@ -533,7 +496,6 @@
         scheduleDuplicateCheck();
     });
 
-    document.getElementById('sub_kategori_id').addEventListener('change', scheduleDuplicateCheck);
     document.getElementById('lokasi_detail').addEventListener('input', scheduleDuplicateCheck);
 
     duplicateOverride.addEventListener('change', function() {
@@ -543,7 +505,6 @@
     function canCheckDuplicate() {
         return Boolean(
             document.getElementById('kategori_id').value &&
-            document.getElementById('sub_kategori_id').value &&
             document.getElementById('gedung_id').value &&
             document.getElementById('lantai').value
         );
@@ -575,11 +536,6 @@
             lantai: document.getElementById('lantai').value,
             lokasi_detail: document.getElementById('lokasi_detail').value || '',
         });
-
-        const subKategoriValue = document.getElementById('sub_kategori_id').value;
-        if (subKategoriValue) {
-            params.set('sub_kategori_id', subKategoriValue);
-        }
 
         try {
             const response = await fetch(`{{ route('api.pengaduan.check-duplicate') }}?${params.toString()}`);

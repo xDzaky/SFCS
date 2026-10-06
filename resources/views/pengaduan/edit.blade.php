@@ -83,17 +83,8 @@
                             @enderror
                         </div>
 
-                        <!-- Sub Kategori -->
-                        <div class="col-md-6">
-                            <label for="sub_kategori_id" class="form-label">Detail Fasilitas/Barang <span class="text-danger">*</span></label>
-                            <select class="form-select @error('sub_kategori_id') is-invalid @enderror" 
-                                    id="sub_kategori_id" name="sub_kategori_id" required>
-                                <option value="">Pilih Detail</option>
-                            </select>
-                            @error('sub_kategori_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <!-- Sub Kategori removed: judul already captures specific facility info -->
+                        <input type="hidden" id="sub_kategori_id" name="sub_kategori_id" value="{{ old('sub_kategori_id', $pengaduan->sub_kategori_id ?? '') }}">
                     </div>
 
                     <div class="row mb-4">
@@ -367,30 +358,7 @@
 
 @push('scripts')
 <script>
-    const oldSubKategoriId = {{ old('sub_kategori_id', $pengaduan->sub_kategori_id ?? 'null') }};
     const oldLantai = '{{ old('lantai', $pengaduan->lantai ?? '') }}';
-
-    // Load sub kategoris when kategori changes
-    document.getElementById('kategori_id').addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        const subKategoriSelect = document.getElementById('sub_kategori_id');
-        
-        subKategoriSelect.innerHTML = '<option value="">Pilih Detail</option>';
-        
-        if (this.value && selected.dataset.subKategoris) {
-            try {
-                const subKategoris = JSON.parse(selected.dataset.subKategoris);
-                subKategoris.forEach(item => {
-                    if (item.is_active) {
-                        const isSelected = item.id == oldSubKategoriId ? 'selected' : '';
-                        subKategoriSelect.innerHTML += `<option value="${item.id}" ${isSelected}>${item.nama}</option>`;
-                    }
-                });
-            } catch(e) {
-                console.error('Error parsing sub kategoris:', e);
-            }
-        }
-    });
 
     // Load lantai when gedung changes
     document.getElementById('gedung_id').addEventListener('change', function() {
