@@ -17,7 +17,7 @@ class RoleMiddleware
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!$request->user()) {
-            return redirect()->route('login');
+            return redirect()->guest(route('login'));
         }
 
         // Check if user is active

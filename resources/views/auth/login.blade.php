@@ -306,6 +306,9 @@
 
             <form method="POST" action="{{ route('login') }}">
                 @csrf
+                @if(request('intended'))
+                    <input type="hidden" name="intended" value="{{ request('intended') }}">
+                @endif
 
                 {{-- NIS / Email --}}
                 <div class="mb-3">

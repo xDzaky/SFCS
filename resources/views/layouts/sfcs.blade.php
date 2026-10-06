@@ -680,6 +680,7 @@
                 <span>Dashboard</span>
             </a>
 
+            @auth
             @if(auth()->user()->isSiswa() || auth()->user()->isGuru())
                 <div class="nav-section-title">Pengaduan</div>
                 <a href="{{ route('pengaduan.index') }}" class="sidebar-link {{ request()->routeIs('pengaduan.index') ? 'active' : '' }}">
@@ -725,7 +726,7 @@
                 </a>
                 <a href="{{ route('admin.gedungs.index') }}" class="sidebar-link {{ request()->routeIs('admin.gedungs.*') ? 'active' : '' }}">
                     <i class="fas fa-building"></i>
-                    <span>Gedung & Ruangan</span>
+                    <span>Gedung &amp; Ruangan</span>
                 </a>
                 <a href="{{ route('admin.reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-bar"></i>
@@ -776,6 +777,23 @@
                     <span>Log Aktivitas</span>
                 </a>
             @endif
+            @else
+                {{-- Guest View: Tampilkan menu Siswa yang mengarah ke login --}}
+                <div class="nav-section-title">Pengaduan</div>
+                <a href="{{ route('login') }}?intended=pengaduan" class="sidebar-link">
+                    <i class="fas fa-list"></i>
+                    <span>Pengaduan Saya</span>
+                </a>
+                <a href="{{ route('login') }}?intended=pengaduan" class="sidebar-link">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Buat Pengaduan</span>
+                </a>
+                <div class="nav-section-title">Peminjaman</div>
+                <a href="{{ route('login') }}?intended=pinjaman" class="sidebar-link">
+                    <i class="fas fa-box-open"></i>
+                    <span>Pinjam Barang</span>
+                </a>
+            @endauth
         </nav>
     </aside>
 
@@ -793,6 +811,7 @@
             </div>
 
             <div class="header-right">
+                @auth
                 <!-- Notifications -->
                 <div class="dropdown" id="notifDropdown">
                     <button class="btn btn-link notif-bell-btn" type="button" id="notifBellBtn"
@@ -856,6 +875,13 @@
                         </li>
                     </ul>
                 </div>
+                @else
+                <!-- Guest: tombol login di header -->
+                <a href="{{ route('login') }}" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 rounded-3 shadow-sm text-white text-decoration-none fw-semibold" style="font-size: 0.875rem;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Masuk / Login</span>
+                </a>
+                @endauth
             </div>
         </header>
 

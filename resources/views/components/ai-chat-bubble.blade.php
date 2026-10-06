@@ -522,7 +522,7 @@
         <div class="cb-hdr-avatar">🤖</div>
         <div class="cb-hdr-info">
             <div class="cb-hdr-name">SFCS Assistant</div>
-            <div class="cb-hdr-status">Online • Siap membantu</div>
+            <div class="cb-hdr-status">Tahap Integrasi AI • Siap Terhubung</div>
         </div>
         <button class="cb-hdr-close" id="cbClose" title="Tutup Chat">
             <i class="fas fa-xmark"></i>
@@ -535,14 +535,11 @@
         <div class="cb-row bot" id="cbWelcome">
             <div class="cb-bot-av">🤖</div>
             <div class="cb-msg-box">
-                <div class="cb-bbl-bot">👋 Halo, <strong>{{ Auth::user()->name ?? 'User' }}</strong>!
+                <div class="cb-bbl-bot">👋 Halo, <strong>{{ Auth::user()?->name ?? 'Tamu' }}</strong>! (Status: <em>{{ Auth::check() ? ucfirst(Auth::user()->role) : 'Belum Login' }}</em>)
 
-Saya asisten virtual <strong>SFCS</strong>. Saya bisa bantu kamu dengan informasi seputar:
-📋 Pengaduan fasilitas sekolah
-📦 Peminjaman barang
-📊 Status dan tracking laporan
+Data chatbot lama telah dibersihkan. Saat ini <strong>SFCS Assistant</strong> sedang dipersiapkan untuk integrasi model kecerdasan buatan baru dari Tim AI.
 
-Silakan tanyakan apa saja! 😊</div>
+Silakan kirim pesan untuk menguji koneksi atau hubungkan server AI temanmu melalui API Context. 😊</div>
                 <div class="cb-ts">Baru saja</div>
             </div>
         </div>
@@ -550,12 +547,9 @@ Silakan tanyakan apa saja! 😊</div>
 
     {{-- 3. Quick Reply Chips --}}
     <div class="cb-chips-area" id="cbChips">
-        <span class="cb-chip-btn" data-msg="Cara membuat pengaduan">📋 Cara Lapor</span>
-        <span class="cb-chip-btn" data-msg="Status pengaduan saya">📊 Status Pengaduan</span>
-        <span class="cb-chip-btn" data-msg="Cara pinjam barang">📦 Cara Pinjam</span>
+        <span class="cb-chip-btn" data-msg="Status AI">🤖 Status AI</span>
+        <span class="cb-chip-btn" data-msg="Cek pengaduan saya">📋 Pengaduan Saya</span>
         <span class="cb-chip-btn" data-msg="Cek stok barang">📦 Stok Barang</span>
-        <span class="cb-chip-btn" data-msg="Kategori kerusakan">📂 Kategori</span>
-        <span class="cb-chip-btn" data-msg="Bantuan">ℹ️ Bantuan</span>
     </div>
 
     {{-- 4. Input Field & Send Button --}}
