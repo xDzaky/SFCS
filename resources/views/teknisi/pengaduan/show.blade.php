@@ -61,8 +61,8 @@
                             @foreach($pengaduan->photos as $photo)
                                 <div class="col-md-4 col-6">
                                     <div class="card">
-                                        <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" data-caption="Foto {{ $loop->iteration }} - {{ $pengaduan->judul }}">
-                                            <img src="{{ asset('storage/' . $photo->file_path) }}" class="card-img-top" alt="Foto {{ $loop->iteration }}" style="height: 200px; object-fit: cover;">
+                                        <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" data-caption="Foto {{ $loop->iteration }} - {{ $pengaduan->judul }}" target="_blank">
+                                            <img src="{{ asset('storage/' . $photo->file_path) }}" class="card-img-top" alt="Foto {{ $loop->iteration }}" style="height: 200px; object-fit: cover;" onerror="this.onerror=null; this.src='{{ route('storage.file', ['path' => 'placeholder']) }}';">
                                         </a>
                                         <div class="card-body text-center py-2">
                                             <small class="text-muted">Foto {{ $loop->iteration }}</small>

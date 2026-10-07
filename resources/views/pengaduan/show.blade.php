@@ -278,11 +278,12 @@
                         @foreach($pengaduan->photos as $photo)
                             <div class="col-6 col-md-4 col-lg-3">
                                 <div class="card border border-light-subtle rounded-3 overflow-hidden shadow-none h-100">
-                                    <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}" class="sfcs-photo-thumb d-block position-relative">
+                                    <a href="{{ asset('storage/' . $photo->file_path) }}" data-fancybox="gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}" target="_blank" class="sfcs-photo-thumb d-block position-relative">
                                         <img src="{{ asset('storage/' . $photo->file_path) }}" 
                                              alt="{{ $photo->tipe ?? 'Bukti' }}" 
                                              class="img-fluid w-100" 
                                              style="height:120px;object-fit:cover;transition:transform .3s ease;"
+                                             onerror="this.onerror=null; this.src='{{ route('storage.file', ['path' => 'placeholder']) }}';"
                                              loading="lazy">
                                         <span class="sfcs-photo-zoom">
                                             <i class="fas fa-search-plus"></i>

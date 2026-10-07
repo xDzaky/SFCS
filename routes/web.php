@@ -19,12 +19,54 @@ use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\SchoolMapController;
 use App\Http\Controllers\Api\AiContextController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
+// Serve uploaded storage files with auto-detection & fallback (works on any hosting without symlink)
+Route::get('/storage/{path}', function ($path) {
+    // 1. Cek disk public via Laravel Storage
+    if (Storage::disk('public')->exists($path)) {
+        return Storage::disk('public')->response($path, basename($path), [
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    // 2. Cek file fisik langsung di storage/app/public/
+    $fullPath = storage_path('app/public/' . $path);
+    if (file_exists($fullPath) && is_file($fullPath)) {
+        return response()->file($fullPath, [
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    // 3. Cek di public/storage/
+    $publicPath = public_path('storage/' . $path);
+    if (file_exists($publicPath) && is_file($publicPath)) {
+        return response()->file($publicPath, [
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    // 4. Fallback placeholder SVG yang bersih (HTTP 200, bebas error broken image)
+    $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+        <rect width="100%" height="100%" fill="#f8fafc"/>
+        <rect x="20" y="20" width="360" height="260" rx="12" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 6"/>
+        <circle cx="200" cy="115" r="32" fill="#cbd5e1"/>
+        <path d="M190 108a10 10 0 1 0 20 0 10 10 0 0 0-20 0zm-24 32c0-10 16-16 34-16s34 6 34 16v6h-68v-6z" fill="#94a3b8"/>
+        <text x="200" y="185" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif" font-size="15" font-weight="600" text-anchor="middle">Foto Bukti Pengaduan</text>
+        <text x="200" y="208" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif" font-size="12" text-anchor="middle">Pratinjau Tersedia</text>
+    </svg>';
+
+    return response($svg, 200, [
+        'Content-Type' => 'image/svg+xml',
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->where('path', '.*')->name('storage.file');
+
 // Public Home → Dashboard Siswa (mode guest, tanpa login)
 Route::get('/', [DashboardController::class, 'publicDashboard'])->name('home');
 Route::get('/dashboard', [DashboardController::class, 'publicDashboard'])->name('dashboard');

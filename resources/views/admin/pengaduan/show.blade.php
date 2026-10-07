@@ -189,9 +189,11 @@
                     <div class="row g-2">
                         @foreach($pengaduan->photos as $photo)
                             <div class="col-4 col-sm-3 col-md-2">
-                                <a href="{{ $photo->url }}" data-fancybox="gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}">
-                                    <img src="{{ $photo->url }}" class="img-fluid rounded"
-                                         style="width:100%;height:90px;object-fit:cover;">
+                                <a href="{{ $photo->url }}" data-fancybox="gallery" data-caption="Foto Bukti - {{ $pengaduan->judul }}" target="_blank">
+                                    <img src="{{ $photo->url }}" class="img-fluid rounded border shadow-sm"
+                                         style="width:100%;height:90px;object-fit:cover;"
+                                         alt="Foto Bukti - {{ $pengaduan->judul }}"
+                                         onerror="this.onerror=null; this.src='{{ route('storage.file', ['path' => 'placeholder']) }}';">
                                 </a>
                             </div>
                         @endforeach
