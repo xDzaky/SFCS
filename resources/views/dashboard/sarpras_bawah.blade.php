@@ -7,15 +7,15 @@
     <!-- Welcome Section -->
     <div class="row mb-3">
         <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body py-3 py-md-4 text-white">
                     <div class="d-flex align-items-center">
                         <div class="rounded-circle bg-white bg-opacity-25 p-2 p-md-3 me-3">
-                            <i class="fas fa-boxes fs-4 fs-md-3"></i>
+                            <i class="fas fa-boxes-stacked fs-4 fs-md-3"></i>
                         </div>
                         <div>
                             <h5 class="mb-1 fs-6 fs-md-5">Halo, {{ auth()->user()->name }}!</h5>
-                            <p class="mb-0 opacity-90 small">Sarpras Bawah — Kelola Permintaan ATK & Perlengkapan Belajar</p>
+                            <p class="mb-0 opacity-90 small">Sarpras Bawah &mdash; Kelola Permintaan ATK & Perlengkapan Belajar</p>
                         </div>
                     </div>
                 </div>
@@ -77,14 +77,14 @@
     <!-- Quick Action Buttons -->
     <div class="row g-2 mb-3">
         <div class="col-12 col-md-6">
-            <a href="{{ route('admin.pinjaman.index') }}" class="btn btn-success btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
+            <a href="{{ route('admin.pinjaman.index') }}" class="btn btn-primary btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
                 <i class="fas fa-clipboard-check fs-4 me-2"></i>
                 <span class="fs-5 fw-bold">KELOLA PERMINTAAN ATK</span>
             </a>
         </div>
         <div class="col-12 col-md-6">
-            <a href="{{ route('admin.barangs.index') }}" class="btn btn-outline-success btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
-                <i class="fas fa-boxes fs-4 me-2"></i>
+            <a href="{{ route('admin.barangs.index') }}" class="btn btn-warning btn-lg w-100 py-3 shadow-sm" style="border-radius: 15px;">
+                <i class="fas fa-boxes-stacked fs-4 me-2"></i>
                 <span class="fs-5 fw-bold">KELOLA STOK BARANG</span>
             </a>
         </div>
@@ -109,9 +109,9 @@
         <div class="card-header bg-white border-0 py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fs-6 fs-md-5">
-                    <i class="fas fa-list-alt text-success"></i> Permintaan Terbaru
+                    <i class="fas fa-clipboard-list text-primary"></i> Permintaan Terbaru
                 </h5>
-                <a href="{{ route('admin.pinjaman.index') }}" class="btn btn-sm btn-outline-success">
+                <a href="{{ route('admin.pinjaman.index') }}" class="btn btn-sm btn-outline-primary">
                     Lihat Semua
                 </a>
             </div>

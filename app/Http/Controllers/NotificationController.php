@@ -72,15 +72,68 @@ class NotificationController extends Controller
     }
 
     /**
-     * Get unread count (for AJAX)
+     * Get unread count and latest unread notification (for real-time AJAX polling)
      */
     public function unreadCount()
     {
-        $count = Notification::where('user_id', Auth::id())
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['count' => 0, 'latest_id' => 0, 'latest' => null]);
+        }
+
+        $count = Notification::where('user_id', $user->id)
             ->whereNull('read_at')
             ->count();
 
-        return response()->json(['count' => $count]);
+        $latest = Notification::where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->latest('id')
+            ->first();
+
+        $latestData = null;
+        if ($latest) {
+            $link = $latest->link;
+            if ($link && str_contains($link, 'pengaduan')) {
+                if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas'])) {
+                    if (!str_contains($link, '/admin/pengaduan')) {
+                        $link = preg_replace('#/(teknisi/)?pengaduan/#', '/admin/pengaduan/', $link, 1);
+                    }
+                } elseif ($user->role === 'teknisi') {
+                    if (!str_contains($link, '/teknisi/pengaduan')) {
+                        $link = preg_replace('#/(admin/)?pengaduan/#', '/teknisi/pengaduan/', $link, 1);
+                    }
+                } elseif (in_array($user->role, ['siswa', 'guru'])) {
+                    $link = str_replace('/admin/pengaduan', '/pengaduan', $link);
+                    $link = str_replace('/teknisi/pengaduan', '/pengaduan', $link);
+                }
+            } elseif ($link && str_contains($link, 'pinjaman')) {
+                if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas', 'sarpras_bawah'])) {
+                    if (!str_contains($link, '/admin/pinjaman')) {
+                        $link = preg_replace('#/pinjaman/#', '/admin/pinjaman/', $link, 1);
+                    }
+                } elseif (in_array($user->role, ['siswa', 'guru'])) {
+                    $link = str_replace('/admin/pinjaman', '/pinjaman', $link);
+                }
+            }
+            $link = $link ? preg_replace('#^https?://[^/]+#', '', $link) : null;
+
+            $latestData = [
+                'id'      => $latest->id,
+                'judul'   => $latest->judul,
+                'pesan'   => $latest->pesan,
+                'jenis'   => $latest->jenis,
+                'icon'    => $latest->jenis_icon,
+                'link'    => $link,
+                'is_read' => $latest->isRead(),
+                'time'    => $latest->created_at ? $latest->created_at->diffForHumans() : 'baru saja',
+            ];
+        }
+
+        return response()->json([
+            'count'     => $count,
+            'latest_id' => $latest ? $latest->id : 0,
+            'latest'    => $latestData,
+        ]);
     }
 
     /**

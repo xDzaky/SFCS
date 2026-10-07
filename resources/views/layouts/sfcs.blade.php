@@ -1148,6 +1148,7 @@
             // No notification bell on guest pages
         } else {
             let lastUnreadCount = 0;
+            let lastNotifiedId  = null;
             let dropdownLoaded  = false;
             let cachedData      = null;   // stores last successful dropdown payload
 
@@ -1178,7 +1179,7 @@
                     }
                     const ctx = window._sfcsAudioCtx;
                     if (ctx.state === 'suspended') {
-                        ctx.resume();
+                        ctx.resume().catch(() => {});
                     }
 
                     const now = ctx.currentTime;
@@ -1189,7 +1190,7 @@
                         osc.frequency.setValueAtTime(freq, time);
 
                         gain.gain.setValueAtTime(0, time);
-                        gain.gain.linearRampToValueAtTime(0.22, time + 0.015);
+                        gain.gain.linearRampToValueAtTime(0.28, time + 0.015);
                         gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
 
                         osc.connect(gain);
@@ -1207,12 +1208,21 @@
                 }
             }
 
-            // Unlock AudioContext on first user interaction for mobile autoplay compliance
-            window.addEventListener('click', () => {
-                if (window._sfcsAudioCtx && window._sfcsAudioCtx.state === 'suspended') {
-                    window._sfcsAudioCtx.resume();
-                }
-            }, { once: true });
+            // Unlock AudioContext on ANY user interaction for mobile & desktop compliance
+            const unlockAudio = () => {
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx && !window._sfcsAudioCtx) {
+                        window._sfcsAudioCtx = new AudioCtx();
+                    }
+                    if (window._sfcsAudioCtx && window._sfcsAudioCtx.state === 'suspended') {
+                        window._sfcsAudioCtx.resume().catch(() => {});
+                    }
+                } catch (e) {}
+            };
+            ['click', 'touchstart', 'keydown', 'pointerdown'].forEach(evt => {
+                window.addEventListener(evt, unlockAudio, { passive: true });
+            });
 
             // ── Update badge ──────────────────────────────────────
             function updateBadge(count) {
@@ -1293,36 +1303,44 @@
                     });
             }
 
-            // ── Fetch count only (background polling) ────────────
-            function fetchCountAndNotify() {
+            // ── Real-time Notification Engine (AJAX Polling) ───────
+            function fetchCountAndNotify(isInitial = false) {
                 fetch('/notifications/unread-count', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(r => r.json())
                     .then(data => {
                         const count = data.count ?? 0;
+                        const latestId = data.latest_id ?? 0;
+                        const latestNotif = data.latest ?? null;
 
-                        // New notification arrived while user is active on page
-                        if (count > lastUnreadCount) {
-                            fetchDropdown(false);
+                        updateBadge(count);
 
-                            fetch('/notifications/latest', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                                .then(r => r.json())
-                                .then(notif => {
-                                    if (notif && notif.judul) {
-                                        if (notif.link) {
-                                            notif.link = notif.link.replace(/^https?:\/\/[^/]+/, '');
-                                        }
-                                        if (isStaff) {
-                                            playNotificationSound();
-                                        }
-                                        showToast(notif);
-                                        showBrowserNotif(notif);
-                                    }
-                                });
-                        } else {
-                            updateBadge(count);
+                        if (isInitial) {
+                            lastNotifiedId  = latestId;
+                            lastUnreadCount = count;
+                            return;
                         }
 
-                        lastUnreadCount = count;
+                        // Real-time detection: new notification arrived without reload!
+                        if (latestNotif && latestNotif.id && latestId > (lastNotifiedId || 0)) {
+                            lastNotifiedId  = latestId;
+                            lastUnreadCount = count;
+
+                            if (latestNotif.link) {
+                                latestNotif.link = latestNotif.link.replace(/^https?:\/\/[^/]+/, '');
+                            }
+
+                            playNotificationSound();
+                            showToast(latestNotif);
+                            showBrowserNotif(latestNotif);
+
+                            // Update dropdown cache immediately
+                            fetchDropdown(false);
+                        } else if (count !== lastUnreadCount) {
+                            lastUnreadCount = count;
+                            if (count < lastUnreadCount) {
+                                fetchDropdown(false);
+                            }
+                        }
                     })
                     .catch(() => {});
             }
@@ -1484,15 +1502,15 @@
                 Notification.requestPermission();
             }
 
-            // ── Lightweight Polling Engine (Optimized for Mobile & Desktop) ──
+            // ── Lightweight Real-time Polling Engine (Optimized for Mobile & Desktop) ──
             let pollTimer = null;
-            const pollInterval = isStaff ? 15000 : 35000; // 15s for admin/sarpras, 35s for siswa/guru
+            const pollInterval = isStaff ? 4000 : 7000; // 4s for staff (realtime), 7s for siswa/guru
 
             function startPolling() {
                 stopPolling();
                 pollTimer = setInterval(() => {
                     if (!document.hidden) {
-                        fetchCountAndNotify();
+                        fetchCountAndNotify(false);
                     }
                 }, pollInterval);
             }
@@ -1509,13 +1527,14 @@
                 if (document.hidden) {
                     stopPolling();
                 } else {
-                    fetchCountAndNotify();
+                    fetchCountAndNotify(false);
                     startPolling();
                 }
             });
 
             // ── Bootstrap: load data immediately on page load ─────
-            fetchDropdown(false); // pre-warm cache silently
+            fetchCountAndNotify(true); // initialize latest_id & count silently on page load
+            fetchDropdown(false);      // pre-warm dropdown cache
             startPolling();
         }
 
