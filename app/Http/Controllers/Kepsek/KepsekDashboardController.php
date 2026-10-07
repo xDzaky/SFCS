@@ -86,8 +86,8 @@ class KepsekDashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Teknisi performance
-        $teknisiPerformance = User::where('role', 'teknisi')
+        // Teknisi / Sarpras Atas performance
+        $teknisiPerformance = User::whereIn('role', ['sarpras_atas', 'teknisi'])
             ->where('is_active', true)
             ->withCount([
                 'assignedPengaduans as total_ditangani',

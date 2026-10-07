@@ -23,7 +23,7 @@ class DispatchQueueService
         }
 
         $teknisiIds = User::query()
-            ->where('role', 'teknisi')
+            ->whereIn('role', ['sarpras_atas', 'teknisi'])
             ->where('is_active', true)
             ->pluck('id');
 
@@ -75,7 +75,7 @@ class DispatchQueueService
 
     public function overloadSummary(): array
     {
-        $teknisiCount = max(1, User::query()->where('role', 'teknisi')->where('is_active', true)->count());
+        $teknisiCount = max(1, User::query()->whereIn('role', ['sarpras_atas', 'teknisi'])->where('is_active', true)->count());
         $capacityPerHour = max(1, (int) Setting::getValue('teknisi_capacity_per_hour', 2));
         $urgentHighCount = Pengaduan::query()
             ->whereIn('status', [Pengaduan::STATUS_DIVERIFIKASI, Pengaduan::STATUS_DIPROSES])

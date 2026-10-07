@@ -126,12 +126,23 @@ class Notification extends Model
                         $link = preg_replace('#/pengaduan/#', '/teknisi/pengaduan/', $link, 1);
                     }
 
-                } elseif (in_array($user->role, ['admin', 'superadmin'])) {
-                    // Admin/superadmin: ensure link uses /admin/pengaduan/
+                } elseif (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas'])) {
+                    // Admin/superadmin/sarpras_atas: ensure link uses /admin/pengaduan/
                     if (!str_contains($link, '/admin/pengaduan')) {
                         // Convert plain /pengaduan/ or /teknisi/pengaduan/ to /admin/pengaduan/
                         $link = preg_replace('#/(teknisi/)?pengaduan/#', '/admin/pengaduan/', $link, 1);
                     }
+                }
+            }
+        } elseif ($link && str_contains($link, 'pinjaman')) {
+            $user = User::find($userId);
+            if ($user) {
+                if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas', 'sarpras_bawah'])) {
+                    if (!str_contains($link, '/admin/pinjaman')) {
+                        $link = preg_replace('#/pinjaman/#', '/admin/pinjaman/', $link, 1);
+                    }
+                } elseif (in_array($user->role, ['siswa', 'guru'])) {
+                    $link = str_replace('/admin/pinjaman', '/pinjaman', $link);
                 }
             }
         }

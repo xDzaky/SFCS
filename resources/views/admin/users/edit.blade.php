@@ -63,12 +63,10 @@
                             <select name="role" id="roleSelect" class="form-select @error('role') is-invalid @enderror" required {{ $user->id === auth()->id() ? 'disabled' : '' }}>
                                 <option value="siswa" {{ old('role', $user->role) == 'siswa' ? 'selected' : '' }}>Siswa</option>
                                 <option value="guru" {{ old('role', $user->role) == 'guru' ? 'selected' : '' }}>Guru</option>
-                                <option value="teknisi" {{ old('role', $user->role) == 'teknisi' ? 'selected' : '' }}>Teknisi</option>
-                                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="sarpras_atas" {{ old('role', $user->role) == 'sarpras_atas' ? 'selected' : '' }}>Sarpras Atas (Aset & Fasilitas)</option>
+                                <option value="sarpras_bawah" {{ old('role', $user->role) == 'sarpras_bawah' ? 'selected' : '' }}>Sarpras Bawah (ATK & Logistik)</option>
+                                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin IT</option>
                                 <option value="kepsek" {{ old('role', $user->role) == 'kepsek' ? 'selected' : '' }}>Kepala Sekolah</option>
-                                @if(auth()->user()->role === 'superadmin')
-                                    <option value="superadmin" {{ old('role', $user->role) == 'superadmin' ? 'selected' : '' }}>Super Admin</option>
-                                @endif
                             </select>
                             @if($user->id === auth()->id())
                                 <input type="hidden" name="role" value="{{ $user->role }}">

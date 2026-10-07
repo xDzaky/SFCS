@@ -113,7 +113,7 @@ class AdminPengaduanController extends Controller
 
         $kategoris = \App\Models\Kategori::where('is_active', true)->get();
         $gedungs = \App\Models\Gedung::where('is_active', true)->get();
-        $teknisis = User::where('role', 'teknisi')->where('is_active', true)->get();
+        $teknisis = User::whereIn('role', ['sarpras_atas', 'teknisi'])->where('is_active', true)->get();
 
         return view('admin.pengaduan.index', compact('pengaduans', 'kategoris', 'gedungs', 'teknisis'));
     }
@@ -150,7 +150,7 @@ class AdminPengaduanController extends Controller
             $pengaduan->setRelation('schedules', collect());
         }
 
-        $teknisis = User::where('role', 'teknisi')
+        $teknisis = User::whereIn('role', ['sarpras_atas', 'teknisi'])
             ->where('is_active', true)
             ->get();
 
@@ -240,9 +240,9 @@ class AdminPengaduanController extends Controller
 
         $teknisi = User::findOrFail($validated['teknisi_id']);
 
-        // Check if teknisi
-        if ($teknisi->role !== 'teknisi') {
-            return back()->with('error', 'User yang dipilih bukan teknisi');
+        // Check if sarpras_atas / teknisi
+        if (!$teknisi->isSarprasAtas()) {
+            return back()->with('error', 'User yang dipilih bukan petugas Sarpras Atas / Teknisi');
         }
 
         $payload = [
@@ -523,8 +523,8 @@ class AdminPengaduanController extends Controller
 
         $teknisi = User::findOrFail($validated['teknisi_id']);
 
-        if ($teknisi->role !== 'teknisi') {
-            return back()->with('error', 'User yang dipilih bukan teknisi');
+        if (!$teknisi->isSarprasAtas()) {
+            return back()->with('error', 'User yang dipilih bukan petugas Sarpras Atas / Teknisi');
         }
 
         DB::beginTransaction();

@@ -47,8 +47,8 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
-        // If AJAX request
-        if (request()->ajax()) {
+        // If AJAX / JSON request
+        if (request()->ajax() || request()->expectsJson()) {
             return response()->json(['success' => true]);
         }
 
@@ -64,7 +64,7 @@ class NotificationController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->expectsJson()) {
             return response()->json(['success' => true]);
         }
 
@@ -84,16 +84,60 @@ class NotificationController extends Controller
     }
 
     /**
-     * Get latest unread notification (for browser notification)
+     * Get latest unread notification (for browser notification & alert toast)
      */
     public function latest()
     {
-        $notification = Notification::where('user_id', Auth::id())
-            ->whereNull('read_at')
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(null);
+        }
+
+        $notification = Notification::where('user_id', $user->id)
+            ->where(fn ($q) => $q->where('is_read', false)->orWhereNull('read_at'))
             ->latest()
             ->first();
 
-        return response()->json($notification);
+        if (!$notification) {
+            return response()->json(null);
+        }
+
+        $link = $notification->link;
+        if ($link && str_contains($link, 'pengaduan')) {
+            if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas'])) {
+                if (!str_contains($link, '/admin/pengaduan')) {
+                    $link = preg_replace('#/(teknisi/)?pengaduan/#', '/admin/pengaduan/', $link, 1);
+                }
+            } elseif ($user->role === 'teknisi') {
+                if (!str_contains($link, '/teknisi/pengaduan')) {
+                    $link = preg_replace('#/(admin/)?pengaduan/#', '/teknisi/pengaduan/', $link, 1);
+                }
+            } elseif (in_array($user->role, ['siswa', 'guru'])) {
+                $link = str_replace('/admin/pengaduan', '/pengaduan', $link);
+                $link = str_replace('/teknisi/pengaduan', '/pengaduan', $link);
+            }
+        } elseif ($link && str_contains($link, 'pinjaman')) {
+            if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas', 'sarpras_bawah'])) {
+                if (!str_contains($link, '/admin/pinjaman')) {
+                    $link = preg_replace('#/pinjaman/#', '/admin/pinjaman/', $link, 1);
+                }
+            } elseif (in_array($user->role, ['siswa', 'guru'])) {
+                $link = str_replace('/admin/pinjaman', '/pinjaman', $link);
+            }
+        }
+
+        $link = $link ? preg_replace('#^https?://[^/]+#', '', $link) : null;
+
+        return response()->json([
+            'id'      => $notification->id,
+            'judul'   => $notification->judul,
+            'pesan'   => $notification->pesan,
+            'jenis'   => $notification->jenis,
+            'icon'    => $notification->jenis_icon,
+            'link'    => $link,
+            'is_read' => $notification->isRead(),
+            'time'    => $notification->created_at->diffForHumans(),
+        ]);
     }
 
     /**
@@ -119,8 +163,8 @@ class NotificationController extends Controller
 
                 // Fix stale/wrong links stored in DB for existing notifications
                 if ($link && str_contains($link, 'pengaduan')) {
-                    if (in_array($user->role, ['admin', 'superadmin'])) {
-                        // Ensure admin always gets /admin/pengaduan/ link
+                    if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas'])) {
+                        // Ensure admin and sarpras_atas always gets /admin/pengaduan/ link
                         if (!str_contains($link, '/admin/pengaduan')) {
                             $link = preg_replace('#/(teknisi/)?pengaduan/#', '/admin/pengaduan/', $link, 1);
                         }
@@ -131,6 +175,14 @@ class NotificationController extends Controller
                     } elseif (in_array($user->role, ['siswa', 'guru'])) {
                         $link = str_replace('/admin/pengaduan', '/pengaduan', $link);
                         $link = str_replace('/teknisi/pengaduan', '/pengaduan', $link);
+                    }
+                } elseif ($link && str_contains($link, 'pinjaman')) {
+                    if (in_array($user->role, ['admin', 'superadmin', 'sarpras_atas', 'sarpras_bawah'])) {
+                        if (!str_contains($link, '/admin/pinjaman')) {
+                            $link = preg_replace('#/pinjaman/#', '/admin/pinjaman/', $link, 1);
+                        }
+                    } elseif (in_array($user->role, ['siswa', 'guru'])) {
+                        $link = str_replace('/admin/pinjaman', '/pinjaman', $link);
                     }
                 }
 

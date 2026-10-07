@@ -114,9 +114,10 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
         ->name('chatbot.chat')
         ->middleware('throttle:30,1');
 
+
     /*
     |--------------------------------------------------------------------------
-    | Siswa & Guru Routes (Pengaduan)
+    | Siswa & Guru Routes (Pengaduan & Pinjaman)
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:siswa,guru,admin,superadmin'])->group(function () {
@@ -151,7 +152,7 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
             ->name('api.pengaduan.check-duplicate')
             ->middleware('throttle:30,1');
 
-        // Pinjaman Barang
+        // Pinjaman Barang (siswa/guru membuat permintaan pinjam/minta)
         Route::get('/pinjaman', [PinjamanController::class, 'index'])->name('pinjaman.index');
         Route::get('/pinjaman/create', [PinjamanController::class, 'create'])->name('pinjaman.create');
         Route::post('/pinjaman', [PinjamanController::class, 'store'])->name('pinjaman.store');
@@ -162,10 +163,11 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
 
     /*
     |--------------------------------------------------------------------------
-    | Teknisi Routes
+    | Sarpras Atas Routes (Teknisi/Fasilitas handler — merged from old Teknisi role)
+    | Accessible by: sarpras_atas, admin (IT Admin), teknisi (backward compat)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:teknisi,admin,superadmin'])->prefix('teknisi')->name('teknisi.')->group(function () {
+    Route::middleware(['role:sarpras_atas,teknisi,admin,superadmin'])->prefix('teknisi')->name('teknisi.')->group(function () {
         // Fix for accidental double-prefix in notifications
         Route::get('/teknisi/pengaduan/{pengaduan}', function ($pengaduan) {
             return redirect()->route('teknisi.pengaduan.show', $pengaduan);
@@ -198,36 +200,15 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
 
     /*
     |--------------------------------------------------------------------------
-    | Admin Routes
+    | Sarpras Shared Routes — Barang & Pinjaman Management
+    | sarpras_atas  → sees unit_sarpras='atas' items only
+    | sarpras_bawah → sees unit_sarpras='bawah' items only
+    | admin         → sees ALL
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
-        // Pengaduan Management
-        Route::get('/pengaduan', [AdminPengaduanController::class, 'index'])->name('pengaduan.index');
-        
-        // Fix for legacy notifications with numeric IDs
-        Route::get('/pengaduan/{id}', function ($id) {
-            $pengaduan = \App\Models\Pengaduan::find($id);
-            return $pengaduan 
-                ? redirect()->route('admin.pengaduan.show', $pengaduan) 
-                : abort(404);
-        })->where('id', '[0-9]+');
+    Route::middleware(['role:sarpras_atas,sarpras_bawah,teknisi,admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
 
-        Route::get('/pengaduan/{pengaduan}', [AdminPengaduanController::class, 'show'])->name('pengaduan.show');
-        Route::post('/pengaduan/{pengaduan}/status', [AdminPengaduanController::class, 'updateStatus'])->name('pengaduan.status');
-        Route::post('/pengaduan/{pengaduan}/assign', [AdminPengaduanController::class, 'assign'])->name('pengaduan.assign');
-        Route::post('/pengaduan/{pengaduan}/reject', [AdminPengaduanController::class, 'reject'])->name('pengaduan.reject');
-        Route::post('/pengaduan/{pengaduan}/mark-duplicate', [AdminPengaduanController::class, 'markDuplicate'])->name('pengaduan.mark-duplicate');
-        Route::delete('/pengaduan/{pengaduan}/mark-duplicate', [AdminPengaduanController::class, 'unmarkDuplicate'])->name('pengaduan.unmark-duplicate');
-        Route::post('/pengaduan/bulk-status', [AdminPengaduanController::class, 'bulkStatus'])->name('pengaduan.bulk-status');
-        Route::post('/pengaduan/bulk-assign', [AdminPengaduanController::class, 'bulkAssign'])->name('pengaduan.bulk-assign');
-        Route::post('/pengaduan/{pengaduan}/approve-reopen', [AdminPengaduanController::class, 'approveReopen'])->name('pengaduan.approve-reopen');
-        Route::post('/pengaduan/{pengaduan}/prioritas', [AdminPengaduanController::class, 'updatePrioritas'])->name('pengaduan.prioritas');
-        Route::post('/pengaduan/{pengaduan}/force-priority', [AdminPengaduanController::class, 'forcePriority'])->name('pengaduan.force-priority');
-        Route::get('/pengaduan-export', [AdminPengaduanController::class, 'export'])->name('pengaduan.export');
-        Route::get('/overload-board', [AdminPengaduanController::class, 'overloadBoard'])->name('overload-board');
-
-        // Pinjaman Management
+        // Barang & Pinjaman (controllers filter by unit_sarpras based on role)
         Route::resource('barangs', BarangController::class)->except(['create', 'edit', 'show']);
         Route::post('/barangs/{barang}/toggle-status', [BarangController::class, 'toggleStatus'])->name('barangs.toggle-status');
         Route::get('/pinjaman', [AdminPinjamanController::class, 'index'])->name('pinjaman.index');
@@ -240,57 +221,87 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
         Route::post('/barang/{barang}/adjust-stock', [AdminPinjamanController::class, 'adjustStock'])->name('barang.adjust-stock');
         Route::get('/pinjaman-export', [AdminPinjamanController::class, 'export'])->name('pinjaman.export');
 
-        // Peta Digital Sekolah
-        Route::get('/denah', [SchoolMapController::class, 'index'])->name('denah.index');
-        Route::post('/denah/chunked', [SchoolMapController::class, 'storeChunked'])->name('denah.store-chunked');
-        Route::post('/denah', [SchoolMapController::class, 'store'])->name('denah.store');
-        Route::put('/denah/{map}', [SchoolMapController::class, 'update'])->name('denah.update');
-        Route::delete('/denah/{map}', [SchoolMapController::class, 'destroy'])->name('denah.destroy');
-        Route::get('/denah/{map}/edit', [SchoolMapController::class, 'edit'])->name('denah.edit');
-        Route::put('/denah/{map}/layers/{layer}', [SchoolMapController::class, 'updateLayer'])->name('denah.layers.update');
-        Route::post('/denah/{map}/layers/{layer}/areas', [SchoolMapController::class, 'storeArea'])->name('denah.layers.areas.store');
-        Route::put('/denah/areas/{area}', [SchoolMapController::class, 'updateArea'])->name('denah.areas.update');
-        Route::delete('/denah/areas/{area}', [SchoolMapController::class, 'destroyArea'])->name('denah.areas.destroy');
-        Route::post('/denah/{map}/activate', [SchoolMapController::class, 'activate'])->name('denah.activate');
-        Route::get('/peta-digital', [SchoolMapController::class, 'viewer'])->name('peta-digital');
+        // Pengaduan Management (Sarpras Atas & Admin only — Sarpras Bawah excluded)
+        Route::middleware(['role:sarpras_atas,teknisi,admin,superadmin'])->group(function () {
+            Route::get('/pengaduan', [AdminPengaduanController::class, 'index'])->name('pengaduan.index');
+            
+            // Fix for legacy notifications with numeric IDs
+            Route::get('/pengaduan/{id}', function ($id) {
+                $pengaduan = \App\Models\Pengaduan::find($id);
+                return $pengaduan 
+                    ? redirect()->route('admin.pengaduan.show', $pengaduan) 
+                    : abort(404);
+            })->where('id', '[0-9]+');
 
-        Route::get('/internal/health', InternalHealthController::class)->name('internal.health');
+            Route::get('/pengaduan/{pengaduan}', [AdminPengaduanController::class, 'show'])->name('pengaduan.show');
+            Route::post('/pengaduan/{pengaduan}/status', [AdminPengaduanController::class, 'updateStatus'])->name('pengaduan.status');
+            Route::post('/pengaduan/{pengaduan}/assign', [AdminPengaduanController::class, 'assign'])->name('pengaduan.assign');
+            Route::post('/pengaduan/{pengaduan}/reject', [AdminPengaduanController::class, 'reject'])->name('pengaduan.reject');
+            Route::post('/pengaduan/{pengaduan}/mark-duplicate', [AdminPengaduanController::class, 'markDuplicate'])->name('pengaduan.mark-duplicate');
+            Route::delete('/pengaduan/{pengaduan}/mark-duplicate', [AdminPengaduanController::class, 'unmarkDuplicate'])->name('pengaduan.unmark-duplicate');
+            Route::post('/pengaduan/bulk-status', [AdminPengaduanController::class, 'bulkStatus'])->name('pengaduan.bulk-status');
+            Route::post('/pengaduan/bulk-assign', [AdminPengaduanController::class, 'bulkAssign'])->name('pengaduan.bulk-assign');
+            Route::post('/pengaduan/{pengaduan}/approve-reopen', [AdminPengaduanController::class, 'approveReopen'])->name('pengaduan.approve-reopen');
+            Route::post('/pengaduan/{pengaduan}/prioritas', [AdminPengaduanController::class, 'updatePrioritas'])->name('pengaduan.prioritas');
+            Route::post('/pengaduan/{pengaduan}/force-priority', [AdminPengaduanController::class, 'forcePriority'])->name('pengaduan.force-priority');
+            Route::get('/pengaduan-export', [AdminPengaduanController::class, 'export'])->name('pengaduan.export');
+            Route::get('/overload-board', [AdminPengaduanController::class, 'overloadBoard'])->name('overload-board');
 
-        // User Management
-        Route::resource('users', UserController::class);
-        Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
-        Route::post('/users/import', [UserController::class, 'import'])->name('users.import');
-        Route::get('/users/import/template', [UserController::class, 'importTemplate'])->name('users.import.template');
-        Route::post('/users/promote/preview', [UserController::class, 'promotePreview'])->name('users.promote.preview');
-        Route::post('/users/promote/apply', [UserController::class, 'promoteApply'])->name('users.promote.apply');
-        Route::get('/users-export', [UserController::class, 'export'])->name('users.export');
-        Route::get('/master-data', [MasterDataController::class, 'index'])->name('master-data.index');
-        Route::post('/master-data/preview', [MasterDataController::class, 'preview'])->name('master-data.preview');
-        Route::post('/master-data/commit/{batch}', [MasterDataController::class, 'commit'])->name('master-data.commit');
-        Route::post('/master-data/import', [MasterDataController::class, 'import'])->name('master-data.import');
-        Route::get('/master-data/error-report/{batch}', [MasterDataController::class, 'errorReport'])->name('master-data.error-report');
-        Route::get('/master-data/template', [MasterDataController::class, 'template'])->name('master-data.template');
-        Route::get('/master-data/validation', [MasterDataController::class, 'validation'])->name('master-data.validation');
+            // Peta Digital Sekolah (Sarpras Atas can view & manage school map)
+            Route::get('/denah', [SchoolMapController::class, 'index'])->name('denah.index');
+            Route::post('/denah/chunked', [SchoolMapController::class, 'storeChunked'])->name('denah.store-chunked');
+            Route::post('/denah', [SchoolMapController::class, 'store'])->name('denah.store');
+            Route::put('/denah/{map}', [SchoolMapController::class, 'update'])->name('denah.update');
+            Route::delete('/denah/{map}', [SchoolMapController::class, 'destroy'])->name('denah.destroy');
+            Route::get('/denah/{map}/edit', [SchoolMapController::class, 'edit'])->name('denah.edit');
+            Route::put('/denah/{map}/layers/{layer}', [SchoolMapController::class, 'updateLayer'])->name('denah.layers.update');
+            Route::post('/denah/{map}/layers/{layer}/areas', [SchoolMapController::class, 'storeArea'])->name('denah.layers.areas.store');
+            Route::put('/denah/areas/{area}', [SchoolMapController::class, 'updateArea'])->name('denah.areas.update');
+            Route::delete('/denah/areas/{area}', [SchoolMapController::class, 'destroyArea'])->name('denah.areas.destroy');
+            Route::post('/denah/{map}/activate', [SchoolMapController::class, 'activate'])->name('denah.activate');
+            Route::get('/peta-digital', [SchoolMapController::class, 'viewer'])->name('peta-digital');
+        });
 
-        // Kategori Management
-        Route::resource('kategoris', KategoriController::class)->except(['show']);
-        Route::get('/kategoris/{kategori}/sub-kategoris', [KategoriController::class, 'subKategoris'])->name('kategoris.sub-kategoris');
-        Route::post('/kategoris/{kategori}/sub-kategoris', [KategoriController::class, 'storeSubKategori'])->name('kategoris.sub-kategoris.store');
-        Route::put('/sub-kategoris/{subKategori}', [KategoriController::class, 'updateSubKategori'])->name('sub-kategoris.update');
-        Route::delete('/sub-kategoris/{subKategori}', [KategoriController::class, 'destroySubKategori'])->name('sub-kategoris.destroy');
+        // Admin IT Only Routes (User Management, Master Data, Kategori, Gedung, Reports, Health)
+        Route::middleware(['role:admin,superadmin'])->group(function () {
+            Route::get('/internal/health', InternalHealthController::class)->name('internal.health');
 
-        // Gedung & Ruangan Management
-        Route::resource('gedungs', GedungController::class)->except(['show']);
-        Route::get('/gedungs/{gedung}/ruangans', [GedungController::class, 'ruangans'])->name('gedungs.ruangans');
-        Route::post('/gedungs/{gedung}/ruangans', [GedungController::class, 'storeRuangan'])->name('gedungs.ruangans.store');
-        Route::put('/ruangans/{ruangan}', [GedungController::class, 'updateRuangan'])->name('ruangans.update');
-        Route::delete('/ruangans/{ruangan}', [GedungController::class, 'destroyRuangan'])->name('ruangans.destroy');
+            // User Management
+            Route::resource('users', UserController::class);
+            Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+            Route::post('/users/import', [UserController::class, 'import'])->name('users.import');
+            Route::get('/users/import/template', [UserController::class, 'importTemplate'])->name('users.import.template');
+            Route::post('/users/promote/preview', [UserController::class, 'promotePreview'])->name('users.promote.preview');
+            Route::post('/users/promote/apply', [UserController::class, 'promoteApply'])->name('users.promote.apply');
+            Route::get('/users-export', [UserController::class, 'export'])->name('users.export');
+            Route::get('/master-data', [MasterDataController::class, 'index'])->name('master-data.index');
+            Route::post('/master-data/preview', [MasterDataController::class, 'preview'])->name('master-data.preview');
+            Route::post('/master-data/commit/{batch}', [MasterDataController::class, 'commit'])->name('master-data.commit');
+            Route::post('/master-data/import', [MasterDataController::class, 'import'])->name('master-data.import');
+            Route::get('/master-data/error-report/{batch}', [MasterDataController::class, 'errorReport'])->name('master-data.error-report');
+            Route::get('/master-data/template', [MasterDataController::class, 'template'])->name('master-data.template');
+            Route::get('/master-data/validation', [MasterDataController::class, 'validation'])->name('master-data.validation');
 
-        // Reports
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/pengaduan', [ReportController::class, 'pengaduan'])->name('reports.pengaduan');
-        Route::get('/reports/performance', [ReportController::class, 'performance'])->name('reports.performance');
-        Route::get('/reports/export/{type}', [ReportController::class, 'export'])->name('reports.export');
+            // Kategori Management
+            Route::resource('kategoris', KategoriController::class)->except(['show']);
+            Route::get('/kategoris/{kategori}/sub-kategoris', [KategoriController::class, 'subKategoris'])->name('kategoris.sub-kategoris');
+            Route::post('/kategoris/{kategori}/sub-kategoris', [KategoriController::class, 'storeSubKategori'])->name('kategoris.sub-kategoris.store');
+            Route::put('/sub-kategoris/{subKategori}', [KategoriController::class, 'updateSubKategori'])->name('sub-kategoris.update');
+            Route::delete('/sub-kategoris/{subKategori}', [KategoriController::class, 'destroySubKategori'])->name('sub-kategoris.destroy');
+
+            // Gedung & Ruangan Management
+            Route::resource('gedungs', GedungController::class)->except(['show']);
+            Route::get('/gedungs/{gedung}/ruangans', [GedungController::class, 'ruangans'])->name('gedungs.ruangans');
+            Route::post('/gedungs/{gedung}/ruangans', [GedungController::class, 'storeRuangan'])->name('gedungs.ruangans.store');
+            Route::put('/ruangans/{ruangan}', [GedungController::class, 'updateRuangan'])->name('ruangans.update');
+            Route::delete('/ruangans/{ruangan}', [GedungController::class, 'destroyRuangan'])->name('ruangans.destroy');
+
+            // Reports
+            Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/pengaduan', [ReportController::class, 'pengaduan'])->name('reports.pengaduan');
+            Route::get('/reports/performance', [ReportController::class, 'performance'])->name('reports.performance');
+            Route::get('/reports/export/{type}', [ReportController::class, 'export'])->name('reports.export');
+        });
     });
 
     /*
@@ -298,7 +309,7 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
     | Kepsek Routes
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:kepsek,superadmin'])->prefix('kepsek')->name('kepsek.')->group(function () {
+    Route::middleware(['role:kepsek,admin,superadmin'])->prefix('kepsek')->name('kepsek.')->group(function () {
         // Redirect to main dashboard for consistency
         Route::get('/dashboard', function () {
             return redirect()->route('dashboard');
@@ -311,10 +322,11 @@ Route::middleware(['auth', 'active', 'force.password.change'])->group(function (
 
     /*
     |--------------------------------------------------------------------------
-    | Superadmin Routes
+    | Admin IT Routes (System Settings & Logs — formerly superadmin)
+    | Now accessible with role 'admin' (new IT Admin / Guru IT role)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::middleware(['role:admin,superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
         // Settings
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');

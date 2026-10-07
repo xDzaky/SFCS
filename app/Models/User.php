@@ -75,27 +75,55 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user is admin
+     * Check if user is admin (IT Admin — full system access)
      */
     public function isAdmin(): bool
+    {
+        // 'admin' is the new IT Admin role (was 'superadmin')
+        // Keep 'superadmin' as backward-compat alias
+        return in_array($this->role, ['admin', 'superadmin']);
+    }
+
+    /**
+     * Check if user is super admin (backward compat alias for admin)
+     */
+    public function isSuperAdmin(): bool
     {
         return in_array($this->role, ['admin', 'superadmin']);
     }
 
     /**
-     * Check if user is super admin
+     * Check if user is sarpras_atas (handles facility complaints + returnable assets)
+     * Merged the old teknisi role into this role.
      */
-    public function isSuperAdmin(): bool
+    public function isSarprasAtas(): bool
     {
-        return $this->role === 'superadmin';
+        // Also keep 'teknisi' and 'admin' (old admin) as backward-compat aliases
+        return in_array($this->role, ['sarpras_atas', 'teknisi']);
     }
 
     /**
-     * Check if user is teknisi
+     * Check if user is sarpras_bawah (handles consumable ATK/supplies only)
+     */
+    public function isSarprasBawah(): bool
+    {
+        return $this->role === 'sarpras_bawah';
+    }
+
+    /**
+     * Check if user is any sarpras role (atas or bawah)
+     */
+    public function isSarpras(): bool
+    {
+        return in_array($this->role, ['sarpras_atas', 'sarpras_bawah', 'teknisi']);
+    }
+
+    /**
+     * Check if user is teknisi (backward-compat alias → sarpras_atas)
      */
     public function isTeknisi(): bool
     {
-        return $this->role === 'teknisi';
+        return in_array($this->role, ['sarpras_atas', 'teknisi']);
     }
 
     /**
@@ -157,13 +185,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleBadgeColorAttribute(): string
     {
         return match($this->role) {
-            'superadmin' => 'danger',
-            'admin' => 'primary',
-            'kepsek' => 'warning',
-            'teknisi' => 'info',
-            'guru' => 'success',
-            'siswa' => 'secondary',
-            default => 'secondary',
+            'admin'         => 'danger',
+            'superadmin'    => 'danger',   // backward compat
+            'sarpras_atas'  => 'primary',
+            'sarpras_bawah' => 'info',
+            'kepsek'        => 'warning',
+            'teknisi'       => 'primary',  // backward compat
+            'guru'          => 'success',
+            'siswa'         => 'secondary',
+            default         => 'secondary',
         };
     }
 
@@ -173,13 +203,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getRoleDisplayAttribute(): string
     {
         return match($this->role) {
-            'superadmin' => 'Super Admin',
-            'admin' => 'Admin Sarpras',
-            'kepsek' => 'Kepala Sekolah',
-            'teknisi' => 'Teknisi',
-            'guru' => 'Guru',
-            'siswa' => 'Siswa',
-            default => ucfirst($this->role),
+            'admin'         => 'Admin IT',
+            'superadmin'    => 'Admin IT',           // backward compat
+            'sarpras_atas'  => 'Sarpras Atas',
+            'sarpras_bawah' => 'Sarpras Bawah',
+            'kepsek'        => 'Kepala Sekolah',
+            'teknisi'       => 'Sarpras Atas',       // backward compat
+            'guru'          => 'Guru',
+            'siswa'         => 'Siswa',
+            default         => ucfirst(str_replace('_', ' ', $this->role)),
         };
     }
 

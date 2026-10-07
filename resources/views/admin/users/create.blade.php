@@ -63,12 +63,10 @@
                                 <option value="">Pilih Role</option>
                                 <option value="siswa" {{ old('role') == 'siswa' ? 'selected' : '' }}>Siswa</option>
                                 <option value="guru" {{ old('role') == 'guru' ? 'selected' : '' }}>Guru</option>
-                                <option value="teknisi" {{ old('role') == 'teknisi' ? 'selected' : '' }}>Teknisi</option>
-                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="sarpras_atas" {{ old('role') == 'sarpras_atas' ? 'selected' : '' }}>Sarpras Atas (Aset & Fasilitas)</option>
+                                <option value="sarpras_bawah" {{ old('role') == 'sarpras_bawah' ? 'selected' : '' }}>Sarpras Bawah (ATK & Logistik)</option>
+                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin IT</option>
                                 <option value="kepsek" {{ old('role') == 'kepsek' ? 'selected' : '' }}>Kepala Sekolah</option>
-                                @if(auth()->user()->role === 'superadmin')
-                                    <option value="superadmin" {{ old('role') == 'superadmin' ? 'selected' : '' }}>Super Admin</option>
-                                @endif
                             </select>
                             @error('role')
                                 <div class="invalid-feedback">{{ $message }}</div>

@@ -37,8 +37,15 @@ class TeknisiPengaduanController extends Controller
     {
         $user = Auth::user();
 
-        $query = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user', 'photos'])
-            ->where('teknisi_id', $user->id);
+        $query = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user', 'photos']);
+
+        // Akun unit Sarpras Atas dapat melihat semua pengaduan fasilitas yang ditugaskan ke Sarpras Atas atau belum di-assign
+        if (!$user->isAdmin()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('teknisi_id', $user->id)
+                  ->orWhereNull('teknisi_id');
+            });
+        }
 
         // Filter by status
         if ($request->filled('status')) {
@@ -78,8 +85,8 @@ class TeknisiPengaduanController extends Controller
     {
         $user = Auth::user();
 
-        // Check if assigned to this teknisi
-        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin()) {
+        // Check if assigned to this teknisi or is Sarpras Atas / Admin
+        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin() && !$user->isSarprasAtas()) {
             abort(403, 'Pengaduan ini tidak ditugaskan kepada Anda');
         }
 
@@ -123,9 +130,14 @@ class TeknisiPengaduanController extends Controller
     {
         $user = Auth::user();
 
-        // Check if assigned to this teknisi
-        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin()) {
+        // Check if assigned to this teknisi or is Sarpras Atas / Admin
+        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin() && !$user->isSarprasAtas()) {
             abort(403);
+        }
+
+        // Auto-assign ke user jika belum ada teknisi_id
+        if (!$pengaduan->teknisi_id) {
+            $pengaduan->update(['teknisi_id' => $user->id]);
         }
 
         $validated = $request->validate([
@@ -145,7 +157,7 @@ class TeknisiPengaduanController extends Controller
             $pengaduan->id,
             Auth::id(),
             'teknisi_update',
-            "Status diubah dari {$oldStatus} ke {$validated['status']} oleh teknisi"
+            "Status diubah dari {$oldStatus} ke {$validated['status']} oleh Sarpras Atas"
         );
 
         // Notify user
@@ -153,7 +165,7 @@ class TeknisiPengaduanController extends Controller
             $pengaduan->user_id,
             Notification::JENIS_STATUS_CHANGED,
             'Pengaduan Sedang Diproses',
-            "Pengaduan #{$pengaduan->kode_pengaduan} sedang dikerjakan oleh teknisi {$user->name}",
+            "Pengaduan #{$pengaduan->kode_pengaduan} sedang dikerjakan oleh petugas Sarpras Atas",
             route('pengaduan.show', $pengaduan->kode_pengaduan)
         );
 
@@ -169,9 +181,13 @@ class TeknisiPengaduanController extends Controller
     {
         $user = Auth::user();
 
-        // Check if assigned to this teknisi
-        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin()) {
+        // Check if assigned to this teknisi or is Sarpras Atas / Admin
+        if ($pengaduan->teknisi_id != $user->id && !$user->isAdmin() && !$user->isSarprasAtas()) {
             abort(403);
+        }
+
+        if (!$pengaduan->teknisi_id) {
+            $pengaduan->update(['teknisi_id' => $user->id]);
         }
 
         $validated = $request->validate([
@@ -238,7 +254,7 @@ class TeknisiPengaduanController extends Controller
         }
 
         $user = Auth::user();
-        if ((int) $pengaduan->teknisi_id !== (int) $user->id && !$user->isAdmin()) {
+        if ((int) $pengaduan->teknisi_id !== (int) $user->id && !$user->isAdmin() && !$user->isSarprasAtas()) {
             abort(403);
         }
 

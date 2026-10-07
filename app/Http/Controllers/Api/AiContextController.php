@@ -472,7 +472,7 @@ class AiContextController extends Controller
                 'overload_delay'=> Pengaduan::where('is_overload_delayed', true)->whereIn('status', ['diverifikasi', 'diproses'])->count(),
             ];
 
-            $context['daftar_teknisi_beban'] = User::where('role', 'teknisi')
+            $context['daftar_teknisi_beban'] = User::whereIn('role', ['sarpras_atas', 'teknisi'])
                 ->where('is_active', true)
                 ->withCount(['assignedPengaduans as tiket_aktif' => function ($q) {
                     $q->whereIn('status', ['diverifikasi', 'diproses']);

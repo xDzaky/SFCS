@@ -28,34 +28,77 @@
     </div>
 
     {{-- Unit Sarpras & Tipe Transaksi --}}
-    <div class="col-md-6">
-        <label for="{{ $prefix }}_unit_sarpras" class="form-label fw-semibold">
-            Unit Sarpras <span class="text-danger">*</span>
-        </label>
-        <select id="{{ $prefix }}_unit_sarpras" name="unit_sarpras" class="form-select" required>
-            <option value="atas"  {{ $defaults['unit_sarpras'] === 'atas'  ? 'selected' : '' }}>
-                Sarpras Atas (Proyektor, Kabel, Elektronik)
-            </option>
-            <option value="bawah" {{ $defaults['unit_sarpras'] === 'bawah' ? 'selected' : '' }}>
-                Sarpras Bawah (ATK, Kertas, Bahan Habis Pakai)
-            </option>
-        </select>
-        <div class="form-text">Tentukan di unit mana barang ini dikelola.</div>
-    </div>
-    <div class="col-md-6">
-        <label for="{{ $prefix }}_tipe_transaksi" class="form-label fw-semibold">
-            Tipe Transaksi <span class="text-danger">*</span>
-        </label>
-        <select id="{{ $prefix }}_tipe_transaksi" name="tipe_transaksi" class="form-select" required>
-            <option value="pinjam" {{ $defaults['tipe_transaksi'] === 'pinjam' ? 'selected' : '' }}>
-                Peminjaman — barang dikembalikan
-            </option>
-            <option value="minta"  {{ $defaults['tipe_transaksi'] === 'minta'  ? 'selected' : '' }}>
-                Permintaan — barang tidak dikembalikan (habis pakai)
-            </option>
-        </select>
-        <div class="form-text">Permintaan: stok langsung berkurang saat disetujui, tanpa proses checkin.</div>
-    </div>
+    @php $currentUser = auth()->user(); @endphp
+    @if($currentUser && $currentUser->isSarprasBawah())
+        <input type="hidden" name="unit_sarpras" value="bawah">
+        <input type="hidden" name="tipe_transaksi" value="minta">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Unit Sarpras</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-success fs-6"><i class="fas fa-boxes me-1"></i> Sarpras Bawah</span>
+            </div>
+            <div class="form-text">Dikelola oleh unit Sarpras Bawah.</div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Tipe Transaksi</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-info text-dark fs-6"><i class="fas fa-hand-holding me-1"></i> Permintaan (Habis Pakai / Tidak Kembali)</span>
+            </div>
+            <div class="form-text">Barang bahan ajar/ATK langsung habis pakai.</div>
+        </div>
+    @elseif($currentUser && $currentUser->isSarprasAtas() && !$currentUser->isAdmin())
+        <input type="hidden" name="unit_sarpras" value="atas">
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Unit Sarpras</label>
+            <div class="form-control-plaintext">
+                <span class="badge bg-primary fs-6"><i class="fas fa-projector me-1"></i> Sarpras Atas</span>
+            </div>
+            <div class="form-text">Dikelola oleh unit Sarpras Atas (Aset & Fasilitas).</div>
+        </div>
+        <div class="col-md-6">
+            <label for="{{ $prefix }}_tipe_transaksi" class="form-label fw-semibold">
+                Tipe Transaksi <span class="text-danger">*</span>
+            </label>
+            <select id="{{ $prefix }}_tipe_transaksi" name="tipe_transaksi" class="form-select" required>
+                <option value="pinjam" {{ $defaults['tipe_transaksi'] === 'pinjam' ? 'selected' : '' }}>
+                    Peminjaman — barang dikembalikan
+                </option>
+                <option value="minta"  {{ $defaults['tipe_transaksi'] === 'minta'  ? 'selected' : '' }}>
+                    Permintaan — barang tidak dikembalikan
+                </option>
+            </select>
+            <div class="form-text">Umumnya untuk barang aset adalah peminjaman.</div>
+        </div>
+    @else
+        <div class="col-md-6">
+            <label for="{{ $prefix }}_unit_sarpras" class="form-label fw-semibold">
+                Unit Sarpras <span class="text-danger">*</span>
+            </label>
+            <select id="{{ $prefix }}_unit_sarpras" name="unit_sarpras" class="form-select" required>
+                <option value="atas"  {{ $defaults['unit_sarpras'] === 'atas'  ? 'selected' : '' }}>
+                    Sarpras Atas (Proyektor, Kabel, Elektronik)
+                </option>
+                <option value="bawah" {{ $defaults['unit_sarpras'] === 'bawah' ? 'selected' : '' }}>
+                    Sarpras Bawah (ATK, Kertas, Bahan Habis Pakai)
+                </option>
+            </select>
+            <div class="form-text">Tentukan di unit mana barang ini dikelola.</div>
+        </div>
+        <div class="col-md-6">
+            <label for="{{ $prefix }}_tipe_transaksi" class="form-label fw-semibold">
+                Tipe Transaksi <span class="text-danger">*</span>
+            </label>
+            <select id="{{ $prefix }}_tipe_transaksi" name="tipe_transaksi" class="form-select" required>
+                <option value="pinjam" {{ $defaults['tipe_transaksi'] === 'pinjam' ? 'selected' : '' }}>
+                    Peminjaman — barang dikembalikan
+                </option>
+                <option value="minta"  {{ $defaults['tipe_transaksi'] === 'minta'  ? 'selected' : '' }}>
+                    Permintaan — barang tidak dikembalikan (habis pakai)
+                </option>
+            </select>
+            <div class="form-text">Permintaan: stok langsung berkurang saat disetujui, tanpa proses checkin.</div>
+        </div>
+    @endif
 
     <div class="col-md-6">
         <label for="{{ $prefix }}_kategori" class="form-label">Kategori</label>

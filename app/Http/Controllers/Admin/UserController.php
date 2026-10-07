@@ -56,12 +56,13 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(15);
         $stats = [
-            'total' => User::count(),
-            'siswa' => User::where('role', 'siswa')->count(),
-            'guru' => User::where('role', 'guru')->count(),
-            'teknisi' => User::where('role', 'teknisi')->count(),
-            'admin' => User::whereIn('role', ['admin', 'superadmin'])->count(),
-            'active' => User::where('is_active', true)->count(),
+            'total'         => User::count(),
+            'siswa'         => User::where('role', 'siswa')->count(),
+            'guru'          => User::where('role', 'guru')->count(),
+            'sarpras_atas'  => User::whereIn('role', ['sarpras_atas', 'teknisi'])->count(),
+            'sarpras_bawah' => User::where('role', 'sarpras_bawah')->count(),
+            'admin'         => User::whereIn('role', ['admin', 'superadmin'])->count(),
+            'active'        => User::where('is_active', true)->count(),
         ];
 
         return view('admin.users.index', compact('users', 'stats'));
@@ -84,7 +85,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', 'in:siswa,guru,admin,teknisi,kepsek,superadmin'],
+            'role' => ['required', 'in:siswa,guru,admin,sarpras_atas,sarpras_bawah,kepsek,teknisi,superadmin'],
             'nis' => [
                 Rule::requiredIf(fn () => $request->input('role') === 'siswa'),
                 'nullable',
@@ -128,7 +129,7 @@ class UserController extends Controller
         $stats = [
             'total_pengaduan' => $user->pengaduans()->count(),
             'pengaduan_selesai' => $user->pengaduans()->where('status', 'selesai')->count(),
-            'ditangani' => $user->role === 'teknisi'
+            'ditangani' => $user->isSarprasAtas()
                 ? $user->assignedPengaduans()->where('status', 'selesai')->count()
                 : 0,
         ];
@@ -153,7 +154,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-            'role' => ['required', 'in:siswa,guru,admin,teknisi,kepsek,superadmin'],
+            'role' => ['required', 'in:siswa,guru,admin,sarpras_atas,sarpras_bawah,kepsek,teknisi,superadmin'],
             'nis' => [
                 Rule::requiredIf(fn () => $request->input('role') === 'siswa'),
                 'nullable',

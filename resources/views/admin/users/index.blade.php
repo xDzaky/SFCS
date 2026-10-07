@@ -18,7 +18,7 @@
         </nav>
     </div>
     <div class="d-flex gap-2 w-100 w-lg-auto">
-        @if(auth()->user()->role === 'superadmin')
+        @if(auth()->user()->isAdmin())
             <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center flex-fill flex-lg-grow-0" data-bs-toggle="modal" data-bs-target="#promoteClassModal">
                 <i class="fas fa-arrow-up-right-dots me-lg-2"></i> <span class="d-none d-lg-inline">Promote Kelas</span>
             </button>
@@ -60,8 +60,9 @@
                             <option value="">Semua Role</option>
                             <option value="siswa" {{ request('role') == 'siswa' ? 'selected' : '' }}>Siswa</option>
                             <option value="guru" {{ request('role') == 'guru' ? 'selected' : '' }}>Guru</option>
-                            <option value="teknisi" {{ request('role') == 'teknisi' ? 'selected' : '' }}>Teknisi</option>
-                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="sarpras_atas" {{ request('role') == 'sarpras_atas' ? 'selected' : '' }}>Sarpras Atas</option>
+                            <option value="sarpras_bawah" {{ request('role') == 'sarpras_bawah' ? 'selected' : '' }}>Sarpras Bawah</option>
+                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin IT</option>
                             <option value="kepsek" {{ request('role') == 'kepsek' ? 'selected' : '' }}>Kepala Sekolah</option>
                         </select>
                     </div>

@@ -588,45 +588,150 @@
 
         .notif-empty { text-align: center; padding: 2rem 1rem; color: #9ca3af; }
 
-        /* ── In-page Toast ────────────────────────────────────── */
+        /* ── In-page Toast (DaisyUI Alert with title & description) ─── */
         #notif-toast-container {
             position: fixed;
-            bottom: 80px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             z-index: 99999;
             display: flex;
             flex-direction: column;
-            gap: .5rem;
-            max-width: 340px;
+            gap: .75rem;
+            max-width: 440px;
+            width: calc(100% - 32px);
             pointer-events: none;
         }
-        .notif-toast {
-            background: #fff;
-            border-left: 4px solid var(--primary-color);
-            border-radius: .75rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,.15);
-            padding: .85rem 1rem;
+
+        @media (max-width: 575.98px) {
+            #notif-toast-container {
+                top: 16px;
+                bottom: auto;
+                left: 16px;
+                right: 16px;
+                width: auto;
+                max-width: none;
+            }
+        }
+
+        /* DaisyUI Alert Layout */
+        .alert-daisy {
             display: flex;
+            flex-direction: column;
             align-items: flex-start;
             gap: .75rem;
+            width: 100%;
+            background: #ffffff;
+            color: #1e293b;
+            padding: 1rem 1.15rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
             pointer-events: auto;
             cursor: pointer;
-            animation: toastSlideIn .3s ease;
-            will-change: transform, opacity;
+            position: relative;
+            animation: daisyAlertSlideIn .35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: transform .2s ease, box-shadow .2s ease;
         }
-        .notif-toast.out { animation: toastSlideOut .3s ease forwards; }
-        @keyframes toastSlideIn {
-            from { transform: translateX(120%); opacity: 0; }
-            to   { transform: translateX(0); opacity: 1; }
+
+        @media (min-width: 576px) {
+            .alert-daisy {
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+            }
         }
-        @keyframes toastSlideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to   { transform: translateX(120%); opacity: 0; }
+
+        .alert-daisy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px -5px rgba(0, 0, 0, 0.18), 0 10px 12px -5px rgba(0, 0, 0, 0.08);
         }
-        .notif-toast-icon { width: 34px; height: 34px; border-radius: 50%; background: #eef2ff; color: var(--primary-color); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .notif-toast-title { font-size: .82rem; font-weight: 600; color: #111827; }
-        .notif-toast-msg { font-size: .76rem; color: #6b7280; margin-top: 1px; line-height: 1.4; }
-        .notif-toast-close { margin-left: auto; color: #9ca3af; background: none; border: none; padding: 0; cursor: pointer; font-size: .9rem; }
+
+        .alert-daisy.out {
+            animation: daisyAlertSlideOut .3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes daisyAlertSlideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes daisyAlertSlideOut {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to   { opacity: 0; transform: translateY(15px) scale(0.96); }
+        }
+
+        .alert-daisy svg {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            flex-shrink: 0;
+        }
+
+        .alert-daisy .daisy-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .alert-daisy .daisy-title {
+            font-weight: 700;
+            font-size: .95rem;
+            color: #0f172a;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .alert-daisy .daisy-desc {
+            font-size: .8rem;
+            color: #64748b;
+            margin-top: 3px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .alert-daisy .daisy-actions {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .alert-daisy .btn-see {
+            background-color: var(--primary-color, #4f46e5);
+            border: 1px solid var(--primary-color, #4f46e5);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: .8rem;
+            padding: .35rem .85rem;
+            border-radius: .5rem;
+            transition: all .15s ease;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .alert-daisy .btn-see:hover {
+            filter: brightness(0.92);
+            color: #ffffff;
+        }
+
+        .alert-daisy .btn-dismiss {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: .25rem .4rem;
+            font-size: .85rem;
+            border-radius: .375rem;
+            cursor: pointer;
+            transition: color .15s;
+        }
+
+        .alert-daisy .btn-dismiss:hover {
+            color: #334155;
+            background: #f1f5f9;
+        }
 
     </style>
 
@@ -681,7 +786,12 @@
             </a>
 
             @auth
-            @if(auth()->user()->isSiswa() || auth()->user()->isGuru())
+            @php $u = auth()->user(); @endphp
+
+            {{-- ============================================================
+                 SISWA & GURU — Pengaduan + Pinjaman menu
+            ============================================================ --}}
+            @if($u->isSiswa() || $u->isGuru())
                 <div class="nav-section-title">Pengaduan</div>
                 <a href="{{ route('pengaduan.index') }}" class="sidebar-link {{ request()->routeIs('pengaduan.index') ? 'active' : '' }}">
                     <i class="fas fa-list"></i>
@@ -694,27 +804,77 @@
                 <div class="nav-section-title">Peminjaman</div>
                 <a href="{{ route('pinjaman.index') }}" class="sidebar-link {{ request()->routeIs('pinjaman.*') ? 'active' : '' }}">
                     <i class="fas fa-box-open"></i>
-                    <span>Pinjam Barang</span>
+                    <span>Pinjam/Minta Barang</span>
                 </a>
             @endif
 
-            @if(auth()->user()->isTeknisi())
-                <div class="nav-section-title">Tugas</div>
+            {{-- ============================================================
+                 SARPRAS ATAS — Fasilitas (Pengaduan) + Pinjaman Aset Returnable
+                 Juga mencakup role 'teknisi' (backward compat)
+            ============================================================ --}}
+            @if($u->isSarprasAtas())
+                <div class="nav-section-title">Fasilitas & Perbaikan</div>
                 <a href="{{ route('teknisi.pengaduan.index') }}" class="sidebar-link {{ request()->routeIs('teknisi.pengaduan.*') ? 'active' : '' }}">
                     <i class="fas fa-tasks"></i>
-                    <span>Pengaduan Ditugaskan</span>
+                    <span>Kelola Pengaduan</span>
                 </a>
-                <a href="{{ route('teknisi.peta-digital.index') }}" class="sidebar-link {{ request()->routeIs('teknisi.peta-digital.*') ? 'active' : '' }}">
-                    <i class="fas fa-map"></i>
+                <a href="{{ route('admin.pengaduan.index') }}" class="sidebar-link {{ request()->routeIs('admin.pengaduan.*') ? 'active' : '' }}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Semua Pengaduan</span>
+                </a>
+                <a href="{{ route('admin.overload-board') }}" class="sidebar-link {{ request()->routeIs('admin.overload-board') ? 'active' : '' }}">
+                    <i class="fas fa-gauge-high"></i>
+                    <span>Overload Board</span>
+                </a>
+                <div class="nav-section-title">Pinjaman Aset</div>
+                <a href="{{ route('admin.pinjaman.index') }}" class="sidebar-link {{ request()->routeIs('admin.pinjaman.*') ? 'active' : '' }}">
+                    <i class="fas fa-boxes-stacked"></i>
+                    <span>Kelola Pinjaman</span>
+                </a>
+                <a href="{{ route('admin.barangs.index') }}" class="sidebar-link {{ request()->routeIs('admin.barangs.*') ? 'active' : '' }}">
+                    <i class="fas fa-box-open"></i>
+                    <span>Master Barang Aset</span>
+                </a>
+                <div class="nav-section-title">Peta Sekolah</div>
+                <a href="{{ route('admin.peta-digital') }}" class="sidebar-link {{ request()->routeIs('admin.peta-digital') ? 'active' : '' }}">
+                    <i class="fas fa-map-location-dot"></i>
                     <span>Peta Digital</span>
+                </a>
+                <a href="{{ route('admin.denah.index') }}" class="sidebar-link {{ request()->routeIs('admin.denah.*') ? 'active' : '' }}">
+                    <i class="fas fa-draw-polygon"></i>
+                    <span>Kelola Denah</span>
                 </a>
             @endif
 
-            @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+            {{-- ============================================================
+                 SARPRAS BAWAH — Permintaan ATK & Logistik (non-returnable only)
+                 Tidak ada akses Pengaduan / Fasilitas / Peta
+            ============================================================ --}}
+            @if($u->isSarprasBawah())
+                <div class="nav-section-title">Permintaan ATK</div>
+                <a href="{{ route('admin.pinjaman.index') }}" class="sidebar-link {{ request()->routeIs('admin.pinjaman.*') ? 'active' : '' }}">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Kelola Permintaan</span>
+                </a>
+                <a href="{{ route('admin.barangs.index') }}" class="sidebar-link {{ request()->routeIs('admin.barangs.*') ? 'active' : '' }}">
+                    <i class="fas fa-boxes"></i>
+                    <span>Master Barang ATK</span>
+                </a>
+            @endif
+
+            {{-- ============================================================
+                 ADMIN IT — Full access (was 'superadmin')
+                 Shows all menus
+            ============================================================ --}}
+            @if($u->isAdmin())
                 <div class="nav-section-title">Manajemen</div>
                 <a href="{{ route('admin.pengaduan.index') }}" class="sidebar-link {{ request()->routeIs('admin.pengaduan.*') ? 'active' : '' }}">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Kelola Pengaduan</span>
+                </a>
+                <a href="{{ route('admin.overload-board') }}" class="sidebar-link {{ request()->routeIs('admin.overload-board') ? 'active' : '' }}">
+                    <i class="fas fa-gauge-high"></i>
+                    <span>Overload Board</span>
                 </a>
                 <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-users"></i>
@@ -726,16 +886,13 @@
                 </a>
                 <a href="{{ route('admin.gedungs.index') }}" class="sidebar-link {{ request()->routeIs('admin.gedungs.*') ? 'active' : '' }}">
                     <i class="fas fa-building"></i>
-                    <span>Gedung &amp; Ruangan</span>
+                    <span>Gedung & Ruangan</span>
                 </a>
                 <a href="{{ route('admin.reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-bar"></i>
                     <span>Laporan</span>
                 </a>
-                <a href="{{ route('admin.overload-board') }}" class="sidebar-link {{ request()->routeIs('admin.overload-board') ? 'active' : '' }}">
-                    <i class="fas fa-gauge-high"></i>
-                    <span>Overload Board</span>
-                </a>
+                <div class="nav-section-title">Pinjaman & Barang</div>
                 <a href="{{ route('admin.pinjaman.index') }}" class="sidebar-link {{ request()->routeIs('admin.pinjaman.*') ? 'active' : '' }}">
                     <i class="fas fa-boxes-stacked"></i>
                     <span>Kelola Pinjaman</span>
@@ -744,6 +901,7 @@
                     <i class="fas fa-box-open"></i>
                     <span>Master Barang</span>
                 </a>
+                <div class="nav-section-title">Peta Sekolah</div>
                 <a href="{{ route('admin.peta-digital') }}" class="sidebar-link {{ request()->routeIs('admin.peta-digital') ? 'active' : '' }}">
                     <i class="fas fa-map-location-dot"></i>
                     <span>Peta Digital</span>
@@ -752,17 +910,6 @@
                     <i class="fas fa-draw-polygon"></i>
                     <span>Kelola Denah</span>
                 </a>
-            @endif
-
-            @if(auth()->user()->isKepsek())
-                <div class="nav-section-title">Manajemen Evaluasi</div>
-                <a href="{{ route('kepsek.reports') }}" class="sidebar-link {{ request()->routeIs('kepsek.reports') ? 'active' : '' }}">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Laporan</span>
-                </a>
-            @endif
-
-            @if(auth()->user()->isSuperAdmin())
                 <div class="nav-section-title">Sistem</div>
                 <a href="{{ route('admin.master-data.index') }}" class="sidebar-link {{ request()->routeIs('admin.master-data.*') ? 'active' : '' }}">
                     <i class="fas fa-database"></i>
@@ -777,6 +924,18 @@
                     <span>Log Aktivitas</span>
                 </a>
             @endif
+
+            {{-- ============================================================
+                 KEPSEK — Laporan & Evaluasi only
+            ============================================================ --}}
+            @if($u->isKepsek())
+                <div class="nav-section-title">Manajemen Evaluasi</div>
+                <a href="{{ route('kepsek.reports') }}" class="sidebar-link {{ request()->routeIs('kepsek.reports') ? 'active' : '' }}">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Laporan</span>
+                </a>
+            @endif
+
             @else
                 {{-- Guest View: Tampilkan menu Siswa yang mengarah ke login --}}
                 <div class="nav-section-title">Pengaduan</div>
@@ -977,265 +1136,388 @@
         //  NOTIFICATION SYSTEM
         // ═══════════════════════════════════════════════════════
 
-        const CSRF      = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const CSRF      = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         const bellBtn   = document.getElementById('notifBellBtn');
         const badge     = document.getElementById('notifBadge');
         const notifList = document.getElementById('notifList');
         const markAllBtn = document.getElementById('notifMarkAllBtn');
+        const isStaff   = {{ (auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isSarpras())) ? 'true' : 'false' }};
 
-        let lastUnreadCount = 0;
-        let dropdownLoaded  = false;
-        let cachedData      = null;   // stores last successful dropdown payload
+        // If not logged in or bell not present, exit cleanly
+        if (!bellBtn || !notifList) {
+            // No notification bell on guest pages
+        } else {
+            let lastUnreadCount = 0;
+            let dropdownLoaded  = false;
+            let cachedData      = null;   // stores last successful dropdown payload
 
-        // ── Icon map ──────────────────────────────────────────
-        const iconMap = {
-            pengaduan_created : { cls: 'fa-plus-circle',          bg: 'icon-green'  },
-            status_changed    : { cls: 'fa-exchange-alt',          bg: 'icon-blue'   },
-            assigned          : { cls: 'fa-user-tag',              bg: 'icon-yellow' },
-            feedback_reminder : { cls: 'fa-star',                  bg: 'icon-purple' },
-            overdue           : { cls: 'fa-exclamation-triangle',  bg: 'icon-red'    },
-            pinjaman_created  : { cls: 'fa-box-open',              bg: 'icon-blue'   },
-            pinjaman_status   : { cls: 'fa-arrow-right-arrow-left',bg: 'icon-blue'   },
-            priority_adjusted : { cls: 'fa-sliders',               bg: 'icon-yellow' },
-            rescheduled       : { cls: 'fa-calendar-days',         bg: 'icon-yellow' },
-            overload_alert    : { cls: 'fa-gauge-high',            bg: 'icon-red'    },
-        };
-        function getIcon(jenis) {
-            return iconMap[jenis] ?? { cls: 'fa-bell', bg: 'icon-gray' };
-        }
-
-        // ── Update badge ──────────────────────────────────────
-        function updateBadge(count) {
-            if (count > 0) {
-                badge.textContent = count > 9 ? '9+' : count;
-                badge.classList.remove('d-none');
-                bellBtn.classList.add('has-unread');
-            } else {
-                badge.classList.add('d-none');
-                bellBtn.classList.remove('has-unread');
-            }
-        }
-
-        // ── Render one notification row ───────────────────────
-        function renderNotifItem(n) {
-            const icon  = getIcon(n.jenis);
-            const link  = n.link || null;
-            const el    = document.createElement('a');
-            el.href     = 'javascript:void(0)';
-            el.className = `notif-item ${n.is_read ? 'read' : 'unread'}`;
-            el.dataset.id   = n.id;
-            el.dataset.link = link ?? '';
-
-            el.innerHTML = `
-                <div class="notif-icon ${icon.bg}">
-                    <i class="fas ${icon.cls}"></i>
-                </div>
-                <div style="flex:1; min-width:0;">
-                    <div class="notif-title">${escHtml(n.judul)}</div>
-                    <div class="notif-msg">${escHtml(n.pesan)}</div>
-                    <div class="notif-time">${escHtml(n.time)}</div>
-                </div>
-                ${!n.is_read ? '<span class="notif-dot"></span>' : ''}
-            `;
-
-            el.addEventListener('click', () => handleNotifClick(n.id, link, el));
-            return el;
-        }
-
-        // ── Render full dropdown contents ─────────────────────
-        function renderNotifList(data) {
-            notifList.innerHTML = '';
-            if (!data.notifications || data.notifications.length === 0) {
-                notifList.innerHTML = `
-                    <div class="notif-empty">
-                        <i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>
-                        Tidak ada notifikasi
-                    </div>`;
-                markAllBtn.style.display = 'none';
-                return;
-            }
-            data.notifications.forEach(n => notifList.appendChild(renderNotifItem(n)));
-            markAllBtn.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
-        }
-
-        // ── Fetch dropdown data ───────────────────────────────
-        function fetchDropdown(showSpinner = false) {
-            // Show cached data immediately to avoid empty flash
-            if (cachedData && !showSpinner) {
-                renderNotifList(cachedData);
-            } else if (showSpinner) {
-                notifList.innerHTML = '<div class="notif-empty"><i class="fas fa-spinner fa-spin"></i></div>';
+            // ── Icon map ──────────────────────────────────────────
+            const iconMap = {
+                pengaduan_created : { cls: 'fa-plus-circle',          bg: 'icon-green'  },
+                status_changed    : { cls: 'fa-exchange-alt',          bg: 'icon-blue'   },
+                assigned          : { cls: 'fa-user-tag',              bg: 'icon-yellow' },
+                feedback_reminder : { cls: 'fa-star',                  bg: 'icon-purple' },
+                overdue           : { cls: 'fa-exclamation-triangle',  bg: 'icon-red'    },
+                pinjaman_created  : { cls: 'fa-box-open',              bg: 'icon-blue'   },
+                pinjaman_status   : { cls: 'fa-arrow-right-arrow-left',bg: 'icon-blue'   },
+                priority_adjusted : { cls: 'fa-sliders',               bg: 'icon-yellow' },
+                rescheduled       : { cls: 'fa-calendar-days',         bg: 'icon-yellow' },
+                overload_alert    : { cls: 'fa-gauge-high',            bg: 'icon-red'    },
+            };
+            function getIcon(jenis) {
+                return iconMap[jenis] ?? { cls: 'fa-bell', bg: 'icon-gray' };
             }
 
-            fetch('/notifications/dropdown', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => r.json())
-                .then(data => {
-                    cachedData       = data;
-                    updateBadge(data.unread_count);
-                    renderNotifList(data);
-                    dropdownLoaded   = true;
-                    lastUnreadCount  = data.unread_count;
-                })
-                .catch(() => {
-                    if (!cachedData) {
-                        notifList.innerHTML = '<div class="notif-empty text-danger">Gagal memuat notifikasi.</div>';
+            // ── Web Audio Chime (0KB synthesized sound) ───────────
+            function playNotificationSound() {
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    if (!window._sfcsAudioCtx) {
+                        window._sfcsAudioCtx = new AudioCtx();
                     }
-                });
-        }
+                    const ctx = window._sfcsAudioCtx;
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
 
-        // ── Fetch count only (background polling) ────────────
-        function fetchCountAndNotify() {
-            fetch('/notifications/unread-count', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => r.json())
-                .then(data => {
-                    const count = data.count ?? 0;
+                    const now = ctx.currentTime;
+                    const playTone = (freq, time, dur) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, time);
 
-                    // New notification arrived while user is on page
-                    if (count > lastUnreadCount) {
-                        // Refresh dropdown cache (always, no spinner)
-                        fetchDropdown(false);
+                        gain.gain.setValueAtTime(0, time);
+                        gain.gain.linearRampToValueAtTime(0.22, time + 0.015);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
 
-                        // Fetch latest for toast/browser notif
-                        fetch('/notifications/latest', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                            .then(r => r.json())
-                            .then(notif => {
-                                if (notif && notif.judul) {
-                                    // Strip absolute URL to avoid cross-host 403
-                                    if (notif.link) {
-                                        notif.link = notif.link.replace(/^https?:\/\/[^/]+/, '');
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+
+                        osc.start(time);
+                        osc.stop(time + dur);
+                    };
+
+                    // Pleasant, modern melodic chime (D5 -> A5)
+                    playTone(587.33, now, 0.16);
+                    playTone(880.00, now + 0.10, 0.32);
+                } catch (e) {
+                    console.debug('Notification audio chime skipped:', e);
+                }
+            }
+
+            // Unlock AudioContext on first user interaction for mobile autoplay compliance
+            window.addEventListener('click', () => {
+                if (window._sfcsAudioCtx && window._sfcsAudioCtx.state === 'suspended') {
+                    window._sfcsAudioCtx.resume();
+                }
+            }, { once: true });
+
+            // ── Update badge ──────────────────────────────────────
+            function updateBadge(count) {
+                if (!badge || !bellBtn) return;
+                if (count > 0) {
+                    badge.textContent = count > 9 ? '9+' : count;
+                    badge.classList.remove('d-none');
+                    bellBtn.classList.add('has-unread');
+                } else {
+                    badge.classList.add('d-none');
+                    bellBtn.classList.remove('has-unread');
+                }
+            }
+
+            // ── Render one notification row in dropdown ───────────
+            function renderNotifItem(n) {
+                const icon  = getIcon(n.jenis);
+                const link  = n.link || null;
+                const el    = document.createElement('a');
+                el.href     = 'javascript:void(0)';
+                el.className = `notif-item ${n.is_read ? 'read' : 'unread'}`;
+                el.dataset.id   = n.id;
+                el.dataset.link = link ?? '';
+
+                el.innerHTML = `
+                    <div class="notif-icon ${icon.bg}">
+                        <i class="fas ${icon.cls}"></i>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="notif-title">${escHtml(n.judul)}</div>
+                        <div class="notif-msg">${escHtml(n.pesan)}</div>
+                        <div class="notif-time">${escHtml(n.time)}</div>
+                    </div>
+                    ${!n.is_read ? '<span class="notif-dot"></span>' : ''}
+                `;
+
+                el.addEventListener('click', () => handleNotifClick(n.id, link, el));
+                return el;
+            }
+
+            // ── Render full dropdown contents ─────────────────────
+            function renderNotifList(data) {
+                notifList.innerHTML = '';
+                if (!data.notifications || data.notifications.length === 0) {
+                    notifList.innerHTML = `
+                        <div class="notif-empty">
+                            <i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>
+                            Tidak ada notifikasi
+                        </div>`;
+                    if (markAllBtn) markAllBtn.style.display = 'none';
+                    return;
+                }
+                data.notifications.forEach(n => notifList.appendChild(renderNotifItem(n)));
+                if (markAllBtn) markAllBtn.style.display = data.unread_count > 0 ? 'inline-block' : 'none';
+            }
+
+            // ── Fetch dropdown data ───────────────────────────────
+            function fetchDropdown(showSpinner = false) {
+                if (cachedData && !showSpinner) {
+                    renderNotifList(cachedData);
+                } else if (showSpinner) {
+                    notifList.innerHTML = '<div class="notif-empty"><i class="fas fa-spinner fa-spin"></i></div>';
+                }
+
+                fetch('/notifications/dropdown', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(data => {
+                        cachedData       = data;
+                        updateBadge(data.unread_count);
+                        renderNotifList(data);
+                        dropdownLoaded   = true;
+                        lastUnreadCount  = data.unread_count;
+                    })
+                    .catch(() => {
+                        if (!cachedData) {
+                            notifList.innerHTML = '<div class="notif-empty text-danger">Gagal memuat notifikasi.</div>';
+                        }
+                    });
+            }
+
+            // ── Fetch count only (background polling) ────────────
+            function fetchCountAndNotify() {
+                fetch('/notifications/unread-count', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(data => {
+                        const count = data.count ?? 0;
+
+                        // New notification arrived while user is active on page
+                        if (count > lastUnreadCount) {
+                            fetchDropdown(false);
+
+                            fetch('/notifications/latest', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                                .then(r => r.json())
+                                .then(notif => {
+                                    if (notif && notif.judul) {
+                                        if (notif.link) {
+                                            notif.link = notif.link.replace(/^https?:\/\/[^/]+/, '');
+                                        }
+                                        if (isStaff) {
+                                            playNotificationSound();
+                                        }
+                                        showToast(notif);
+                                        showBrowserNotif(notif);
                                     }
-                                    showToast(notif);
-                                    showBrowserNotif(notif);
-                                }
-                            });
-                    } else {
-                        updateBadge(count);
-                    }
+                                });
+                        } else {
+                            updateBadge(count);
+                        }
 
-                    lastUnreadCount = count;
-                })
-                .catch(() => {});
-        }
-
-        // ── Click: mark as read, then navigate ────────────────
-        function handleNotifClick(id, link, el) {
-            // Optimistic UI
-            el.classList.remove('unread');
-            el.classList.add('read');
-            const dot = el.querySelector('.notif-dot');
-            if (dot) dot.remove();
-
-            // Update cache
-            if (cachedData) {
-                const n = cachedData.notifications.find(x => x.id == id);
-                if (n) n.is_read = true;
-                cachedData.unread_count = Math.max(0, (cachedData.unread_count || 1) - 1);
-                updateBadge(cachedData.unread_count);
+                        lastUnreadCount = count;
+                    })
+                    .catch(() => {});
             }
 
-            // Tell server (fire-and-forget), then navigate
-            fetch(`/notifications/${id}/read`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
-            }).finally(() => {
-                // link is already relative path (stripped by dropdown API)
-                if (link) window.location.href = link;
-            });
-        }
-
-        // ── Mark all as read (AJAX) ────────────────────────────
-        markAllBtn.addEventListener('click', () => {
-            fetch('/notifications/read-all', {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
-            })
-            .then(r => r.json())
-            .then(() => {
-                document.querySelectorAll('.notif-item.unread').forEach(el => {
+            // ── Click: mark as read, then navigate ────────────────
+            function handleNotifClick(id, link, el) {
+                if (el) {
                     el.classList.remove('unread');
                     el.classList.add('read');
                     const dot = el.querySelector('.notif-dot');
                     if (dot) dot.remove();
-                });
-                // Update cache
+                }
+
                 if (cachedData) {
-                    cachedData.unread_count = 0;
-                    cachedData.notifications.forEach(n => n.is_read = true);
+                    const n = cachedData.notifications.find(x => x.id == id);
+                    if (n) n.is_read = true;
+                    cachedData.unread_count = Math.max(0, (cachedData.unread_count || 1) - 1);
+                    updateBadge(cachedData.unread_count);
                 }
-                updateBadge(0);
-                markAllBtn.style.display = 'none';
-                lastUnreadCount = 0;
-            });
-        });
 
-        // ── Load dropdown when bell is opened ─────────────────
-        const bsDropdown = document.getElementById('notifDropdown');
-        bsDropdown.addEventListener('show.bs.dropdown', () => {
-            // If we have cached data, show immediately (no spinner)
-            // then silently refresh in background
-            fetchDropdown(cachedData === null);
-        });
-
-        // ── In-page Toast ──────────────────────────────────────
-        const toastContainer = document.getElementById('notif-toast-container');
-
-        function showToast(notif) {
-            const icon = getIcon(notif.jenis);
-            const toast = document.createElement('div');
-            toast.className = 'notif-toast';
-            toast.innerHTML = `
-                <div class="notif-toast-icon ${icon.bg}">
-                    <i class="fas ${icon.cls}"></i>
-                </div>
-                <div style="flex:1; min-width:0;">
-                    <div class="notif-toast-title">${escHtml(notif.judul)}</div>
-                    <div class="notif-toast-msg">${escHtml(notif.pesan ?? '')}</div>
-                </div>
-                <button class="notif-toast-close" title="Tutup">&times;</button>
-            `;
-
-            const link = notif.link;
-            toast.addEventListener('click', e => {
-                if (!e.target.classList.contains('notif-toast-close') && link) {
-                    window.location.href = link;
-                }
-            });
-            toast.querySelector('.notif-toast-close').addEventListener('click', () => dismissToast(toast));
-
-            toastContainer.appendChild(toast);
-            setTimeout(() => dismissToast(toast), 6000);
-        }
-
-        function dismissToast(toast) {
-            toast.classList.add('out');
-            setTimeout(() => toast.remove(), 300);
-        }
-
-        // ── Browser Push Notification ──────────────────────────
-        function showBrowserNotif(notif) {
-            if (Notification.permission === 'granted') {
-                const n = new Notification('SFCS — ' + notif.judul, {
-                    body   : notif.pesan ?? '',
-                    icon   : '/images/icons/icon-192x192.png',
-                    tag    : 'sfcs-notif-' + notif.id,
-                    requireInteraction: false,
-                });
-                n.onclick = () => {
-                    window.focus();
-                    if (notif.link) window.location.href = notif.link;
-                    n.close();
+                const navigate = () => {
+                    if (link) {
+                        window.location.href = link;
+                    } else {
+                        window.location.href = '{{ route("notifications.index") }}';
+                    }
                 };
+
+                if (id) {
+                    fetch(`/notifications/${id}/read`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+                    }).finally(navigate);
+                } else {
+                    navigate();
+                }
             }
-        }
 
-        // ── Request browser notification permission ────────────
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
+            // ── Mark all as read (AJAX) ────────────────────────────
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', () => {
+                    fetch('/notifications/read-all', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+                    })
+                    .then(r => r.json())
+                    .then(() => {
+                        document.querySelectorAll('.notif-item.unread').forEach(el => {
+                            el.classList.remove('unread');
+                            el.classList.add('read');
+                            const dot = el.querySelector('.notif-dot');
+                            if (dot) dot.remove();
+                        });
+                        if (cachedData) {
+                            cachedData.unread_count = 0;
+                            cachedData.notifications.forEach(n => n.is_read = true);
+                        }
+                        updateBadge(0);
+                        markAllBtn.style.display = 'none';
+                        lastUnreadCount = 0;
+                    });
+                });
+            }
 
-        // ── Bootstrap: load data immediately on page load ─────
-        fetchDropdown(false);                               // pre-warm cache silently
-        setInterval(fetchCountAndNotify, 15000);
+            // ── Load dropdown when bell is opened ─────────────────
+            const bsDropdown = document.getElementById('notifDropdown');
+            if (bsDropdown) {
+                bsDropdown.addEventListener('show.bs.dropdown', () => {
+                    fetchDropdown(cachedData === null);
+                });
+            }
+
+            // ── In-page Toast (DaisyUI Alert Component) ────────────
+            const toastContainer = document.getElementById('notif-toast-container');
+
+            function showToast(notif) {
+                if (!toastContainer) return;
+
+                const toast = document.createElement('div');
+                toast.setAttribute('role', 'alert');
+                toast.className = 'alert-daisy alert alert-vertical sm:alert-horizontal';
+
+                // Determine stroke color for SVG
+                let strokeColor = '#0284c7'; // default text-info
+                if (notif.jenis && (notif.jenis.includes('overdue') || notif.jenis.includes('overload') || notif.jenis.includes('ditolak'))) {
+                    strokeColor = '#dc2626';
+                } else if (notif.jenis && (notif.jenis.includes('selesai') || notif.jenis.includes('created') || notif.jenis.includes('disetujui'))) {
+                    strokeColor = '#16a34a';
+                }
+
+                toast.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0" style="stroke: ${strokeColor};">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="daisy-content">
+                        <h3 class="font-bold daisy-title">${escHtml(notif.judul)}</h3>
+                        <div class="text-xs daisy-desc">${escHtml(notif.pesan ?? '')}</div>
+                    </div>
+                    <div class="daisy-actions">
+                        <button type="button" class="btn-see">Lihat</button>
+                        <button type="button" class="btn-dismiss" title="Tutup"><i class="fas fa-times"></i></button>
+                    </div>
+                `;
+
+                const link = notif.link;
+                const goToNotif = (e) => {
+                    if (e) e.stopPropagation();
+                    dismissToast(toast);
+                    handleNotifClick(notif.id, link, null);
+                };
+
+                // Click on alert body or "Lihat" button navigates directly
+                toast.addEventListener('click', (e) => {
+                    if (!e.target.closest('.btn-dismiss')) {
+                        goToNotif(e);
+                    }
+                });
+
+                const seeBtn = toast.querySelector('.btn-see');
+                if (seeBtn) seeBtn.addEventListener('click', goToNotif);
+
+                const dismissBtn = toast.querySelector('.btn-dismiss');
+                if (dismissBtn) {
+                    dismissBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        dismissToast(toast);
+                    });
+                }
+
+                toastContainer.appendChild(toast);
+                setTimeout(() => dismissToast(toast), 8000);
+            }
+
+            function dismissToast(toast) {
+                if (!toast || toast.classList.contains('out')) return;
+                toast.classList.add('out');
+                setTimeout(() => toast.remove(), 320);
+            }
+
+            // ── Browser Push Notification ──────────────────────────
+            function showBrowserNotif(notif) {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const n = new Notification('SFCS — ' + notif.judul, {
+                        body   : notif.pesan ?? '',
+                        icon   : '/images/icons/icon-192x192.png',
+                        tag    : 'sfcs-notif-' + notif.id,
+                        requireInteraction: false,
+                    });
+                    n.onclick = () => {
+                        window.focus();
+                        if (notif.link) window.location.href = notif.link;
+                        n.close();
+                    };
+                }
+            }
+
+            // ── Request browser notification permission ────────────
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // ── Lightweight Polling Engine (Optimized for Mobile & Desktop) ──
+            let pollTimer = null;
+            const pollInterval = isStaff ? 15000 : 35000; // 15s for admin/sarpras, 35s for siswa/guru
+
+            function startPolling() {
+                stopPolling();
+                pollTimer = setInterval(() => {
+                    if (!document.hidden) {
+                        fetchCountAndNotify();
+                    }
+                }, pollInterval);
+            }
+
+            function stopPolling() {
+                if (pollTimer) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            }
+
+            // Pause polling when tab is hidden to save battery & data; resume upon return
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopPolling();
+                } else {
+                    fetchCountAndNotify();
+                    startPolling();
+                }
+            });
+
+            // ── Bootstrap: load data immediately on page load ─────
+            fetchDropdown(false); // pre-warm cache silently
+            startPolling();
+        }
 
         // ── Utility ───────────────────────────────────────────
         function escHtml(str) {

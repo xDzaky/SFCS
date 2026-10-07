@@ -139,8 +139,8 @@ class ReportController extends Controller
         $endDate = $request->get('date_to', now()->format('Y-m-d'));
         $teknisiId = $request->get('teknisi_id');
 
-        // Teknisi performance
-        $teknisiQuery = User::where('role', 'teknisi');
+        // Teknisi / Sarpras Atas performance
+        $teknisiQuery = User::whereIn('role', ['sarpras_atas', 'teknisi']);
         
         if ($teknisiId) {
             $teknisiQuery->where('id', $teknisiId);
@@ -235,8 +235,8 @@ class ReportController extends Controller
         // Ensure all ratings 1-5 are present
         $ratingDistribution = array_replace([1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0], $ratingDistribution);
 
-        // Get all teknisi for filter dropdown
-        $teknisis = User::where('role', 'teknisi')->orderBy('name')->get();
+        // Get all teknisi / sarpras atas for filter dropdown
+        $teknisis = User::whereIn('role', ['sarpras_atas', 'teknisi'])->orderBy('name')->get();
 
         // Calculate summary statistics
         $allPengaduans = Pengaduan::whereBetween('created_at', [$startDate, $endDate]);
@@ -377,7 +377,7 @@ class ReportController extends Controller
             'Rata-rata Durasi (Hari)',
         ]);
 
-        $teknisis = User::where('role', 'teknisi')->get();
+        $teknisis = User::whereIn('role', ['sarpras_atas', 'teknisi'])->get();
 
         foreach ($teknisis as $teknisi) {
             $pengaduans = Pengaduan::where('teknisi_id', $teknisi->id)

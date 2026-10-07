@@ -20,7 +20,20 @@ class AdminPinjamanController extends Controller
 
     public function index(Request $request)
     {
+        $user = Auth::user();
         $query = Pinjaman::query()->with(['user', 'barang'])->latest();
+
+        // Auto-filter berdasarkan role:
+        // sarpras_atas → hanya lihat pinjaman barang unit 'atas'
+        // sarpras_bawah → hanya lihat pinjaman barang unit 'bawah'
+        // admin → lihat semua, bisa filter manual
+        if ($user->isSarprasAtas() && !$user->isAdmin()) {
+            $query->whereHas('barang', fn($q) => $q->where('unit_sarpras', 'atas'));
+        } elseif ($user->isSarprasBawah()) {
+            $query->whereHas('barang', fn($q) => $q->where('unit_sarpras', 'bawah'));
+        } elseif ($request->filled('unit_sarpras')) {
+            $query->whereHas('barang', fn($q) => $q->where('unit_sarpras', $request->unit_sarpras));
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -28,10 +41,6 @@ class AdminPinjamanController extends Controller
 
         if ($request->filled('tipe')) {
             $query->where('tipe', $request->tipe);
-        }
-
-        if ($request->filled('unit_sarpras')) {
-            $query->whereHas('barang', fn($q) => $q->where('unit_sarpras', $request->unit_sarpras));
         }
 
         if ($request->filled('search')) {
@@ -50,6 +59,7 @@ class AdminPinjamanController extends Controller
 
     public function show(Pinjaman $pinjaman)
     {
+        $this->authorizePinjamanUnit($pinjaman);
         $pinjaman->load(['user', 'barang', 'logs.user', 'feedback']);
 
         return view('admin.pinjaman.show', compact('pinjaman'));
@@ -57,6 +67,7 @@ class AdminPinjamanController extends Controller
 
     public function approve(Request $request, Pinjaman $pinjaman)
     {
+        $this->authorizePinjamanUnit($pinjaman);
         if ($pinjaman->status !== Pinjaman::STATUS_PENDING) {
             return back()->with('error', 'Status pengajuan tidak valid untuk disetujui.');
         }
@@ -118,6 +129,7 @@ class AdminPinjamanController extends Controller
 
     public function reject(Request $request, Pinjaman $pinjaman)
     {
+        $this->authorizePinjamanUnit($pinjaman);
         if ($pinjaman->status !== Pinjaman::STATUS_PENDING) {
             return back()->with('error', 'Status pengajuan tidak valid untuk ditolak.');
         }
@@ -146,6 +158,7 @@ class AdminPinjamanController extends Controller
 
     public function checkOut(Request $request, Pinjaman $pinjaman)
     {
+        $this->authorizePinjamanUnit($pinjaman);
         // Permintaan (minta) tidak memiliki tahap checkout — langsung selesai saat approve
         if ($pinjaman->tipe === Pinjaman::TIPE_MINTA) {
             return back()->with('error', 'Permintaan barang tidak memerlukan checkout. Barang sudah diserahkan saat disetujui.');
@@ -185,6 +198,7 @@ class AdminPinjamanController extends Controller
 
     public function checkIn(Request $request, Pinjaman $pinjaman)
     {
+        $this->authorizePinjamanUnit($pinjaman);
         // Permintaan tidak memiliki tahap checkin
         if ($pinjaman->tipe === Pinjaman::TIPE_MINTA) {
             return back()->with('error', 'Permintaan barang tidak memerlukan pengembalian.');
@@ -224,6 +238,7 @@ class AdminPinjamanController extends Controller
 
     public function forceClose(Request $request, Pinjaman $pinjaman)
     {
+        $this->authorizePinjamanUnit($pinjaman);
         if (in_array($pinjaman->status, [Pinjaman::STATUS_SELESAI, Pinjaman::STATUS_DITOLAK], true)) {
             return back()->with('error', 'Pengajuan sudah final.');
         }
@@ -308,5 +323,26 @@ class AdminPinjamanController extends Controller
             'Content-Type'        => 'text/csv',
             'Content-Disposition' => 'attachment; filename="laporan-pinjaman-'.now()->format('Ymd-His').'.csv"',
         ]);
+    }
+
+    private function authorizePinjamanUnit(Pinjaman $pinjaman): void
+    {
+        $user = Auth::user();
+        if (!$user || $user->isAdmin()) {
+            return;
+        }
+
+        $barang = $pinjaman->barang ?? Barang::find($pinjaman->barang_id);
+        if (!$barang) {
+            return;
+        }
+
+        if ($user->isSarprasBawah() && $barang->unit_sarpras !== 'bawah') {
+            abort(403, 'Anda hanya dapat mengakses pinjaman/permintaan barang Sarpras Bawah.');
+        }
+
+        if ($user->isSarprasAtas() && $barang->unit_sarpras !== 'atas') {
+            abort(403, 'Anda hanya dapat mengakses pinjaman barang Sarpras Atas.');
+        }
     }
 }

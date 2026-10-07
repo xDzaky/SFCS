@@ -56,11 +56,18 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         return match ($user->role) {
-            'superadmin' => $this->superadminDashboard(),
-            'admin'      => $this->adminDashboard(),
-            'kepsek'     => $this->kepsekDashboard(),
-            'teknisi'    => $this->teknisiDashboard(),
-            default      => $this->siswaDashboard(),
+            // Admin IT (new role — full system access, was 'superadmin')
+            'admin'         => $this->superadminDashboard(),
+            // Backward compat: old 'superadmin' label
+            'superadmin'    => $this->superadminDashboard(),
+            // Sarpras Atas: Fasilitas + Peminjaman Aset (merged teknisi)
+            'sarpras_atas'  => $this->sarprasAtasDashboard(),
+            // Sarpras Bawah: ATK & Logistik supply only
+            'sarpras_bawah' => $this->sarprasBawahDashboard(),
+            // Backward compat: old 'teknisi' label → sarpras_atas dashboard
+            'teknisi'       => $this->sarprasAtasDashboard(),
+            'kepsek'        => $this->kepsekDashboard(),
+            default         => $this->siswaDashboard(),
         };
     }
 
@@ -88,13 +95,14 @@ class DashboardController extends Controller
     }
 
     /**
-     * Teknisi Dashboard
+     * Sarpras Atas Dashboard — Fasilitas/Pengaduan + Peminjaman Aset Returnable
+     * (Merged from old Teknisi role)
      */
-    private function teknisiDashboard()
+    private function sarprasAtasDashboard()
     {
         $user = Auth::user();
 
-        // Pengaduan assigned to this teknisi
+        // Pengaduan assigned to this sarpras atas user
         $assignedPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user'])
             ->where('teknisi_id', $user->id)
             ->whereNotIn('status', ['selesai', 'ditolak'])
@@ -102,8 +110,7 @@ class DashboardController extends Controller
             ->get();
 
         // Urgent pengaduans
-        $urgentPengaduans = Pengaduan::with(['kategori', 'gedung', 'ruangan.gedung', 'user'])
-            ->where('teknisi_id', $user->id)
+        $urgentPengaduans = Pengaduan::where('teknisi_id', $user->id)
             ->whereIn('prioritas', ['urgent', 'tinggi'])
             ->whereNotIn('status', ['selesai', 'ditolak'])
             ->count();
@@ -112,17 +119,77 @@ class DashboardController extends Controller
             ->where('status', 'pending')
             ->count();
 
+        // Pinjaman aset (unit atas, tipe pinjam)
+        $pinjamanAktif = Pinjaman::whereHas('barang', fn($q) => $q->where('unit_sarpras', 'atas'))
+            ->aktif()
+            ->count();
+
+        $pinjamanPending = Pinjaman::whereHas('barang', fn($q) => $q->where('unit_sarpras', 'atas'))
+            ->where('status', Pinjaman::STATUS_PENDING)
+            ->count();
+
         $stats = [
-            'assigned' => $assignedPengaduans->count(),
-            'urgent' => $urgentPengaduans,
-            'unassigned' => $unassigned,
+            'assigned'          => $assignedPengaduans->count(),
+            'urgent'            => $urgentPengaduans,
+            'unassigned'        => $unassigned,
             'selesai_bulan_ini' => Pengaduan::where('teknisi_id', $user->id)
                 ->where('status', 'selesai')
                 ->whereMonth('updated_at', now()->month)
                 ->count(),
+            'pinjaman_aktif'    => $pinjamanAktif,
+            'pinjaman_pending'  => $pinjamanPending,
         ];
 
-        return view('dashboard.teknisi', compact('assignedPengaduans', 'stats'));
+        return view('dashboard.sarpras_atas', compact('assignedPengaduans', 'stats'));
+    }
+
+    /**
+     * Sarpras Bawah Dashboard — ATK, Logistik, Kebutuhan Belajar (non-returnable)
+     */
+    private function sarprasBawahDashboard()
+    {
+        // Total permintaan ATK (unit bawah, tipe minta)
+        $totalPermintaan = Pinjaman::whereHas('barang', fn($q) => $q->where('unit_sarpras', 'bawah'))
+            ->count();
+
+        $pendingPermintaan = Pinjaman::whereHas('barang', fn($q) => $q->where('unit_sarpras', 'bawah'))
+            ->where('status', Pinjaman::STATUS_PENDING)
+            ->count();
+
+        $selesaiBulanIni = Pinjaman::whereHas('barang', fn($q) => $q->where('unit_sarpras', 'bawah'))
+            ->where('status', Pinjaman::STATUS_SELESAI)
+            ->whereMonth('updated_at', now()->month)
+            ->count();
+
+        // Stock alerts: barang unit bawah dengan stok rendah (< 10)
+        $stockRendah = \App\Models\Barang::where('unit_sarpras', 'bawah')
+            ->where('is_active', true)
+            ->where('stok', '<', 10)
+            ->count();
+
+        $stats = [
+            'total_permintaan'  => $totalPermintaan,
+            'pending'           => $pendingPermintaan,
+            'selesai_bulan_ini' => $selesaiBulanIni,
+            'stock_rendah'      => $stockRendah,
+        ];
+
+        // Recent permintaan
+        $recentPermintaan = Pinjaman::with(['barang', 'user'])
+            ->whereHas('barang', fn($q) => $q->where('unit_sarpras', 'bawah'))
+            ->latest()
+            ->take(8)
+            ->get();
+
+        return view('dashboard.sarpras_bawah', compact('stats', 'recentPermintaan'));
+    }
+
+    /**
+     * Teknisi Dashboard — backward compat alias for sarprasAtasDashboard()
+     */
+    private function teknisiDashboard()
+    {
+        return $this->sarprasAtasDashboard();
     }
 
     /**
@@ -192,7 +259,7 @@ class DashboardController extends Controller
 
         // Teknisi list with utilization
         $capacityPerHour = max(1, (int) \App\Models\Setting::getValue('teknisi_capacity_per_hour', 2));
-        $teknisis = User::where('role', 'teknisi')
+        $teknisis = User::whereIn('role', ['sarpras_atas', 'teknisi'])
             ->where('is_active', true)
             ->withCount([
                 'assignedPengaduans as active_ticket_count' => function ($query) {
@@ -265,7 +332,7 @@ class DashboardController extends Controller
             ->get();
 
         // Teknisi performance
-        $teknisiPerformance = User::where('role', 'teknisi')
+        $teknisiPerformance = User::whereIn('role', ['sarpras_atas', 'teknisi'])
             ->where('is_active', true)
             ->withCount([
                 'assignedPengaduans as total_ditangani',

@@ -99,12 +99,21 @@ class PinjamanController extends Controller
                 ($isPermintaan ? "Pengajuan permintaan" : "Pengajuan pinjaman") . " {$pinjaman->kode_pinjaman} dibuat"
             );
 
-            $admins = User::query()->whereIn('role', ['admin', 'superadmin'])->pluck('id');
-            foreach ($admins as $adminId) {
+            // Notifikasi ke petugas sarpras yang bertanggung jawab + Admin IT
+            $targetRoles = ['admin', 'superadmin'];
+            if ($barang->unit_sarpras === 'bawah') {
+                $targetRoles[] = 'sarpras_bawah';
+            } else {
+                $targetRoles[] = 'sarpras_atas';
+                $targetRoles[] = 'teknisi';
+            }
+
+            $recipients = User::query()->whereIn('role', $targetRoles)->where('is_active', true)->pluck('id');
+            foreach ($recipients as $recipientId) {
                 Notification::send(
-                    $adminId,
+                    $recipientId,
                     Notification::JENIS_PINJAMAN_CREATED,
-                    $isPermintaan ? 'Permintaan Barang Baru' : 'Pengajuan Pinjaman Baru',
+                    $isPermintaan ? 'Permintaan Barang Baru (Sarpras Bawah)' : 'Pengajuan Pinjaman Baru (Sarpras Atas)',
                     "Pengajuan {$pinjaman->kode_pinjaman} menunggu persetujuan.",
                     route('admin.pinjaman.show', $pinjaman)
                 );
@@ -112,15 +121,16 @@ class PinjamanController extends Controller
         });
 
         $msg = $isPermintaan
-            ? 'Permintaan barang berhasil dikirim. Tunggu persetujuan admin.'
-            : 'Pengajuan pinjaman berhasil dikirim.';
+            ? 'Permintaan barang berhasil dikirim ke Sarpras Bawah. Menunggu persetujuan.'
+            : 'Pengajuan pinjaman berhasil dikirim ke Sarpras Atas.';
 
         return redirect()->route('pinjaman.index')->with('success', $msg);
     }
 
     public function show(Pinjaman $pinjaman)
     {
-        if ((int) $pinjaman->user_id !== (int) Auth::id() && !Auth::user()->isAdmin()) {
+        $user = Auth::user();
+        if ((int) $pinjaman->user_id !== (int) $user->id && !$user->isAdmin() && !$user->isSarpras()) {
             abort(403);
         }
 

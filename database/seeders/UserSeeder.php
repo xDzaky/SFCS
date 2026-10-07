@@ -15,28 +15,42 @@ class UserSeeder extends Seeder
     {
         $defaultPassword = Hash::make('password');
 
-        // Super Admin
+        // Admin IT (full system access)
         User::firstOrCreate(
-            ['email' => 'superadmin@sfcs.sch.id'],
+            ['email' => 'admin@sfcs.sch.id'],
             [
-                'name' => 'Super Admin',
+                'name' => 'Admin IT',
                 'password' => $defaultPassword,
-                'role' => 'superadmin',
-                'nip' => 'SA001',
+                'role' => 'admin',
+                'nip' => 'ADM001',
                 'is_active' => true,
                 'force_password_change' => false,
                 'email_verified_at' => now(),
             ]
         );
 
-        // Admin
+        // Sarpras Atas (Fasilitas & Peminjaman Aset)
         User::firstOrCreate(
-            ['email' => 'admin@sfcs.sch.id'],
+            ['email' => 'sarpras.atas@sfcs.sch.id'],
             [
-                'name' => 'Admin Sarana',
+                'name' => 'Sarpras Atas',
                 'password' => $defaultPassword,
-                'role' => 'admin',
-                'nip' => 'ADM001',
+                'role' => 'sarpras_atas',
+                'nip' => 'SPA001',
+                'is_active' => true,
+                'force_password_change' => false,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Sarpras Bawah (ATK & Logistik)
+        User::firstOrCreate(
+            ['email' => 'sarpras.bawah@sfcs.sch.id'],
+            [
+                'name' => 'Sarpras Bawah',
+                'password' => $defaultPassword,
+                'role' => 'sarpras_bawah',
+                'nip' => 'SPB001',
                 'is_active' => true,
                 'force_password_change' => false,
                 'email_verified_at' => now(),
@@ -56,28 +70,6 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-
-        // Teknisi
-        $teknisis = [
-            ['name' => 'Ahmad Teknisi', 'email' => 'teknisi1@sfcs.sch.id', 'nip' => 'TK001'],
-            ['name' => 'Budi Teknisi', 'email' => 'teknisi2@sfcs.sch.id', 'nip' => 'TK002'],
-            ['name' => 'Cahyo Teknisi', 'email' => 'teknisi3@sfcs.sch.id', 'nip' => 'TK003'],
-        ];
-
-        foreach ($teknisis as $teknisi) {
-            User::firstOrCreate(
-                ['email' => $teknisi['email']],
-                [
-                    'name' => $teknisi['name'],
-                    'password' => $defaultPassword,
-                    'role' => 'teknisi',
-                    'nip' => $teknisi['nip'],
-                    'is_active' => true,
-                    'force_password_change' => false,
-                    'email_verified_at' => now(),
-                ]
-            );
-        }
 
         // Guru
         $gurus = [
