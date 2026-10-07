@@ -164,7 +164,7 @@ class DashboardController extends Controller
         // Stock alerts: barang unit bawah dengan stok rendah (< 10)
         $stockRendah = \App\Models\Barang::where('unit_sarpras', 'bawah')
             ->where('is_active', true)
-            ->where('stok', '<', 10)
+            ->where('stok_tersedia', '<', 10)
             ->count();
 
         $stats = [
